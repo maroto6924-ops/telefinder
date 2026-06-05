@@ -470,7 +470,11 @@ async function analyzePhone() {
   document.getElementById('loadingSub').textContent  = 'Consultando bases de datos históricas';
   userContent.push({ type:'text', text: desc || `Identifica el teléfono en la${currentImages.length>1?' ' +currentImages.length+' imágenes':'imagen'}.` });
 
-  const systemPrompt = `Eres TeleFinder, el experto mundial en identificación y tasación de teléfonos de coleccionismo con especial foco en el mercado español. Tienes acceso a las siguientes fuentes académicas, museísticas y de mercado:
+  const systemPrompt = `Eres TeleFinder, experto en identificación y tasación de teléfonos de coleccionismo en el mercado español.
+
+REGLA ABSOLUTA: Tu respuesta debe ser ÚNICAMENTE el objeto JSON. Ni una sola palabra antes ni después. No escribas "Observo", "Aquí", "Basándome", ni ningún texto. SOLO el JSON empezando por { y terminando por }. Si añades cualquier texto fuera del JSON la aplicación se rompe.
+
+Tienes acceso a las siguientes fuentes académicas, museísticas y de mercado:
 
 FUENTES ACADÉMICAS Y DE ARCHIVO:
 - Colección Histórico-Tecnológica de Telefónica (Madrid, 1994)
@@ -566,7 +570,10 @@ Responde ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después, si
 
     const data  = await response.json();
     const raw   = data.content.map(c => c.text || '').join('');
-    const clean = raw.replace(/```json|```/g, '').trim();
+    // Extraer solo el bloque JSON aunque haya texto alrededor
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No se encontró JSON en la respuesta');
+    const clean = match[0];
     const result = JSON.parse(clean);
     currentResult = result;
     renderResult(result);
