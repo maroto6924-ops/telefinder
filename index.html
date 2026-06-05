@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeleFinder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, addDoc, getDocs, orderBy, query, serverTimestamp }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyB9mSF3RsWs1iYoShocPkI3nXl3UCUMh8E",
+    authDomain:        "telefinder-ea033.firebaseapp.com",
+    projectId:         "telefinder-ea033",
+    storageBucket:     "telefinder-ea033.firebasestorage.app",
+    messagingSenderId: "395387321523",
+    appId:             "1:395387321523:web:62ed43629c0a11fd6d04c6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // Exponer funciones al scope global para que el resto del script las use
+  window._fbSave = async (entry) => {
+    await addDoc(collection(db, 'coleccion'), entry);
+  };
+
+  window._fbLoad = async () => {
+    const q = query(collection(db, 'coleccion'), orderBy('savedAt', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+  };
+
+  window._firebaseReady = true;
+  // Disparar evento para que la app sepa que Firebase está listo
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+<style>
+  :root {
+    --bg: #F5F2ED;
+    --bg2: #EDEAE3;
+    --surface: #FFFFFF;
+    --surface2: #F9F7F4;
+    --border: #E2DDD5;
+    --text: #1A1714;
+    --text2: #6B6560;
+    --text3: #9C9690;
+    --accent: #C17F3E;
+    --accent2: #8B5E2E;
+    --accent-light: #F5E6D3;
+    --green: #3A7D5C;
+    --green-light: #D4EDE2;
+    --red: #C0392B;
+    --red-light: #FDECEA;
+    --blue: #2C5F8A;
+    --blue-light: #D6E8F5;
+    --orange: #D4622A;
+    --orange-light: #FDEEE6;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 16px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+  /* HEADER */
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .header-logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 34px; height: 34px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); letter-spacing: -0.5px; }
+  .header-nav { display: flex; gap: 4px; }
+  .nav-btn { padding: 7px 14px; border-radius: 8px; border: none; background: transparent; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .nav-btn.active, .nav-btn:hover { background: var(--accent-light); color: var(--accent2); }
+
+  /* PAGES */
+  .page { display: none; padding: 24px 20px 80px; max-width: 600px; margin: 0 auto; }
+  .page.active { display: block; }
+  #page-home { padding-top: 0; }
+
+  /* HERO COVER */
+  .hero-cover {
+    position: relative;
+    margin: -24px -20px 28px;
+    height: 340px;
+    overflow: hidden;
+    background: linear-gradient(160deg, #1a0e05 0%, #2d1a08 40%, #0f0a04 100%);
+    border-radius: 0 0 28px 28px;
+  }
+  /* grain texture */
+  .hero-cover::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 1;
+  }
+  /* warm glow */
+  .hero-cover::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 50%; transform: translateX(-50%);
+    width: 320px; height: 200px;
+    background: radial-gradient(ellipse, rgba(193,127,62,0.22) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .hero-phone-svg {
+    position: absolute;
+    bottom: -10px; right: -20px;
+    width: 260px;
+    opacity: 0.18;
+    z-index: 2;
+    filter: drop-shadow(0 0 30px rgba(193,127,62,0.3));
+    animation: floatPhone 6s ease-in-out infinite;
+  }
+  @keyframes floatPhone {
+    0%,100% { transform: translateY(0px) rotate(-4deg); }
+    50%      { transform: translateY(-10px) rotate(-4deg); }
+  }
+  .hero-content {
+    position: relative; z-index: 3;
+    display: flex; flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    height: 100%;
+    padding: 28px 24px 32px;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(193,127,62,0.18);
+    border: 1px solid rgba(193,127,62,0.35);
+    color: #e8b56a;
+    font-size: 10px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; padding: 5px 12px;
+    border-radius: 20px; margin-bottom: 14px;
+    backdrop-filter: blur(4px);
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-badge::before { content: '◆'; font-size: 7px; }
+  .hero-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 52px;
+    letter-spacing: -2px;
+    line-height: 0.95;
+    color: #f5ead8;
+    margin-bottom: 6px;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: #C17F3E;
+    display: block;
+  }
+  .hero-sub {
+    font-size: 13px;
+    color: rgba(245,234,216,0.55);
+    letter-spacing: 0.3px;
+    margin-bottom: 22px;
+    max-width: 220px;
+    line-height: 1.5;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+  .hero-pills {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+  .hero-pill {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(245,234,216,0.7);
+    font-size: 11px; font-weight: 500;
+    padding: 5px 11px; border-radius: 20px;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(14px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  /* decorative scan line */
+  .hero-scanline {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(193,127,62,0.6), transparent);
+    z-index: 4;
+    animation: scanMove 3s ease-in-out infinite;
+  }
+  @keyframes scanMove {
+    0%   { top: 0%; opacity: 1; }
+    80%  { top: 100%; opacity: 0.4; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  /* CARD */
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .card-title { font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; }
+
+  /* UPLOAD BUTTONS */
+  .upload-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .upload-btn { border: 1.5px dashed var(--border); border-radius: var(--radius-sm); background: var(--surface2); padding: 14px; text-align: center; cursor: pointer; transition: all 0.2s; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; display: block; }
+  .upload-btn:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent2); }
+  .upload-btn .icon { font-size: 20px; display: block; margin-bottom: 5px; }
+  input[type=file] { display: none; }
+
+  /* PHOTO STRIP */
+  .photo-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .photo-thumb { position: relative; width: 72px; height: 72px; border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-remove { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .photo-add-btn { width: 72px; height: 72px; border: 1.5px dashed var(--border); border-radius: 10px; background: var(--surface2); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: var(--text3); font-size: 11px; gap: 3px; transition: all 0.2s; }
+  .photo-add-btn:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent2); }
+  .photo-add-btn span { font-size: 20px; }
+  .photo-count { font-size: 11px; color: var(--text3); margin-top: 6px; margin-bottom: 12px; }
+
+  /* DIVIDER */
+  .divider { display: flex; align-items: center; gap: 12px; color: var(--text3); font-size: 12px; margin: 14px 0; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  textarea { width: 100%; background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); resize: none; height: 110px; transition: border-color 0.2s; outline: none; }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--text3); }
+
+  .hint { font-size: 12px; color: var(--text3); margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+
+  /* BUTTONS */
+  .btn-primary { width: 100%; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); padding: 16px; font-family: 'DM Serif Display', serif; font-size: 17px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-save { width: 100%; background: var(--green); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+  .btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* LOADING */
+  .loading-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px 20px; text-align: center; display: none; }
+  .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--text); margin-bottom: 6px; }
+  .loading-sub { font-size: 13px; color: var(--text3); }
+
+  /* ── RESULT PAGE ── */
+  .result-back { display: flex; align-items: center; gap: 8px; background: none; border: none; color: var(--text2); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; padding: 0; margin-bottom: 20px; }
+  .result-name { font-family: 'DM Serif Display', serif; font-size: 26px; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 10px; }
+  .result-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+  .tag-period { background: var(--accent-light); color: var(--accent2); }
+  .tag-rarity-common { background: var(--green-light); color: var(--green); }
+  .tag-rarity-rare { background: var(--orange-light); color: var(--orange); }
+  .tag-rarity-uncommon { background: var(--blue-light); color: var(--blue); }
+  .tag-material { background: var(--bg2); color: var(--text2); }
+
+  /* DESC */
+  .desc-section { background: var(--surface2); border-left: 3px solid var(--accent); padding: 14px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 16px; font-size: 14px; line-height: 1.7; color: var(--text); }
+
+  /* TABS */
+  .tabs-nav { display: flex; gap: 0; margin-bottom: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px; }
+  .tab-btn { flex: 1; padding: 9px 6px; border: none; background: transparent; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: var(--text2); cursor: pointer; transition: all 0.2s; text-align: center; }
+  .tab-btn.active { background: var(--accent); color: white; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* PRICE SECTION */
+  .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .price-card { border-radius: var(--radius-sm); padding: 16px; text-align: center; }
+  .price-card.buy { background: var(--green-light); }
+  .price-card.sell { background: var(--accent-light); }
+  .price-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .price-card.buy .price-label { color: var(--green); }
+  .price-card.sell .price-label { color: var(--accent2); }
+  .price-value { font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1.1; }
+  .price-card.buy .price-value { color: var(--green); }
+  .price-card.sell .price-value { color: var(--accent2); }
+  .margin-row { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .margin-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); }
+  .margin-val { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--green); }
+  .last-price { background: var(--blue-light); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+  .last-price-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--blue); min-width: 58px; padding-top: 2px; }
+  .last-price-val { font-size: 14px; color: var(--blue); font-weight: 500; line-height: 1.4; }
+  .chart-wrap { position: relative; height: 175px; margin-top: 4px; }
+
+  /* SECTION CARDS */
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .section-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .icon-orange { background: var(--orange-light); }
+  .icon-red { background: var(--red-light); }
+  .icon-green { background: var(--green-light); }
+  .icon-blue { background: var(--blue-light); }
+  .icon-yellow { background: #FEF9E7; }
+  .section-title { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text2); }
+
+  .check-list { list-style: none; }
+  .check-list li { padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); display: flex; gap: 10px; line-height: 1.5; }
+  .check-list li:last-child { border-bottom: none; }
+  .check-list li .bullet { flex-shrink: 0; margin-top: 1px; }
+
+  .numbered-list { list-style: none; counter-reset: item; }
+  .numbered-list li { counter-increment: item; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; display: flex; gap: 12px; align-items: flex-start; line-height: 1.5; }
+  .numbered-list li:last-child { border-bottom: none; }
+  .numbered-list li::before { content: counter(item); background: var(--blue); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+
+  .alert-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.5; }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-dot { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+  .prose-box { font-size: 14px; line-height: 1.7; color: var(--text); }
+
+  .min-state-box { background: var(--green-light); border-radius: var(--radius-sm); padding: 14px; font-size: 14px; line-height: 1.6; color: var(--green); }
+
+  .confidence-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); }
+  .confidence-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .conf-alta { background: var(--green-light); color: var(--green); }
+  .conf-media { background: var(--accent-light); color: var(--accent2); }
+  .conf-baja { background: var(--red-light); color: var(--red); }
+  .sources-box { font-size: 11px; color: var(--text3); line-height: 1.7; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 8px; }
+
+  /* COLLECTION */
+  .page-header { margin-bottom: 24px; }
+  .page-header h2 { font-family: 'DM Serif Display', serif; font-size: 28px; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .page-header p { font-size: 13px; color: var(--text2); }
+  .section-label { font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text3); margin-bottom: 12px; margin-top: 20px; }
+  .phone-grid { display: flex; flex-direction: column; gap: 10px; }
+  .phone-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s; }
+  .phone-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .phone-thumb { width: 52px; height: 52px; border-radius: 10px; background: var(--bg2); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden; }
+  .phone-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .phone-info { flex: 1; min-width: 0; }
+  .phone-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+  .phone-sub { font-size: 12px; color: var(--text2); }
+  .phone-price { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--accent2); text-align: right; flex-shrink: 0; }
+  .phone-price span { display: block; font-family: 'DM Sans', sans-serif; font-size: 11px; color: var(--text3); font-weight: 400; }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text3); }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state h3 { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text2); margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; }
+  .stats-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 4px; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 10px; text-align: center; }
+  .stat-val { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+  .stat-lbl { font-size: 11px; color: var(--text3); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: white; padding: 12px 20px; border-radius: 24px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.3s; z-index: 999; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-icon">📞</div>
+    <span class="logo-text">TeleFinder</span>
+  </div>
+  <nav class="header-nav">
+    <button class="nav-btn active" onclick="showPage('home')">Identificar</button>
+    <button class="nav-btn" onclick="showPage('collection')">Colección</button>
+  </nav>
+</header>
+
+<!-- HOME PAGE -->
+<div class="page active" id="page-home">
+  <!-- PORTADA -->
+  <div class="hero-cover">
+    <div class="hero-scanline"></div>
+
+    <!-- Teléfono de baquelita SVG de fondo -->
+    <svg class="hero-phone-svg" viewBox="0 0 340 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- base del teléfono -->
+      <rect x="30" y="200" width="280" height="175" rx="18" fill="#c8a97a"/>
+      <rect x="38" y="208" width="264" height="159" rx="14" fill="#b8946a"/>
+      <!-- sombra interior base -->
+      <rect x="38" y="208" width="264" height="30" rx="8" fill="#a07850" opacity="0.5"/>
+      <!-- auricular -->
+      <path d="M60 200 Q60 80 170 60 Q280 80 280 200" stroke="#c8a97a" stroke-width="32" fill="none" stroke-linecap="round"/>
+      <path d="M60 200 Q60 80 170 60 Q280 80 280 200" stroke="#b8946a" stroke-width="26" fill="none" stroke-linecap="round"/>
+      <!-- cuerpo auricular izquierdo -->
+      <ellipse cx="60" cy="200" rx="28" ry="38" fill="#c8a97a"/>
+      <ellipse cx="60" cy="200" rx="20" ry="28" fill="#9a7348"/>
+      <ellipse cx="60" cy="200" rx="12" ry="18" fill="#7a5530"/>
+      <!-- cuerpo auricular derecho -->
+      <ellipse cx="280" cy="200" rx="28" ry="38" fill="#c8a97a"/>
+      <ellipse cx="280" cy="200" rx="20" ry="28" fill="#9a7348"/>
+      <ellipse cx="280" cy="200" rx="12" ry="18" fill="#7a5530"/>
+      <!-- disco de marcar -->
+      <circle cx="170" cy="290" r="65" fill="#a07850"/>
+      <circle cx="170" cy="290" r="58" fill="#8a6438"/>
+      <circle cx="170" cy="290" r="22" fill="#6a4820"/>
+      <!-- agujeros del disco -->
+      <circle cx="170" cy="237" r="8" fill="#4a3010"/>
+      <circle cx="213" cy="253" r="8" fill="#4a3010"/>
+      <circle cx="228" cy="295" r="8" fill="#4a3010"/>
+      <circle cx="210" cy="335" r="8" fill="#4a3010"/>
+      <circle cx="170" cy="348" r="8" fill="#4a3010"/>
+      <circle cx="130" cy="335" r="8" fill="#4a3010"/>
+      <circle cx="112" cy="295" r="8" fill="#4a3010"/>
+      <circle cx="127" cy="253" r="8" fill="#4a3010"/>
+      <!-- números del disco -->
+      <text x="170" y="232" text-anchor="middle" fill="#c8a97a" font-size="7" font-family="serif">1</text>
+      <text x="213" y="248" text-anchor="middle" fill="#c8a97a" font-size="7" font-family="serif">2</text>
+      <text x="228" y="298" text-anchor="middle" fill="#c8a97a" font-size="7" font-family="serif">3</text>
+      <text x="210" y="339" text-anchor="middle" fill="#c8a97a" font-size="7" font-family="serif">4</text>
+      <text x="170" y="353" text-anchor="middle" fill="#c8a97a" font-size="7" font-family="serif">5</text>
+      <text x="130" y="339" text-anchor="middle" fill="#c8a97a" font-size="7" font-family="serif">6</text>
+      <text x="112" y="298" text-anchor="middle" fill="#c8a97a" font-size="7" font-family="serif">7</text>
+      <text x="127" y="248" text-anchor="middle" fill="#c8a97a" font-size="7" font-family="serif">8</text>
+      <!-- dedo stop -->
+      <circle cx="196" cy="270" r="5" fill="#c8a97a" opacity="0.6"/>
+      <!-- horquilla / soporte auricular -->
+      <rect x="118" y="218" width="30" height="10" rx="5" fill="#7a5530"/>
+      <rect x="192" y="218" width="30" height="10" rx="5" fill="#7a5530"/>
+      <!-- detalles laterales base -->
+      <rect x="30" y="240" width="8" height="60" rx="4" fill="#a07850"/>
+      <rect x="302" y="240" width="8" height="60" rx="4" fill="#a07850"/>
+      <!-- cable trenzado -->
+      <path d="M60 370 Q20 390 10 360 Q0 330 20 310 Q40 290 30 260" stroke="#6a4820" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="4 3"/>
+    </svg>
+
+    <div class="hero-content">
+      <div class="hero-badge">Identificador &amp; Tasador</div>
+      <div class="hero-title">
+        Tele<em>Finder</em>
+      </div>
+      <div class="hero-sub">Identifica y valora teléfonos antiguos con inteligencia artificial</div>
+      <div class="hero-pills">
+        <span class="hero-pill">📅 Mercado español</span>
+        <span class="hero-pill">🏛️ +35 fuentes</span>
+        <span class="hero-pill">📸 Hasta 5 fotos</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📸 Fotografías del teléfono <span style="font-weight:400;color:var(--text3)">(hasta 5)</span></div>
+
+    <!-- botones iniciales -->
+    <div class="upload-btns" id="uploadBtns">
+      <label class="upload-btn" for="cameraInput">
+        <span class="icon">📷</span>Cámara
+      </label>
+      <label class="upload-btn" for="galleryInput">
+        <span class="icon">🖼️</span>Galería
+      </label>
+    </div>
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="addImage(this)">
+    <input type="file" id="galleryInput" accept="image/*" onchange="addImage(this)">
+    <input type="file" id="extraInput" accept="image/*" onchange="addImage(this)">
+
+    <!-- tira de fotos -->
+    <div class="photo-strip" id="photoStrip"></div>
+    <div class="photo-count" id="photoCount" style="display:none"></div>
+
+    <div class="divider">o describe con texto</div>
+    <textarea id="descInput" placeholder="Color, material (baquelita, plástico, madera), disco o botones, marcas visibles, estado, precio que pide el vendedor..."></textarea>
+    <div class="hint">💡 Cuantos más detalles y fotos, más precisa será la tasación</div>
+  </div>
+
+  <button class="btn-primary" id="analyzeBtn" onclick="analyzePhone()">
+    <span>🔍</span> Identificar y Valorar
+  </button>
+
+  <div class="loading-card" id="loadingCard">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Analizando tu teléfono…</div>
+    <div class="loading-sub" id="loadingSub">Comprimiendo imágenes y consultando bases de datos</div>
+  </div>
+</div>
+
+<!-- RESULT PAGE -->
+<div class="page" id="page-result">
+  <button class="result-back" onclick="showPage('home')">← Nuevo análisis</button>
+  <div class="result-name" id="r-name">—</div>
+  <div class="result-meta" id="r-meta"></div>
+  <div class="desc-section" id="r-desc"></div>
+
+  <!-- TABS -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('precios')">💰 Precios</button>
+    <button class="tab-btn" onclick="switchTab('revision')">🔎 Revisión</button>
+    <button class="tab-btn" onclick="switchTab('cuidado')">🧹 Cuidado</button>
+    <button class="tab-btn" onclick="switchTab('info')">📋 Info</button>
+  </div>
+
+  <!-- TAB: PRECIOS -->
+  <div class="tab-panel active" id="tab-precios">
+    <div class="price-grid">
+      <div class="price-card buy">
+        <div class="price-label">Precio Compra</div>
+        <div class="price-value" id="r-buy">—</div>
+      </div>
+      <div class="price-card sell">
+        <div class="price-label">Precio Venta</div>
+        <div class="price-value" id="r-sell">—</div>
+      </div>
+    </div>
+    <div class="margin-row">
+      <span class="margin-label">Margen si compras bien</span>
+      <span class="margin-val" id="r-margin">—</span>
+    </div>
+    <div class="last-price">
+      <span class="last-price-label">Último vendido</span>
+      <span class="last-price-val" id="r-last">—</span>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">📈</div>
+        <div class="section-title">Proyección de Valor</div>
+      </div>
+      <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">🤝</div>
+        <div class="section-title">Cómo Negociar</div>
+      </div>
+      <div class="prose-box" id="r-negotiate"></div>
+    </div>
+  </div>
+
+  <!-- TAB: REVISIÓN -->
+  <div class="tab-panel" id="tab-revision">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon icon-orange">🔶</div>
+        <div class="section-title">Qué Revisar</div>
+      </div>
+      <ul class="check-list" id="r-inspect"></ul>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon icon-red">⚠️</div>
+        <div class="section-title">Señales de Alerta</div>
+      </div>
+      <div id="r-alerts"></div>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon icon-green">✅</div>
+        <div class="section-title">Estado Mínimo Aceptable</div>
+      </div>
+      <div class="min-state-box" id="r-minstate"></div>
+    </div>
+  </div>
+
+  <!-- TAB: CUIDADO -->
+  <div class="tab-panel" id="tab-cuidado">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🧹</div>
+        <div class="section-title">Cómo Limpiar</div>
+      </div>
+      <ol class="numbered-list" id="r-clean"></ol>
+    </div>
+  </div>
+
+  <!-- TAB: INFO -->
+  <div class="tab-panel" id="tab-info">
+    <div class="section">
+      <div class="confidence-row">
+        <span>Confianza de IA:</span>
+        <span class="confidence-badge" id="r-conf">—</span>
+      </div>
+      <div class="sources-box" id="r-sources"></div>
+    </div>
+  </div>
+
+  <button class="btn-save" onclick="saveToCollection()">💾 Guardar en Mi Colección</button>
+</div>
+
+<!-- COLLECTION PAGE -->
+<div class="page" id="page-collection">
+  <div class="page-header">
+    <h2>Mi Colección</h2>
+    <p>Tus teléfonos identificados y guardados</p>
+  </div>
+  <div class="stats-strip" id="collectionStats"></div>
+  <div id="collectionContent"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let currentResult = null;
+let currentImages = []; // array de { dataUrl, b64, compressed }
+let chartInstance = null;
+const MAX_PHOTOS = 5;
+const MAX_DIM = 800;   // px máximo por lado tras compresión
+const QUALITY = 0.72;  // calidad JPEG
+
+// ─── NAVIGATION ──────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const idx = ['home','collection'].indexOf(name);
+  if (idx >= 0) document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+  if (name === 'collection') renderCollection();
+  window.scrollTo(0, 0);
+}
+
+// ─── TABS ─────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ─── IMAGE HANDLING ───────────────────────────────────────
+function addImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (currentImages.length >= MAX_PHOTOS) {
+    showToast('Máximo ' + MAX_PHOTOS + ' fotos');
+    input.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    compressImage(e.target.result, (compressedDataUrl) => {
+      const b64 = compressedDataUrl.split(',')[1];
+      currentImages.push({ dataUrl: compressedDataUrl, b64 });
+      renderPhotoStrip();
+      input.value = '';
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function compressImage(dataUrl, callback) {
+  const img = new Image();
+  img.onload = () => {
+    let w = img.width, h = img.height;
+    const scale = Math.min(1, MAX_DIM / Math.max(w, h));
+    w = Math.round(w * scale);
+    h = Math.round(h * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', QUALITY));
+  };
+  img.src = dataUrl;
+}
+
+function removePhoto(idx) {
+  currentImages.splice(idx, 1);
+  renderPhotoStrip();
+}
+
+function renderPhotoStrip() {
+  const strip = document.getElementById('photoStrip');
+  const countEl = document.getElementById('photoCount');
+  strip.innerHTML = '';
+
+  currentImages.forEach((img, i) => {
+    strip.innerHTML += `
+      <div class="photo-thumb">
+        <img src="${img.dataUrl}" alt="foto ${i+1}">
+        <button class="photo-remove" onclick="removePhoto(${i})">✕</button>
+      </div>`;
+  });
+
+  if (currentImages.length < MAX_PHOTOS) {
+    strip.innerHTML += `
+      <label class="photo-add-btn" for="extraInput">
+        <span>＋</span>
+        <span>Añadir</span>
+      </label>`;
+  }
+
+  if (currentImages.length > 0) {
+    countEl.style.display = 'block';
+    countEl.textContent = `${currentImages.length} foto${currentImages.length > 1 ? 's' : ''} añadida${currentImages.length > 1 ? 's' : ''} · ${MAX_PHOTOS - currentImages.length} restante${MAX_PHOTOS - currentImages.length !== 1 ? 's' : ''}`;
+    document.getElementById('uploadBtns').style.display = 'none';
+  } else {
+    countEl.style.display = 'none';
+    document.getElementById('uploadBtns').style.display = 'grid';
+  }
+}
+
+// ─── ANALYZE ─────────────────────────────────────────────
+async function analyzePhone() {
+  const desc = document.getElementById('descInput').value.trim();
+  if (!desc && currentImages.length === 0) {
+    showToast('Añade una foto o descripción primero');
+    return;
+  }
+
+  document.getElementById('analyzeBtn').style.display = 'none';
+  document.getElementById('loadingCard').style.display = 'block';
+
+  const userContent = [];
+
+  // añadir todas las imágenes comprimidas
+  for (let i = 0; i < currentImages.length; i++) {
+    document.getElementById('loadingSub').textContent = `Preparando foto ${i+1} de ${currentImages.length}…`;
+    userContent.push({
+      type: 'image',
+      source: { type: 'base64', media_type: 'image/jpeg', data: currentImages[i].b64 }
+    });
+  }
+
+  document.getElementById('loadingText').textContent = 'Identificando el modelo…';
+  document.getElementById('loadingSub').textContent = 'Consultando bases de datos históricas';
+
+  userContent.push({
+    type: 'text',
+    text: desc || `Identifica el teléfono en las ${currentImages.length > 1 ? currentImages.length + ' imágenes' : 'imagen'}.`
+  });
+
+  const systemPrompt = `Eres TeleFinder, el experto mundial en identificación y tasación de teléfonos de coleccionismo con especial foco en el mercado español. Tienes acceso a las siguientes fuentes académicas, museísticas y de mercado:
+
+FUENTES ACADÉMICAS Y DE ARCHIVO:
+- Colección Histórico-Tecnológica de Telefónica (Madrid, 1994)
+- Cien Años de Teléfono en España – CTNE (1974)
+- Historia de las Telecomunicaciones en España – Fundación Telefónica (2010)
+- The Telephone: An Illustrated History – A. Edward Evenson (2000)
+- 100 Years of Bell System – AT&T Archives (1876-1976)
+- Telefon-Handbuch – Werner Lorenz (Berlín, 1935)
+- The Antique Telephone Collectors Association (ATCA) – Reference Library
+- Telefonhistorische Sammlung – Museum für Kommunikation, Frankfurt
+- Musée des Arts et Métiers – Collection Téléphonie, París
+- Science Museum London – Telecommunications Collection Catalogue (2018)
+- Smithsonian National Museum of American History – Telephone Archives
+- The Henry Ford Museum – Communications Technology Collection
+- Ericsson Historical Archives – Stockholm Corporate Library
+- Siemens Historical Institute – München (Telefonía 1880-1980)
+- ITT Corporation Archives – Laboratoire LMT París
+- Western Electric Historical Archives – AT&T Corporate Library
+- TCI Library (Telephone Collectors International)
+- NATCA (North American Telephone Collectors Association) Yearbook
+- BT Heritage & Archives – British Telecom (Londres)
+- PTT Museum Collection – Berna, Suiza
+- Politecnico di Milano – Archivio Storico Telecomunicazioni
+- IEEE History Center – Engineering and Technology History Wiki
+- CITESA Archives – Construcciones e Instalaciones Telefónicas (España)
+- Standard Eléctrica SA (ITT España) – Fondo Documental
+- Marcas y Patentes Históricas – Oficina Española de Patentes y Marcas (OEPM)
+- Museo de las Telecomunicaciones de Madrid – Catálogo permanente
+- Colección del Museu de la Ciència i de la Tècnica de Catalunya (mNACTEC)
+- Archivo Histórico de la Compañía Telefónica Nacional de España (CTNE)
+- Bibliothèque nationale de France – Fonds Documents Télécommunications
+- Deutsches Technikmuseum Berlin – Abteilung Nachrichtentechnik
+- Stiftelsen Tekniska Museet Stockholm – Telefonsamling
+- Norsk Telemuseum Oslo – Historisk Samling
+- Finnish Communications Regulatory Authority – Heritage Archive
+- Rijksmuseum Boerhaave Leiden – Telecommunicatie Collectie
+- Museo Nazionale della Scienza e della Tecnologia Leonardo da Vinci – Milano
+- Popmuseum Budapest – Retró Telefon Gyűjtemény
+- American Telephone History – F. Prentiss Taylor (1937)
+- Antique Telephones – Kate E. Dooner (Schiffer Publishing, 1992)
+- Telephones: Antique to Modern – N.A. collection (1993)
+- Old Telephones – Andrew Emmerson (Shire Publications, 1994)
+- Collecting Antique Telephones – Ron Knappen (1996)
+- The Encyclopedia of Antique Telephones – Coyne & Schroeder (2004)
+- Teléfonos de Colección – Revista Vintage Tech España (2015-2023)
+
+FUENTES DE MERCADO ESPAÑOL Y EUROPEO:
+- Todocolección.net – histórico de ventas 2010-2024
+- Wallapop ES – precios vendidos 2018-2024
+- eBay.es / eBay.de / eBay.fr – completados y vendidos
+- Catawiki – subastas especializadas telefonía vintage
+- Delcampe – mercado europeo coleccionismo
+- LiveAuctioneers – subastas internacionales
+- The Saleroom UK – resultados de subastas especializadas
+- Barnebys – agregador subastas Europa
+
+Responde ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después, sin backticks ni markdown. El JSON debe tener exactamente esta estructura:
+
+{
+  "nombre": "Nombre completo del modelo",
+  "fabricante": "Empresa fabricante",
+  "pais": "País de fabricación",
+  "periodo": "Años (ej: 1955-1970)",
+  "material": "Material principal",
+  "rareza": "COMÚN|POCO COMÚN|RARO|MUY RARO",
+  "dificultad": 2,
+  "descripcion": "Párrafo rico sobre historia y contexto del modelo (3-5 frases)",
+  "precio_compra_min": 40,
+  "precio_compra_max": 80,
+  "precio_venta_min": 90,
+  "precio_venta_max": 160,
+  "ultimo_precio": "110EUR en Todocolección / 95-130EUR en Wallapop 2023-2024",
+  "proyeccion": [85, 95, 110, 112, 125, 140, 160],
+  "que_revisar": ["punto 1 detallado", "punto 2 detallado", "punto 3 detallado", "punto 4 detallado"],
+  "alertas": ["alerta 1 con consecuencia", "alerta 2 con consecuencia", "alerta 3 con consecuencia"],
+  "estado_minimo": "Descripción concreta del estado mínimo aceptable para que valga la pena comprarlo",
+  "como_limpiar": ["paso 1 específico", "paso 2 específico", "paso 3 específico", "paso 4 específico"],
+  "como_negociar": "Consejos específicos de negociación para este modelo concreto (2-4 frases)",
+  "confianza": "ALTA|MEDIA|BAJA",
+  "fuentes_usadas": "Enumera 5-7 fuentes específicas de la lista que has usado para este modelo"
+}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userContent }]
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error('API error ' + response.status + ': ' + (errData.error?.message || ''));
+    }
+
+    const data = await response.json();
+    const raw = data.content.map(c => c.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+    currentResult = result;
+    renderResult(result);
+  } catch (err) {
+    console.error('Error:', err);
+    showToast('Error: ' + (err.message || 'Inténtalo de nuevo'));
+    document.getElementById('analyzeBtn').style.display = 'flex';
+  }
+
+  document.getElementById('loadingCard').style.display = 'none';
+  document.getElementById('analyzeBtn').style.display = 'flex';
+  document.getElementById('loadingText').textContent = 'Analizando tu teléfono…';
+  document.getElementById('loadingSub').textContent = 'Comprimiendo imágenes y consultando bases de datos';
+}
+
+// ─── RENDER RESULT ────────────────────────────────────────
+function renderResult(r) {
+  // reset tabs
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.querySelectorAll('.tab-panel').forEach((p,i) => p.classList.toggle('active', i===0));
+
+  document.getElementById('r-name').textContent = r.nombre || '—';
+
+  const meta = document.getElementById('r-meta');
+  meta.innerHTML = '';
+  if (r.periodo) meta.innerHTML += `<span class="tag tag-period">📅 ${r.periodo}</span>`;
+  if (r.rareza) {
+    const cls = r.rareza.includes('MUY') ? 'tag-rarity-rare' : r.rareza.includes('POCO') ? 'tag-rarity-uncommon' : r.rareza === 'RARO' ? 'tag-rarity-rare' : 'tag-rarity-common';
+    meta.innerHTML += `<span class="tag ${cls}">${r.rareza}</span>`;
+  }
+  if (r.material) meta.innerHTML += `<span class="tag tag-material">${r.material}</span>`;
+  if (r.pais) meta.innerHTML += `<span class="tag tag-material">🌍 ${r.pais}</span>`;
+
+  document.getElementById('r-desc').textContent = r.descripcion || '';
+
+  // precios
+  document.getElementById('r-buy').textContent = `${r.precio_compra_min}–${r.precio_compra_max}€`;
+  document.getElementById('r-sell').textContent = `${r.precio_venta_min}–${r.precio_venta_max}€`;
+  const marginMin = r.precio_venta_min - r.precio_compra_max;
+  const marginMax = r.precio_venta_max - r.precio_compra_min;
+  document.getElementById('r-margin').textContent = `${marginMin}–${marginMax}€`;
+  document.getElementById('r-last').textContent = r.ultimo_precio || '—';
+
+  // chart
+  if (chartInstance) chartInstance.destroy();
+  const years = ['2019','2020','2021','2022','2023','2024','2025'];
+  const proj = r.proyeccion || [80,85,90,95,100,110,120];
+  const historical = proj.slice(0,5);
+  const projected = [null,null,null,null,proj[4],proj[5],proj[6]];
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: [
+        { label: 'Histórico', data: historical, borderColor: '#C17F3E', backgroundColor: 'rgba(193,127,62,0.1)', borderWidth: 2.5, pointBackgroundColor: '#C17F3E', pointRadius: 4, tension: 0.4, fill: true },
+        { label: 'Proyección', data: projected, borderColor: '#3A7D5C', backgroundColor: 'rgba(58,125,92,0.07)', borderWidth: 2.5, borderDash: [6,4], pointBackgroundColor: '#3A7D5C', pointRadius: 4, tension: 0.4, fill: true }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, labels: { font: { family: 'DM Sans', size: 11 }, color: '#6B6560', boxWidth: 12, padding: 12 } } },
+      scales: {
+        x: { grid: { color: '#F0EDE8' }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#9C9690' } },
+        y: { grid: { color: '#F0EDE8' }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#9C9690', callback: v => v+'€' } }
+      }
+    }
+  });
+
+  // negociar
+  document.getElementById('r-negotiate').textContent = r.como_negociar || '';
+
+  // revisar
+  const inspList = document.getElementById('r-inspect');
+  inspList.innerHTML = '';
+  (r.que_revisar || []).forEach(item => {
+    inspList.innerHTML += `<li><span class="bullet">🔶</span><span>${item}</span></li>`;
+  });
+
+  // alertas
+  const alertsEl = document.getElementById('r-alerts');
+  alertsEl.innerHTML = '';
+  (r.alertas || []).forEach(a => {
+    alertsEl.innerHTML += `<div class="alert-item"><span class="alert-dot">⚠️</span><span>${a}</span></div>`;
+  });
+
+  document.getElementById('r-minstate').textContent = r.estado_minimo || '';
+
+  // limpiar
+  const cleanEl = document.getElementById('r-clean');
+  cleanEl.innerHTML = '';
+  (r.como_limpiar || []).forEach(step => {
+    cleanEl.innerHTML += `<li><span>${step}</span></li>`;
+  });
+
+  // confianza
+  const confEl = document.getElementById('r-conf');
+  confEl.textContent = r.confianza || '—';
+  confEl.className = 'confidence-badge ' + (r.confianza === 'ALTA' ? 'conf-alta' : r.confianza === 'MEDIA' ? 'conf-media' : 'conf-baja');
+
+  document.getElementById('r-sources').textContent = 'FUENTES: ' + (r.fuentes_usadas || '—');
+
+  showPage('result');
+}
+
+// ─── FIREBASE COLLECTION ─────────────────────────────────
+// Cache local para no recargar Firestore en cada render
+let _collectionCache = null;
+
+async function saveToCollection() {
+  if (!currentResult) return;
+  if (!window._firebaseReady) {
+    showToast('⏳ Firebase aún cargando, espera un momento');
+    return;
+  }
+  const thumb = currentImages.length > 0 ? currentImages[0].dataUrl : null;
+  const entry = {
+    savedAt: new Date().toISOString(),
+    thumb: thumb || null,
+    data: currentResult
+  };
+  try {
+    showToast('💾 Guardando…');
+    await window._fbSave(entry);
+    _collectionCache = null; // invalidar cache
+    showToast('✅ Guardado en tu colección');
+  } catch(e) {
+    console.error(e);
+    showToast('❌ Error al guardar: ' + e.message);
+  }
+}
+
+async function loadCollection() {
+  if (_collectionCache) return _collectionCache;
+  if (!window._firebaseReady) return [];
+  try {
+    _collectionCache = await window._fbLoad();
+    return _collectionCache;
+  } catch(e) {
+    console.error('Error cargando colección:', e);
+    return [];
+  }
+}
+
+// ─── RENDER COLLECTION ────────────────────────────────────
+async function renderCollection() {
+  const statsEl   = document.getElementById('collectionStats');
+  const contentEl = document.getElementById('collectionContent');
+
+  // Mostrar skeleton mientras carga
+  contentEl.innerHTML = `
+    <div style="text-align:center;padding:40px 0;color:var(--text3);">
+      <div class="spinner" style="margin:0 auto 12px"></div>
+      <div style="font-size:13px">Cargando colección…</div>
+    </div>`;
+
+  const col = await loadCollection();
+
+  if (col.length === 0) {
+    statsEl.innerHTML = '';
+    contentEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📞</div>
+        <h3>Colección vacía</h3>
+        <p>Identifica tu primer teléfono y guárdalo aquí</p>
+      </div>`;
+    return;
+  }
+
+  const totalMin = col.reduce((s,e) => s + (e.data.precio_venta_min || 0), 0);
+  const totalMax = col.reduce((s,e) => s + (e.data.precio_venta_max || 0), 0);
+  statsEl.innerHTML = `
+    <div class="stat-box"><div class="stat-val">${col.length}</div><div class="stat-lbl">Teléfonos</div></div>
+    <div class="stat-box"><div class="stat-val">${totalMin}€</div><div class="stat-lbl">Valor mín.</div></div>
+    <div class="stat-box"><div class="stat-val">${totalMax}€</div><div class="stat-lbl">Valor máx.</div></div>
+  `;
+
+  const recents = col.slice(0, 3);
+  const older   = col.slice(3);
+
+  let html = '<div class="section-label">🕐 Recientes</div><div class="phone-grid">';
+  recents.forEach(e => { html += phoneCardHTML(e); });
+  html += '</div>';
+
+  if (older.length > 0) {
+    html += '<div class="section-label">📦 Colección completa</div><div class="phone-grid">';
+    older.forEach(e => { html += phoneCardHTML(e); });
+    html += '</div>';
+  }
+  contentEl.innerHTML = html;
+}
+
+function phoneCardHTML(entry) {
+  const d     = entry.data;
+  const fid   = entry.firestoreId;
+  const thumb = entry.thumb ? `<img src="${entry.thumb}" alt="">` : '📞';
+  const date  = new Date(entry.savedAt).toLocaleDateString('es-ES', { day:'numeric', month:'short' });
+  return `
+    <div class="phone-card" onclick="viewSaved('${fid}')">
+      <div class="phone-thumb">${thumb}</div>
+      <div class="phone-info">
+        <div class="phone-name">${d.nombre || 'Teléfono'}</div>
+        <div class="phone-sub">${d.fabricante || ''} · ${d.periodo || ''}</div>
+        <div class="phone-sub" style="color:var(--text3);font-size:11px;">${date}</div>
+      </div>
+      <div class="phone-price">${d.precio_venta_min}–${d.precio_venta_max}€<span>venta</span></div>
+    </div>`;
+}
+
+async function viewSaved(firestoreId) {
+  const col   = await loadCollection();
+  const entry = col.find(e => e.firestoreId === firestoreId);
+  if (!entry) return;
+  currentResult = entry.data;
+  currentImages = entry.thumb ? [{ dataUrl: entry.thumb, b64: entry.thumb.split(',')[1] }] : [];
+  renderResult(entry.data);
+}
+
+// ─── TOAST ────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
