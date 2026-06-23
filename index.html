@@ -1087,7 +1087,7 @@ var _pendingModalFid=null,_isSold=false,_selectedFeedback=null;
 var _sellAdData=null,_negoMsgs={msg1:'',msg2:''},_negoGoal='low',_sellPlatform='wallapop';
 var CLN_ZONES=[],CLN_ACTIVE=0,CLN_PHOTO_URL=null,_pnlChart=null;
 var _chkState=[],_quickResult=null,_lotPhotos=[],_searchTimer=null;
-var MAX_PHOTOS=5,MAX_DIM=640,QUALITY=0.55,DRAFT_KEY='pf_drafts',MAX_DRAFTS=5;
+var MAX_PHOTOS=5,MAX_DIM=800,QUALITY=0.7,DRAFT_KEY='pf_drafts',MAX_DRAFTS=5;
 
 // NAVIGATION
 function showPage(n){
@@ -1253,28 +1253,17 @@ async function analyzePhone(quickMode){
     '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos ej 1955-1970","material":"Material principal","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia y contexto en 3-4 frases","detalles_tecnicos":"Marcado, mecanismo, variantes en 2 frases","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio y fuente de venta reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["punto 1","punto 2","punto 3","punto 4"],"alertas":["alerta 1","alerta 2"],"estado_minimo":"Estado minimo aceptable","como_limpiar":["paso 1","paso 2","paso 3"],"como_negociar":"Estrategia de negociacion en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"4-6 fuentes concretas","zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"material","product":"producto","avoid":"evitar","steps":["paso 1","paso 2"]}]}'
     ].join('\n');
   adv(2);
-  // Smooth progress animation during the API wait so it never looks frozen
-  var _fakeProgress=55;
-  var _progTimer=setInterval(function(){
-    if(_fakeProgress<88){
-      _fakeProgress+=_qm?3:1.2;
-      var pf=document.getElementById('progressFill'),pp=document.getElementById('progressPct');
-      if(pf)pf.style.width=_fakeProgress+'%';
-      if(pp)pp.textContent=Math.round(_fakeProgress)+'%';
-    }
-  },_qm?200:500);
-  // Abort the request if it takes too long so the user is never stuck
+  // Timeout so the user is never stuck forever, but generous enough for Opus
   var _ctrl=new AbortController();
-  var _timeout=setTimeout(function(){_ctrl.abort();},_qm?30000:45000);
+  var _timeout=setTimeout(function(){_ctrl.abort();},60000);
   try{
-    var _model=_qm?'claude-sonnet-4-6':'claude-sonnet-4-6';
-    var _maxTok=_qm?350:2200;
+    var _model=_qm?'claude-sonnet-4-6':'claude-opus-4-6';
+    var _maxTok=_qm?512:2000;
     var _t0=performance.now();
     var resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:_model,max_tokens:_maxTok,system:systemPrompt,messages:[{role:'user',content:userContent}]}),signal:_ctrl.signal});
     clearTimeout(_timeout);
     var _apiMs=Math.round(performance.now()-_t0);
-    console.log('[phonefinder] API round-trip: '+_apiMs+'ms, model: '+_model+', images: '+_imgsToSend);
-    clearInterval(_progTimer);
+    console.log('[phonefinder] API round-trip: '+_apiMs+'ms');
     adv(3);
     if(!resp.ok){var err=await resp.json().catch(function(){return{};});throw new Error('Error '+resp.status+': '+(err.error&&err.error.message||'API error'));}
     var data=await resp.json();
@@ -1302,7 +1291,6 @@ async function analyzePhone(quickMode){
       renderResult(result);
     }
   }catch(err){
-    if(typeof _progTimer!=='undefined')clearInterval(_progTimer);
     if(typeof _timeout!=='undefined')clearTimeout(_timeout);
     console.error(err);
     if(err.name==='AbortError'){showToast('Tardo demasiado. Usa menos fotos o reintenta.');}
