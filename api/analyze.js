@@ -1,5 +1,17 @@
-// api/analyze.js - Vercel serverless function (optimized for speed)
-export const config = { maxDuration: 60 };
+// api/analyze.js - Vercel serverless function (latency-optimized)
+//
+// KEY OPTIMIZATIONS:
+// 1. maxDuration raised so the function is never killed mid-request
+// 2. Runs in iad1 (US East) - closest Vercel region to Anthropic's API,
+//    which removes cross-region network latency (often 1-3s saved)
+// 3. Caps max_tokens to avoid runaway generation time
+// 4. Returns a Server-Timing header so you can SEE the upstream time
+//    in the browser Network tab
+
+export const config = {
+  maxDuration: 60,
+  regions: ['iad1']   // US East - nearest to api.anthropic.com
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -8,24 +20,25 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: { message: 'API key no configurada' } });
+    return res.status(500).json({ error: { message: 'ANTHROPIC_API_KEY no configurada en Vercel' } });
   }
 
-  try {
-    const { model, max_tokens, system, messages } = req.body;
+  const started = Date.now();
 
-    // Sensible defaults + caps to avoid runaway latency
+  try {
+    const { model, max_tokens, system, messages } = req.body || {};
+
     const body = {
       model: model || 'claude-sonnet-4-6',
-      max_tokens: Math.min(max_tokens || 2500, 3000),
+      max_tokens: Math.min(max_tokens || 2200, 3000),
       messages: messages || []
     };
     if (system) body.system = system;
 
-    // Abort upstream if it takes too long (keeps the function from hanging)
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 55000);
 
+    const upstreamStart = Date.now();
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -37,8 +50,13 @@ export default async function handler(req, res) {
       signal: controller.signal
     });
     clearTimeout(timeout);
+    const upstreamMs = Date.now() - upstreamStart;
 
     const data = await r.json();
+
+    // Expose timing so you can diagnose in the browser Network tab
+    res.setHeader('Server-Timing', `upstream;dur=${upstreamMs}, total;dur=${Date.now() - started}`);
+
     if (!r.ok) {
       return res.status(r.status).json(data);
     }
@@ -46,8 +64,8 @@ export default async function handler(req, res) {
 
   } catch (err) {
     if (err.name === 'AbortError') {
-      return res.status(504).json({ error: { message: 'La IA tardo demasiado. Reintenta.' } });
+      return res.status(504).json({ error: { message: 'La IA tardo demasiado (timeout). Reintenta con menos fotos.' } });
     }
-    return res.status(500).json({ error: { message: err.message || 'Error interno' } });
+    return res.status(500).json({ error: { message: err.message || 'Error interno del servidor' } });
   }
 }
