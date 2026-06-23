@@ -725,14 +725,17 @@ textarea::placeholder{color:var(--fog);}
 
   <div class="loading-wrap" id="loadingWrap">
     <div class="loading-inner">
-      <div class="loading-ring">
+      <div class="loading-ring" id="loadingRing">
         <svg viewBox="0 0 52 52" fill="none">
           <circle cx="26" cy="26" r="22" stroke="var(--mist3)" stroke-width="4"/>
           <circle cx="26" cy="26" r="22" stroke="var(--amber)" stroke-width="4" stroke-dasharray="30 110" stroke-linecap="round"/>
         </svg>
       </div>
-      <div class="loading-title">Analizando...</div>
+      <div class="loading-title" id="loadingTitle">Analizando...</div>
       <div class="loading-sub" id="loadingSub">Consultando bases de datos historicas</div>
+      <div id="loadingTimer" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fog2);margin-top:8px"></div>
+      <div id="loadingError" style="display:none;margin-top:16px;padding:14px;background:var(--ruby-light);border:1px solid rgba(192,57,43,.2);border-radius:12px;font-size:13px;color:var(--ruby);line-height:1.5;text-align:left"></div>
+      <button id="loadingRetry" onclick="newAnalysis()" style="display:none;margin-top:12px;width:100%;padding:12px;background:var(--ink);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">Volver e intentar de nuevo</button>
       <div class="progress-bar-wrap">
         <div class="progress-bar-label"><span id="progressLabel">Iniciando...</span><span id="progressPct">0%</span></div>
         <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
@@ -1223,62 +1226,124 @@ async function analyzePhone(quickMode){
   var desc=document.getElementById('descInput').value.trim();
   if(!desc&&currentImages.length===0){showToast('Anade una foto o descripcion primero');return;}
   var _qm=!!quickMode;
+
+  // Reset loading UI
   document.getElementById('analyzeBtn').style.display='none';
   document.getElementById('quickBtn').style.display='none';
   document.getElementById('loadingWrap').style.display='block';
+  document.getElementById('loadingError').style.display='none';
+  document.getElementById('loadingRetry').style.display='none';
+  document.getElementById('loadingRing').style.display='block';
+  document.getElementById('loadingTitle').textContent='Analizando...';
   window.scrollTo(0,0);
-  var stepIds=['step1','step2','step3','step4','step5'];
-  var pcts=[10,30,55,75,90];
-  var labels=_qm?['Procesando...','Identificando...','Tasando...','Calculando precio...','Listo!']:['Procesando imagenes...','Identificando modelo y fabricante...','Consultando archivos historicos y mercado...','Calculando valor de mercado actual...','Generando informe completo...'];
-  function adv(idx){stepIds.forEach(function(s,i){var el=document.getElementById(s);if(!el)return;if(i<idx){el.classList.remove('active');el.classList.add('done');}else if(i===idx){el.classList.add('active');el.classList.remove('done');}else{el.classList.remove('active','done');}});document.getElementById('progressFill').style.width=pcts[idx]+'%';document.getElementById('progressLabel').textContent=labels[idx];document.getElementById('progressPct').textContent=pcts[idx]+'%';}
-  adv(0);
+
+  // Live timer so the user always sees something happening
+  var _elapsed=0;
+  var _timerEl=document.getElementById('loadingTimer');
+  var _timerInt=setInterval(function(){
+    _elapsed++;
+    if(_timerEl)_timerEl.textContent=_elapsed+'s';
+    var sub=document.getElementById('loadingSub');
+    if(sub){
+      if(_elapsed<3)sub.textContent='Enviando imagen al servidor...';
+      else if(_elapsed<8)sub.textContent='La IA esta identificando el modelo...';
+      else if(_elapsed<15)sub.textContent='Calculando valor de mercado...';
+      else if(_elapsed<25)sub.textContent='Casi listo, generando informe...';
+      else sub.textContent='Tardando mas de lo normal...';
+    }
+  },1000);
+
+  function showError(message){
+    clearInterval(_timerInt);
+    document.getElementById('loadingRing').style.display='none';
+    document.getElementById('loadingTitle').textContent='No se pudo analizar';
+    var sub=document.getElementById('loadingSub');if(sub)sub.textContent='';
+    if(_timerEl)_timerEl.textContent='';
+    var errEl=document.getElementById('loadingError');
+    errEl.style.display='block';
+    errEl.innerHTML=message;
+    document.getElementById('loadingRetry').style.display='block';
+  }
+
+  // Build request content
   var userContent=[];
-  // Send at most 3 images to the model: vision processing is the main
-  // latency driver, and 3 photos are enough to identify any phone.
-  var _imgsToSend=Math.min(currentImages.length,2);
-  for(var i=0;i<_imgsToSend;i++){userContent.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:currentImages[i].b64}});}
-  adv(1);
+  var _imgsToSend=Math.min(currentImages.length,3);
+  for(var i=0;i<_imgsToSend;i++){
+    userContent.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:currentImages[i].b64}});
+  }
   userContent.push({type:'text',text:desc||'Identifica el telefono en la imagen y devuelve el JSON.'});
-  var quickPrompt='Eres phonefinder. REGLA: responde SOLO JSON sin texto. Devuelve: {"nombre":"Nombre","fabricante":"Fab","precio_compra_min":0,"precio_compra_max":0,"precio_venta_min":0,"precio_venta_max":0,"material":"mat","rareza":"COMUN","periodo":"...","pais":"...","descripcion":"breve","detalles_tecnicos":"","dificultad":1,"ultimo_precio":"","proyeccion":[0,0,0,0,0,0,0],"que_revisar":[],"alertas":[],"estado_minimo":"","como_limpiar":[],"como_negociar":"","confianza":"MEDIA","fuentes_usadas":"","zonas_limpieza":[]}';
-  
-  var systemPrompt = _quickMode ?
-    'Eres phonefinder. REGLA: responde SOLO JSON. Identifica el telefono y devuelve solo: {"nombre":"Nombre","fabricante":"Fab","precio_compra_min":0,"precio_compra_max":0,"precio_venta_min":0,"precio_venta_max":0,"material":"mat","rareza":"COMUN","periodo":"...","pais":"...","descripcion":"breve","detalles_tecnicos":"","dificultad":1,"ultimo_precio":"","proyeccion":[0,0,0,0,0,0,0],"que_revisar":[],"alertas":[],"estado_minimo":"","como_limpiar":[],"como_negociar":"","confianza":"MEDIA","fuentes_usadas":"","zonas_limpieza":[]}' :
+
+  // System prompt
+  var systemPrompt = _qm ?
+    'Eres phonefinder. Responde SOLO JSON sin texto. Devuelve: {"nombre":"","fabricante":"","precio_compra_min":0,"precio_compra_max":0,"precio_venta_min":0,"precio_venta_max":0,"material":"","rareza":"COMUN","periodo":"","pais":"","descripcion":"","detalles_tecnicos":"","dificultad":1,"ultimo_precio":"","proyeccion":[0,0,0,0,0,0,0],"que_revisar":[],"alertas":[],"estado_minimo":"","como_limpiar":[],"como_negociar":"","confianza":"MEDIA","fuentes_usadas":"","zonas_limpieza":[]}' :
     [
-    'Eres phonefinder, tasador experto de telefonia vintage para el mercado espanol. Conoces los catalogos de fabricantes (Ericsson, Siemens, Western Electric, Standard Electrica/CITESA, CGCT, GPO), los museos de telecomunicaciones y las guias de coleccionista (ATCA, TCI). Valoras con precios reales de Todocoleccion, Wallapop, eBay y Catawiki.',
+    'Eres phonefinder, tasador experto de telefonia vintage para el mercado espanol. Conoces catalogos de fabricantes (Ericsson, Siemens, Western Electric, Standard Electrica, CGCT, GPO), museos de telecomunicaciones y guias de coleccionista (ATCA, TCI). Valoras con precios reales de Todocoleccion, Wallapop, eBay y Catawiki.',
     'REGLA: responde SOLO el objeto JSON, sin texto ni markdown ni backticks.',
-    'precio_compra es el rango justo para comprar y revender con margen. precio_venta es el rango real de venta en Espana hoy.',
+    'precio_compra es el rango justo para comprar y revender. precio_venta es el rango real de venta en Espana hoy.',
     'Devuelve EXACTAMENTE esta estructura:',
-    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos","material":"Material","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia en 3 frases","detalles_tecnicos":"Specs en 2 frases","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio venta reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["punto 1","punto 2","punto 3"],"alertas":["alerta 1","alerta 2"],"estado_minimo":"Estado minimo aceptable","como_limpiar":["paso 1","paso 2","paso 3"],"como_negociar":"Estrategia en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"3-4 fuentes","zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"material","product":"producto","avoid":"evitar","steps":["paso 1","paso 2"]}]}'
+    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos","material":"Material","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia en 3 frases","detalles_tecnicos":"Specs en 2 frases","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["p1","p2","p3"],"alertas":["a1","a2"],"estado_minimo":"Estado minimo","como_limpiar":["p1","p2","p3"],"como_negociar":"Estrategia en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"3-4 fuentes","zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"mat","product":"producto","avoid":"evitar","steps":["p1","p2"]}]}'
     ].join('\n');
-  adv(2);
-  // Timeout so the user is never stuck forever, but generous enough for Opus
+
   var _ctrl=new AbortController();
-  var _timeout=setTimeout(function(){_ctrl.abort();},35000);
+  var _timeout=setTimeout(function(){_ctrl.abort();},40000);
+
   try{
-    var _model='claude-sonnet-4-6';
-    var _maxTok=_qm?400:1600;
-    var _t0=performance.now();
-    var resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:_model,max_tokens:_maxTok,system:systemPrompt,messages:[{role:'user',content:userContent}]}),signal:_ctrl.signal});
+    var resp=await fetch('/api/analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:_qm?400:1600,system:systemPrompt,messages:[{role:'user',content:userContent}]}),
+      signal:_ctrl.signal
+    });
     clearTimeout(_timeout);
-    var _apiMs=Math.round(performance.now()-_t0);
-    console.log('[phonefinder] API round-trip: '+_apiMs+'ms');
-    adv(3);
-    if(!resp.ok){var err=await resp.json().catch(function(){return{};});throw new Error('Error '+resp.status+': '+(err.error&&err.error.message||'API error'));}
-    var data=await resp.json();
-    var raw=data.content.map(function(c){return c.text||'';}).join('');
+
+    // Read response as text first so we can show what came back even if not JSON
+    var rawResp=await resp.text();
+
+    if(!resp.ok){
+      var serverMsg=rawResp;
+      try{var ej=JSON.parse(rawResp);serverMsg=(ej.error&&ej.error.message)||rawResp;}catch(e){}
+      if(resp.status===504||resp.status===503){
+        showError('<b>El servidor tardo demasiado (error '+resp.status+').</b><br>Tu funcion api/analyze.js en Vercel se esta cortando. Necesita la linea <code>export const config={maxDuration:60}</code> al principio del archivo.');
+      }else if(resp.status===500){
+        showError('<b>Error 500 del servidor.</b><br>Lo mas probable: falta la variable <code>ANTHROPIC_API_KEY</code> en la configuracion de Vercel (Settings > Environment Variables).<br><br>Detalle: '+serverMsg);
+      }else if(resp.status===404){
+        showError('<b>Error 404: no se encuentra /api/analyze.</b><br>El archivo api/analyze.js no esta desplegado en Vercel o esta en la carpeta equivocada. Debe estar en <code>/api/analyze.js</code>.');
+      }else if(resp.status===401||resp.status===403){
+        showError('<b>Error '+resp.status+': API key rechazada.</b><br>La ANTHROPIC_API_KEY en Vercel es incorrecta o ha caducado.');
+      }else{
+        showError('<b>Error '+resp.status+'.</b><br>'+serverMsg);
+      }
+      document.getElementById('analyzeBtn').style.display='flex';
+      document.getElementById('quickBtn').style.display='flex';
+      return;
+    }
+
+    var data;
+    try{data=JSON.parse(rawResp);}catch(e){
+      showError('<b>El servidor devolvio una respuesta invalida.</b><br>'+rawResp.substring(0,200));
+      document.getElementById('analyzeBtn').style.display='flex';
+      document.getElementById('quickBtn').style.display='flex';
+      return;
+    }
+
+    var raw=(data.content||[]).map(function(c){return c.text||'';}).join('');
     var result=extractJSON(raw);
-    if(!result)throw new Error('La IA no devolvio JSON valido. Intentalo con mas fotos o una descripcion.');
-    adv(4);
-    document.getElementById('progressFill').style.width='100%';
-    document.getElementById('progressPct').textContent='100%';
-    stepIds.forEach(function(s){var el=document.getElementById(s);if(el){el.classList.remove('active');el.classList.add('done');}});
-    await new Promise(function(r){setTimeout(r,120);});
+    if(!result){
+      showError('<b>La IA no devolvio un JSON valido.</b><br>Reintenta con una foto mas clara.<br><br>Respuesta: '+raw.substring(0,150));
+      document.getElementById('analyzeBtn').style.display='flex';
+      document.getElementById('quickBtn').style.display='flex';
+      return;
+    }
+
+    // SUCCESS
+    clearInterval(_timerInt);
     currentResult=result;
     saveDraft(result,currentImages);
     renderDrafts();
     collapseHero();
-    if(_qm){openQuick(result);}
-    else{
+    if(_qm){
+      openQuick(result);
+    }else{
       if(result.confianza==='BAJA'||result.confianza==='MEDIA')result._lowConf=true;
       CLN_ZONES=[];
       if(result.zonas_limpieza&&result.zonas_limpieza.length){
@@ -1288,19 +1353,21 @@ async function analyzePhone(quickMode){
       clnInit(result);
       renderResult(result);
     }
+    document.getElementById('loadingWrap').style.display='none';
+    document.getElementById('analyzeBtn').style.display='flex';
+    document.getElementById('quickBtn').style.display='flex';
+
   }catch(err){
-    if(typeof _timeout!=='undefined')clearTimeout(_timeout);
-    console.error('[phonefinder] Error:',err);
-    var msg;
-    if(err.name==='AbortError'){msg='El servidor tardo demasiado (mas de 35s). Revisa que api/analyze.js tenga maxDuration:60 en Vercel.';}
-    else if(err.message&&err.message.indexOf('504')!==-1){msg='Timeout del servidor Vercel. Sube el nuevo analyze.js con maxDuration:60.';}
-    else if(err.message&&err.message.indexOf('500')!==-1){msg='Error del servidor. Revisa que ANTHROPIC_API_KEY este configurada en Vercel.';}
-    else{msg='Error: '+(err.message||'reintenta');}
-    showToast(msg);
+    clearTimeout(_timeout);
+    console.error('[phonefinder]',err);
+    if(err.name==='AbortError'){
+      showError('<b>Tardo mas de 40 segundos y se cancelo.</b><br>Casi seguro: tu funcion api/analyze.js en Vercel se corta a los 10s. Anade <code>export const config={maxDuration:60}</code> al principio del archivo y vuelve a desplegar.');
+    }else{
+      showError('<b>Error de conexion.</b><br>'+(err.message||'Revisa tu conexion a internet')+'<br><br>Si tienes internet, el problema es el endpoint /api/analyze en Vercel.');
+    }
+    document.getElementById('analyzeBtn').style.display='flex';
+    document.getElementById('quickBtn').style.display='flex';
   }
-  document.getElementById('loadingWrap').style.display='none';
-  document.getElementById('analyzeBtn').style.display='flex';
-  document.getElementById('quickBtn').style.display='flex';
 }
 
 // RENDER RESULT
