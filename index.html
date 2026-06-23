@@ -1087,7 +1087,7 @@ var _pendingModalFid=null,_isSold=false,_selectedFeedback=null;
 var _sellAdData=null,_negoMsgs={msg1:'',msg2:''},_negoGoal='low',_sellPlatform='wallapop';
 var CLN_ZONES=[],CLN_ACTIVE=0,CLN_PHOTO_URL=null,_pnlChart=null;
 var _chkState=[],_quickResult=null,_lotPhotos=[],_searchTimer=null;
-var MAX_PHOTOS=5,MAX_DIM=800,QUALITY=0.7,DRAFT_KEY='pf_drafts',MAX_DRAFTS=5;
+var MAX_PHOTOS=5,MAX_DIM=512,QUALITY=0.5,DRAFT_KEY='pf_drafts',MAX_DRAFTS=5;
 
 // NAVIGATION
 function showPage(n){
@@ -1235,7 +1235,7 @@ async function analyzePhone(quickMode){
   var userContent=[];
   // Send at most 3 images to the model: vision processing is the main
   // latency driver, and 3 photos are enough to identify any phone.
-  var _imgsToSend=Math.min(currentImages.length,3);
+  var _imgsToSend=Math.min(currentImages.length,2);
   for(var i=0;i<_imgsToSend;i++){userContent.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:currentImages[i].b64}});}
   adv(1);
   userContent.push({type:'text',text:desc||'Identifica el telefono en la imagen y devuelve el JSON.'});
@@ -1244,21 +1244,19 @@ async function analyzePhone(quickMode){
   var systemPrompt = _quickMode ?
     'Eres phonefinder. REGLA: responde SOLO JSON. Identifica el telefono y devuelve solo: {"nombre":"Nombre","fabricante":"Fab","precio_compra_min":0,"precio_compra_max":0,"precio_venta_min":0,"precio_venta_max":0,"material":"mat","rareza":"COMUN","periodo":"...","pais":"...","descripcion":"breve","detalles_tecnicos":"","dificultad":1,"ultimo_precio":"","proyeccion":[0,0,0,0,0,0,0],"que_revisar":[],"alertas":[],"estado_minimo":"","como_limpiar":[],"como_negociar":"","confianza":"MEDIA","fuentes_usadas":"","zonas_limpieza":[]}' :
     [
-    'Eres phonefinder, tasador experto de telefonia vintage para el mercado espanol. Combinas conocimiento de tasador profesional, historiador de telecomunicaciones y operador de mercado secundario.',
-    'REGLA ABSOLUTA: responde SOLO el objeto JSON. Sin texto antes ni despues, sin markdown, sin backticks.',
-    'CONOCIMIENTO: Dominas los catalogos de Ericsson, Siemens, Western Electric, Standard Electrica/CITESA (Espana), CGCT, GEC/GPO, Automatic Electric y Stromberg-Carlson. Conoces los fondos de Telefonica/CTNE, mNACTEC, museos de telecomunicaciones europeos (Estocolmo, Munich, Paris, Londres, Milan) y americanos (Smithsonian, AT&T Archives, Henry Ford). Manejas las guias de coleccionista ATCA, TCI, NATCA y las referencias de precio Schroeder, Warman y Miller.',
-    'PRECIOS: Basa la valoracion en ventas reales de Todocoleccion.net (fuente primaria espanola), Wallapop, eBay.es/de/fr/uk, Catawiki y resultados de subastas (LiveAuctioneers, Barnebys, Christie\'s, Drouot). precio_compra es el rango justo para comprar y revender con margen; precio_venta es el rango real de venta en Espana hoy.',
-    'METODOLOGIA: 1) Identifica modelo exacto, variante y ano con precision de catalogo. 2) Contextualiza: produccion, rareza, que lo hace especial. 3) Valora cruzando los mercados citados. 4) Detecta problemas especificos de ESTE modelo. 5) Da instrucciones de limpieza segun el material exacto (baquelita, catalin, ebonita, galalita, aluminio, hierro fundido, ABS). 6) En fuentes_usadas cita 4-6 fuentes concretas relevantes para este modelo.',
-    'Devuelve EXACTAMENTE esta estructura JSON:',
-    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos ej 1955-1970","material":"Material principal","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia y contexto en 3-4 frases","detalles_tecnicos":"Marcado, mecanismo, variantes en 2 frases","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio y fuente de venta reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["punto 1","punto 2","punto 3","punto 4"],"alertas":["alerta 1","alerta 2"],"estado_minimo":"Estado minimo aceptable","como_limpiar":["paso 1","paso 2","paso 3"],"como_negociar":"Estrategia de negociacion en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"4-6 fuentes concretas","zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"material","product":"producto","avoid":"evitar","steps":["paso 1","paso 2"]}]}'
+    'Eres phonefinder, tasador experto de telefonia vintage para el mercado espanol. Conoces los catalogos de fabricantes (Ericsson, Siemens, Western Electric, Standard Electrica/CITESA, CGCT, GPO), los museos de telecomunicaciones y las guias de coleccionista (ATCA, TCI). Valoras con precios reales de Todocoleccion, Wallapop, eBay y Catawiki.',
+    'REGLA: responde SOLO el objeto JSON, sin texto ni markdown ni backticks.',
+    'precio_compra es el rango justo para comprar y revender con margen. precio_venta es el rango real de venta en Espana hoy.',
+    'Devuelve EXACTAMENTE esta estructura:',
+    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos","material":"Material","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia en 3 frases","detalles_tecnicos":"Specs en 2 frases","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio venta reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["punto 1","punto 2","punto 3"],"alertas":["alerta 1","alerta 2"],"estado_minimo":"Estado minimo aceptable","como_limpiar":["paso 1","paso 2","paso 3"],"como_negociar":"Estrategia en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"3-4 fuentes","zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"material","product":"producto","avoid":"evitar","steps":["paso 1","paso 2"]}]}'
     ].join('\n');
   adv(2);
   // Timeout so the user is never stuck forever, but generous enough for Opus
   var _ctrl=new AbortController();
   var _timeout=setTimeout(function(){_ctrl.abort();},60000);
   try{
-    var _model=_qm?'claude-sonnet-4-6':'claude-opus-4-6';
-    var _maxTok=_qm?512:2000;
+    var _model='claude-sonnet-4-6';
+    var _maxTok=_qm?400:1600;
     var _t0=performance.now();
     var resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:_model,max_tokens:_maxTok,system:systemPrompt,messages:[{role:'user',content:userContent}]}),signal:_ctrl.signal});
     clearTimeout(_timeout);
@@ -1682,7 +1680,7 @@ async function analyzeLot(){
   _lotPhotos.forEach(function(p,i){content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:p.b64}});content.push({type:'text',text:'Telefono '+(i+1)+':'});});
   content.push({type:'text',text:'Analiza cada telefono. SOLO array JSON: [{"nombre":"...","precio_compra_min":0,"precio_compra_max":0,"precio_venta_min":0,"precio_venta_max":0,"rareza":"COMUN"},...]'});
   try{
-    var resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-opus-4-6',max_tokens:2048,messages:[{role:'user',content:content}]})});
+    var resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:content}]})});
     var data=await resp.json();
     var raw=data.content.map(function(c){return c.text||'';}).join('');
     var arr=null;
