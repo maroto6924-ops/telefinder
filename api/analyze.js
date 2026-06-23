@@ -1,44 +1,51 @@
-// api/analyze.js - Vercel serverless function (latency-optimized)
+// api/analyze.js
 //
-// KEY OPTIMIZATIONS:
-// 1. maxDuration raised so the function is never killed mid-request
-// 2. Runs in iad1 (US East) - closest Vercel region to Anthropic's API,
-//    which removes cross-region network latency (often 1-3s saved)
-// 3. Caps max_tokens to avoid runaway generation time
-// 4. Returns a Server-Timing header so you can SEE the upstream time
-//    in the browser Network tab
+// CRITICAL: Vercel's free/hobby tier kills serverless functions after
+// 10 seconds by default. If the model takes longer, the function is
+// terminated and the app never gets a response - it just hangs.
+//
+// This config raises the limit. On Hobby plan max is 60s; if you are on
+// Hobby and still hit limits, the streaming approach below also helps by
+// returning as soon as the model finishes.
 
 export const config = {
-  maxDuration: 60,
-  regions: ['iad1']   // US East - nearest to api.anthropic.com
+  maxDuration: 60
 };
 
 export default async function handler(req, res) {
+  // CORS / preflight
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: { message: 'Method not allowed' } });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: { message: 'ANTHROPIC_API_KEY no configurada en Vercel' } });
+    return res.status(500).json({ error: { message: 'Falta ANTHROPIC_API_KEY en las variables de entorno de Vercel' } });
   }
 
-  const started = Date.now();
-
   try {
-    const { model, max_tokens, system, messages } = req.body || {};
+    // Body may arrive parsed or as a string depending on config
+    let payload = req.body;
+    if (typeof payload === 'string') {
+      try { payload = JSON.parse(payload); } catch (e) { payload = {}; }
+    }
+
+    const { model, max_tokens, system, messages } = payload || {};
 
     const body = {
       model: model || 'claude-sonnet-4-6',
-      max_tokens: Math.min(max_tokens || 2200, 3000),
+      max_tokens: Math.min(max_tokens || 1600, 2000),
       messages: messages || []
     };
     if (system) body.system = system;
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 55000);
-
-    const upstreamStart = Date.now();
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -46,26 +53,18 @@ export default async function handler(req, res) {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01'
       },
-      body: JSON.stringify(body),
-      signal: controller.signal
+      body: JSON.stringify(body)
     });
-    clearTimeout(timeout);
-    const upstreamMs = Date.now() - upstreamStart;
 
-    const data = await r.json();
+    const text = await r.text();
 
-    // Expose timing so you can diagnose in the browser Network tab
-    res.setHeader('Server-Timing', `upstream;dur=${upstreamMs}, total;dur=${Date.now() - started}`);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', 'application/json');
 
-    if (!r.ok) {
-      return res.status(r.status).json(data);
-    }
-    return res.status(200).json(data);
+    // Pass through the exact status and body from Anthropic
+    return res.status(r.status).send(text);
 
   } catch (err) {
-    if (err.name === 'AbortError') {
-      return res.status(504).json({ error: { message: 'La IA tardo demasiado (timeout). Reintenta con menos fotos.' } });
-    }
-    return res.status(500).json({ error: { message: err.message || 'Error interno del servidor' } });
+    return res.status(500).json({ error: { message: 'Error en el servidor: ' + (err.message || 'desconocido') } });
   }
 }
