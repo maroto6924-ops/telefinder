@@ -1212,11 +1212,42 @@ function extractJSON(raw){
   try{return JSON.parse(raw.slice(start,end+1));}catch(e){try{return JSON.parse(repairJSON(raw.slice(start,end+1)));}catch(e2){return null;}}
 }
 function repairJSON(s){
+  // Remove trailing comma before close bracket
   s=s.replace(/,\s*([}\]])/g,'$1');
-  var depth=0,inStr=false,esc=false;
-  for(var i=0;i<s.length;i++){var ch=s[i];if(esc){esc=false;continue;}if(ch==='\\'){esc=true;continue;}if(ch==='"'){inStr=!inStr;continue;}if(inStr)continue;if(ch==='{'||ch==='[')depth++;else if(ch==='}'||ch===']')depth--;}
-  if(inStr)s+='"';
+  // Track depth and open strings
+  var depth=0,inStr=false,esc=false,lastOpenStr=-1;
+  for(var i=0;i<s.length;i++){
+    var ch=s[i];
+    if(esc){esc=false;continue;}
+    if(ch==='\\'){esc=true;continue;}
+    if(ch==='"'){
+      if(!inStr){inStr=true;lastOpenStr=i;}
+      else{inStr=false;}
+      continue;
+    }
+    if(inStr)continue;
+    if(ch==='{'||ch==='[')depth++;
+    else if(ch==='}'||ch===']')depth--;
+  }
+  // If we ended mid-string, close it then remove the partial value
+  if(inStr){
+    // Truncate back to before the last open string (partial value)
+    s=s.substring(0,lastOpenStr);
+    s=s.replace(/,\s*$/,'');
+  }
   s=s.replace(/,\s*$/,'');
+  // Recount depth after potential truncation
+  depth=0;inStr=false;esc=false;
+  for(var i=0;i<s.length;i++){
+    var ch=s[i];
+    if(esc){esc=false;continue;}
+    if(ch==='\\'){esc=true;continue;}
+    if(ch==='"'){inStr=!inStr;continue;}
+    if(inStr)continue;
+    if(ch==='{'||ch==='[')depth++;
+    else if(ch==='}'||ch===']')depth--;
+  }
+  // Close open arrays/objects
   while(depth>0){s+='}';depth--;}
   return s;
 }
@@ -1291,7 +1322,7 @@ async function analyzePhone(quickMode){
     var resp=await fetch('/api/analyze',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:_qm?400:1600,system:systemPrompt,messages:[{role:'user',content:userContent}]}),
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:_qm?500:4096,system:systemPrompt,messages:[{role:'user',content:userContent}]}),
       signal:_ctrl.signal
     });
     clearTimeout(_timeout);
