@@ -1253,7 +1253,7 @@ async function analyzePhone(quickMode){
   adv(2);
   // Timeout so the user is never stuck forever, but generous enough for Opus
   var _ctrl=new AbortController();
-  var _timeout=setTimeout(function(){_ctrl.abort();},60000);
+  var _timeout=setTimeout(function(){_ctrl.abort();},35000);
   try{
     var _model='claude-sonnet-4-6';
     var _maxTok=_qm?400:1600;
@@ -1290,9 +1290,13 @@ async function analyzePhone(quickMode){
     }
   }catch(err){
     if(typeof _timeout!=='undefined')clearTimeout(_timeout);
-    console.error(err);
-    if(err.name==='AbortError'){showToast('Tardo demasiado. Usa menos fotos o reintenta.');}
-    else{showToast('Error: '+(err.message||'Intentalo de nuevo'));}
+    console.error('[phonefinder] Error:',err);
+    var msg;
+    if(err.name==='AbortError'){msg='El servidor tardo demasiado (mas de 35s). Revisa que api/analyze.js tenga maxDuration:60 en Vercel.';}
+    else if(err.message&&err.message.indexOf('504')!==-1){msg='Timeout del servidor Vercel. Sube el nuevo analyze.js con maxDuration:60.';}
+    else if(err.message&&err.message.indexOf('500')!==-1){msg='Error del servidor. Revisa que ANTHROPIC_API_KEY este configurada en Vercel.';}
+    else{msg='Error: '+(err.message||'reintenta');}
+    showToast(msg);
   }
   document.getElementById('loadingWrap').style.display='none';
   document.getElementById('analyzeBtn').style.display='flex';
