@@ -418,7 +418,11 @@ textarea::placeholder{color:var(--fog);}
 .hunt-idle-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px;}
 .hunt-idle-sub{font-size:11px;color:var(--fog2);}
 .hunt-start-btn{flex-shrink:0;background:var(--amber);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
-.hunt-active{background:linear-gradient(135deg,#1c2e28 0%,#152420 100%);border:1px solid rgba(94,196,174,.3);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--sh-lg);}
+.hunt-history-link{flex-shrink:0;width:34px;height:34px;border-radius:8px;background:var(--mist);border:1px solid var(--mist3);color:var(--fog3);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.hunt-history-link svg{width:15px;height:15px;}
+.hunt-active{background:linear-gradient(135deg,#1c2e28 0%,#152420 100%);border:1px solid rgba(94,196,174,.3);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--sh-lg);cursor:pointer;transition:transform .15s;}
+.hunt-active:active{transform:scale(.98);}
+.hunt-active-arrow{color:#5ec4ae;font-size:16px;flex-shrink:0;}
 .hunt-active-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
 .hunt-active-pulse{width:10px;height:10px;border-radius:50%;background:#5ec4ae;flex-shrink:0;animation:huntPulse 1.6s ease-in-out infinite;}
 @keyframes huntPulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(94,196,174,.5);}50%{opacity:.7;box-shadow:0 0 0 6px rgba(94,196,174,0);}}
@@ -689,6 +693,62 @@ textarea::placeholder{color:var(--fog);}
 @keyframes milestoneBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
 .milestone-num{font-family:'Instrument Serif',serif;font-size:52px;color:var(--amber);line-height:1;letter-spacing:-1px;}
 .milestone-text{font-size:13px;color:rgba(255,255,255,.6);margin-top:6px;font-weight:500;letter-spacing:.3px;}
+/* MODO CAZA: pantalla completa dedicada */
+.hunt-mode-overlay{position:fixed;inset:0;z-index:850;display:none;flex-direction:column;background:radial-gradient(ellipse at top,#1c2e28 0%,#0d1613 60%,#080d0b 100%);}
+.hunt-mode-overlay.open{display:flex;animation:huntModeIn .3s ease;}
+@keyframes huntModeIn{from{opacity:0;transform:scale(1.02);}to{opacity:1;transform:scale(1);}}
+.hunt-mode-topbar{display:flex;align-items:center;justify-content:space-between;padding:calc(16px + env(safe-area-inset-top,0)) 16px 8px;}
+.hunt-mode-close{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.75);border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+.hunt-mode-close svg{width:14px;height:14px;}
+.hunt-mode-history-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.hunt-mode-history-btn svg{width:16px;height:16px;}
+.hunt-mode-body{flex:1;display:flex;flex-direction:column;align-items:center;padding:20px 24px;overflow-y:auto;}
+.hunt-mode-pulse-ring{width:14px;height:14px;border-radius:50%;background:#5ec4ae;margin:12px 0 6px;animation:huntPulse 1.6s ease-in-out infinite;position:relative;}
+.hunt-mode-eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(94,196,174,.8);font-family:'JetBrains Mono',monospace;margin-bottom:14px;}
+.hunt-mode-timer{font-family:'Instrument Serif',serif;font-size:64px;color:#fff;letter-spacing:-2px;line-height:1;margin-bottom:18px;font-variant-numeric:tabular-nums;}
+.hunt-mode-place-row{width:100%;max-width:320px;margin-bottom:22px;}
+.hunt-mode-place-input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:11px 16px;color:#fff;font-family:'Inter',sans-serif;font-size:13px;text-align:center;outline:none;}
+.hunt-mode-place-input::placeholder{color:rgba(255,255,255,.3);}
+.hunt-mode-place-input:focus{border-color:#5ec4ae;background:rgba(255,255,255,.09);}
+.hunt-mode-stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;width:100%;max-width:340px;margin-bottom:26px;}
+.hunt-mode-stat{text-align:center;background:rgba(255,255,255,.05);border-radius:14px;padding:14px 8px;}
+.hunt-mode-stat-num{font-family:'Instrument Serif',serif;font-size:26px;color:#fff;line-height:1;margin-bottom:4px;}
+.hunt-mode-stat-lbl{font-size:9.5px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;font-weight:600;}
+.hunt-mode-analyze-btn{width:100%;max-width:340px;background:var(--amber);color:#fff;border:none;border-radius:16px;padding:17px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 10px 30px rgba(212,134,42,.35);margin-bottom:20px;}
+.hunt-mode-analyze-btn svg{width:19px;height:19px;}
+.hunt-mode-log{width:100%;max-width:340px;}
+.hunt-mode-log-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;margin-bottom:6px;font-size:12.5px;color:rgba(255,255,255,.7);}
+.hunt-mode-log-icon{font-size:14px;flex-shrink:0;}
+.hunt-mode-log-text{flex:1;}
+.hunt-mode-log-time{font-size:10.5px;color:rgba(255,255,255,.3);font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.hunt-mode-bottombar{padding:12px 16px calc(16px + env(safe-area-inset-bottom,0));}
+.hunt-mode-end-btn{width:100%;background:rgba(192,57,43,.15);color:#e57c72;border:1px solid rgba(192,57,43,.3);border-radius:14px;padding:14px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+
+/* Historial de caza */
+.hunt-history-overlay{position:fixed;inset:0;z-index:860;display:none;flex-direction:column;background:var(--mist);}
+.hunt-history-overlay.open{display:flex;animation:huntModeIn .25s ease;}
+.hunt-history-header{display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top,0)) 16px 14px;background:var(--ink);border-bottom:1px solid var(--ink3);}
+.hunt-history-back{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.hunt-history-back svg{width:15px;height:15px;}
+.hunt-history-title{font-family:'Instrument Serif',serif;font-size:19px;color:#fff;}
+.hunt-history-body{flex:1;overflow-y:auto;padding:16px;}
+.hunt-history-empty{text-align:center;padding:60px 20px;color:var(--fog2);}
+.hunt-history-empty-icon{font-size:44px;margin-bottom:14px;display:block;}
+.hunt-session-card{background:var(--surface);border:1px solid var(--mist3);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:10px;box-shadow:var(--sh);}
+.hunt-session-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.hunt-session-place{font-size:14.5px;font-weight:700;color:var(--ink);margin-bottom:2px;}
+.hunt-session-date{font-size:11.5px;color:var(--fog2);}
+.hunt-session-duration{background:var(--teal-light);color:var(--teal);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.hunt-session-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.hunt-session-stat{text-align:center;background:var(--mist);border-radius:10px;padding:9px 6px;}
+.hunt-session-stat-num{font-family:'Instrument Serif',serif;font-size:19px;color:var(--ink);line-height:1;}
+.hunt-session-stat-lbl{font-size:9px;color:var(--fog2);text-transform:uppercase;letter-spacing:.4px;font-weight:600;margin-top:2px;}
+.hunt-history-summary{background:var(--ink);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr 1fr;box-shadow:var(--sh-lg);}
+.hunt-summary-item{text-align:center;}
+.hunt-summary-item:not(:last-child){border-right:1px solid var(--ink3);}
+.hunt-summary-lbl{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--fog);margin-bottom:5px;font-family:'JetBrains Mono',monospace;}
+.hunt-summary-val{font-family:'Instrument Serif',serif;font-size:20px;color:var(--amber);letter-spacing:-.3px;}
+
 /* Photo full-screen lightbox */
 .photo-lightbox{position:fixed;inset:0;z-index:900;display:none;flex-direction:column;background:rgba(4,4,4,.96);}
 .photo-lightbox.open{display:flex;animation:lightboxIn .22s ease;}
@@ -937,16 +997,19 @@ textarea::placeholder{color:var(--fog);}
         <div class="hunt-idle-title">Diario de Caza</div>
         <div class="hunt-idle-sub">Registra tu sesion en el rastro</div>
       </div>
+      <button class="hunt-history-link" onclick="openHuntHistory()" title="Ver historial">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </button>
       <button class="hunt-start-btn" onclick="startHuntSession()">Empezar</button>
     </div>
-    <div class="hunt-active" id="huntActive" style="display:none">
+    <div class="hunt-active" id="huntActive" style="display:none" onclick="openHuntMode()">
       <div class="hunt-active-top">
         <div class="hunt-active-pulse"></div>
         <div class="hunt-active-info">
-          <div class="hunt-active-title">Sesion activa</div>
+          <div class="hunt-active-title">Sesion activa - toca para abrir</div>
           <div class="hunt-active-timer" id="huntTimer">00:00</div>
         </div>
-        <button class="hunt-end-btn" onclick="endHuntSession()">Terminar</button>
+        <div class="hunt-active-arrow">&#8594;</div>
       </div>
       <div class="hunt-active-stats">
         <div class="hunt-stat"><span class="hunt-stat-num" id="huntSeenNum">0</span><span class="hunt-stat-lbl">vistos</span></div>
@@ -1521,6 +1584,63 @@ textarea::placeholder{color:var(--fog);}
 
 <!-- Jackpot overlay: MUY RARO + alto valor -->
 <!-- Photo full-screen viewer -->
+<!-- MODO CAZA: pantalla completa dedicada a la sesion de rastro -->
+<div class="hunt-mode-overlay" id="huntModeOverlay">
+  <div class="hunt-mode-topbar">
+    <button class="hunt-mode-close" onclick="minimizeHuntMode()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Minimizar</span>
+    </button>
+    <button class="hunt-mode-history-btn" onclick="openHuntHistory()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </button>
+  </div>
+  <div class="hunt-mode-body">
+    <div class="hunt-mode-pulse-ring">
+      <div class="hunt-mode-pulse-dot"></div>
+    </div>
+    <div class="hunt-mode-eyebrow">Sesion de caza activa</div>
+    <div class="hunt-mode-timer" id="huntModeTimer">00:00</div>
+    <div class="hunt-mode-place-row">
+      <input class="hunt-mode-place-input" id="huntPlaceInput" type="text" placeholder="Donde estas cazando? (opcional)" oninput="updateHuntPlace(this.value)">
+    </div>
+    <div class="hunt-mode-stats-row">
+      <div class="hunt-mode-stat">
+        <div class="hunt-mode-stat-num" id="huntModeSeenNum">0</div>
+        <div class="hunt-mode-stat-lbl">Vistos</div>
+      </div>
+      <div class="hunt-mode-stat">
+        <div class="hunt-mode-stat-num" id="huntModeBoughtNum">0</div>
+        <div class="hunt-mode-stat-lbl">Comprados</div>
+      </div>
+      <div class="hunt-mode-stat">
+        <div class="hunt-mode-stat-num" id="huntModeSpentNum">0EUR</div>
+        <div class="hunt-mode-stat-lbl">Gastado</div>
+      </div>
+    </div>
+    <button class="hunt-mode-analyze-btn" onclick="huntModeAnalyze()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span>Analizar telefono</span>
+    </button>
+    <div class="hunt-mode-log" id="huntModeLog"></div>
+  </div>
+  <div class="hunt-mode-bottombar">
+    <button class="hunt-mode-end-btn" onclick="confirmEndHuntSession()">Terminar sesion</button>
+  </div>
+</div>
+
+<!-- HISTORIAL DE SESIONES DE CAZA -->
+<div class="hunt-history-overlay" id="huntHistoryOverlay">
+  <div class="hunt-history-header">
+    <button class="hunt-history-back" onclick="closeHuntHistory()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="hunt-history-title">Historial de Caza</div>
+    <div style="width:30px"></div>
+  </div>
+  <div class="hunt-history-body" id="huntHistoryBody"></div>
+</div>
+
 <div class="photo-lightbox" id="photoLightbox" onclick="closePhotoLightbox(event)">
   <button class="photo-lightbox-close" onclick="closePhotoLightbox(event)">&#10005;</button>
   <div class="photo-lightbox-track" id="photoLightboxTrack"></div>
@@ -2496,9 +2616,10 @@ function quickSeeFullReport(){closeQuick();if(_quickResult){currentResult=_quick
 function collapseHero(){var h=document.querySelector('.hero');if(h&&!h.classList.contains('compact'))h.classList.add('compact');}
 
 // -- DIARIO DE CAZA -----------------------------------------------
-// Sesion de rastro: registra tiempo, teleofonos vistos y comprados.
+// Sesion de rastro con experiencia dedicada a pantalla completa.
 // Vive en localStorage, no requiere Firestore. Se conecta con
-// saveToCollection para contar compras automaticamente.
+// saveToCollection para contar compras automaticamente. Cada sesion
+// terminada queda guardada permanentemente en el historial.
 var HUNT_KEY='pf_hunt_session';
 var HUNT_LOG_KEY='pf_hunt_log';
 function loadHuntSession(){
@@ -2508,29 +2629,43 @@ function saveHuntSession(){
   try{if(_huntSession)localStorage.setItem(HUNT_KEY,JSON.stringify(_huntSession));else localStorage.removeItem(HUNT_KEY);}catch(e){}
 }
 function startHuntSession(){
-  _huntSession={startedAt:Date.now(),seen:0,bought:0,spent:0};
+  _huntSession={startedAt:Date.now(),seen:0,bought:0,spent:0,place:'',events:[]};
   saveHuntSession();
   renderHuntWidget();
-  showToast('Sesion de caza iniciada - buena suerte!');
+  openHuntMode();
+}
+function updateHuntPlace(val){
+  if(!_huntSession)return;
+  _huntSession.place=val;
+  saveHuntSession();
 }
 function logHuntSeen(){
   if(!_huntSession)return;
   _huntSession.seen++;
+  var name=(currentResult&&currentResult.nombre)?currentResult.nombre:'Telefono';
+  _huntSession.events.unshift({type:'seen',text:'Visto: '+name,at:Date.now()});
+  if(_huntSession.events.length>30)_huntSession.events=_huntSession.events.slice(0,30);
   saveHuntSession();
   renderHuntWidget();
+  renderHuntModeBody();
 }
 function logHuntPurchase(price){
   if(!_huntSession)return;
   _huntSession.bought++;
   _huntSession.spent+=(price||0);
+  var name=(currentResult&&currentResult.nombre)?currentResult.nombre:'Telefono';
+  _huntSession.events.unshift({type:'bought',text:'Comprado: '+name+' - '+Math.round(price||0)+'EUR',at:Date.now()});
+  if(_huntSession.events.length>30)_huntSession.events=_huntSession.events.slice(0,30);
   saveHuntSession();
   renderHuntWidget();
+  renderHuntModeBody();
 }
 function endHuntSession(){
   if(!_huntSession)return;
   var durationMin=Math.round((Date.now()-_huntSession.startedAt)/60000);
   var entry={
     date:new Date().toISOString(),
+    place:_huntSession.place||'',
     durationMin:durationMin,
     seen:_huntSession.seen,
     bought:_huntSession.bought,
@@ -2539,19 +2674,29 @@ function endHuntSession(){
   try{
     var log=JSON.parse(localStorage.getItem(HUNT_LOG_KEY)||'[]');
     log.unshift(entry);
-    if(log.length>50)log=log.slice(0,50);
+    if(log.length>100)log=log.slice(0,100);
     localStorage.setItem(HUNT_LOG_KEY,JSON.stringify(log));
   }catch(e){}
   _huntSession=null;
   saveHuntSession();
   renderHuntWidget();
-  var summary=entry.bought>0?entry.bought+' comprado'+(entry.bought!==1?'s':'')+' en '+durationMin+' min':'Sesion cerrada - '+durationMin+' min de caza';
+  closeHuntMode();
+  var summary=entry.bought>0?entry.bought+' comprado'+(entry.bought!==1?'s':'')+' en '+durationMin+' min - guardado en tu historial':'Sesion guardada - '+durationMin+' min de caza';
   showToast(summary);
+}
+function confirmEndHuntSession(){
+  if(!_huntSession)return;
+  if(_huntSession.seen===0&&_huntSession.bought===0){
+    endHuntSession();
+    return;
+  }
+  if(confirm('Terminar la sesion? Quedara guardada en tu historial.')){
+    endHuntSession();
+  }
 }
 function renderHuntWidget(){
   var idle=document.getElementById('huntIdle'),active=document.getElementById('huntActive');
   if(!idle||!active)return;
-  if(_huntTimerInt){clearInterval(_huntTimerInt);_huntTimerInt=null;}
   if(!_huntSession){
     idle.style.display='flex';
     active.style.display='none';
@@ -2563,15 +2708,115 @@ function renderHuntWidget(){
   if(seenEl)seenEl.textContent=_huntSession.seen;
   if(boughtEl)boughtEl.textContent=_huntSession.bought;
   if(spentEl)spentEl.textContent=Math.round(_huntSession.spent)+'EUR';
-  function tick(){
-    var el=document.getElementById('huntTimer');
-    if(!el||!_huntSession)return;
+  var timerEl=document.getElementById('huntTimer');
+  if(timerEl&&_huntSession){
     var elapsed=Math.floor((Date.now()-_huntSession.startedAt)/1000);
     var m=Math.floor(elapsed/60),s=elapsed%60;
-    el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    timerEl.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
   }
-  tick();
-  _huntTimerInt=setInterval(tick,1000);
+}
+// Single interval drives BOTH the home widget timer and the fullscreen mode timer
+if(_huntTimerInt){clearInterval(_huntTimerInt);}
+_huntTimerInt=setInterval(function(){
+  if(!_huntSession)return;
+  var elapsed=Math.floor((Date.now()-_huntSession.startedAt)/1000);
+  var m=Math.floor(elapsed/60),s=elapsed%60;
+  var txt=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  var t1=document.getElementById('huntTimer');if(t1)t1.textContent=txt;
+  var t2=document.getElementById('huntModeTimer');if(t2)t2.textContent=txt;
+},1000);
+
+// -- MODO CAZA: experiencia a pantalla completa --------------------
+function openHuntMode(){
+  if(!_huntSession)return;
+  var ov=document.getElementById('huntModeOverlay');
+  if(!ov)return;
+  var placeInp=document.getElementById('huntPlaceInput');
+  if(placeInp)placeInp.value=_huntSession.place||'';
+  renderHuntModeBody();
+  ov.classList.add('open');
+}
+function minimizeHuntMode(){
+  var ov=document.getElementById('huntModeOverlay');
+  if(ov)ov.classList.remove('open');
+}
+function closeHuntMode(){
+  var ov=document.getElementById('huntModeOverlay');
+  if(ov)ov.classList.remove('open');
+}
+function renderHuntModeBody(){
+  if(!_huntSession)return;
+  var seenEl=document.getElementById('huntModeSeenNum'),boughtEl=document.getElementById('huntModeBoughtNum'),spentEl=document.getElementById('huntModeSpentNum');
+  if(seenEl)seenEl.textContent=_huntSession.seen;
+  if(boughtEl)boughtEl.textContent=_huntSession.bought;
+  if(spentEl)spentEl.textContent=Math.round(_huntSession.spent)+'EUR';
+  var logEl=document.getElementById('huntModeLog');
+  if(logEl){
+    logEl.innerHTML='';
+    (_huntSession.events||[]).slice(0,8).forEach(function(ev){
+      var icon=ev.type==='bought'?String.fromCharCode(0x1F4B0):String.fromCharCode(0x1F441);
+      var timeStr=new Date(ev.at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      var item=document.createElement('div');
+      item.className='hunt-mode-log-item';
+      item.innerHTML='<span class="hunt-mode-log-icon">'+icon+'</span><span class="hunt-mode-log-text">'+ev.text+'</span><span class="hunt-mode-log-time">'+timeStr+'</span>';
+      logEl.appendChild(item);
+    });
+  }
+}
+function huntModeAnalyze(){
+  minimizeHuntMode();
+  showPage('home');
+  window.scrollTo(0,0);
+}
+
+// -- HISTORIAL DE SESIONES -----------------------------------------
+function getHuntLog(){
+  try{return JSON.parse(localStorage.getItem(HUNT_LOG_KEY)||'[]');}catch(e){return[];}
+}
+function openHuntHistory(){
+  var ov=document.getElementById('huntHistoryOverlay');
+  if(!ov)return;
+  renderHuntHistory();
+  ov.classList.add('open');
+}
+function closeHuntHistory(){
+  var ov=document.getElementById('huntHistoryOverlay');
+  if(ov)ov.classList.remove('open');
+}
+function renderHuntHistory(){
+  var body=document.getElementById('huntHistoryBody');
+  if(!body)return;
+  var log=getHuntLog();
+  if(!log.length){
+    body.innerHTML='<div class="hunt-history-empty"><span class="hunt-history-empty-icon">&#127890;</span><div style="font-family:\'Instrument Serif\',serif;font-size:19px;color:var(--ink2);margin-bottom:6px">Sin sesiones aun</div><div style="font-size:12.5px">Tus sesiones de caza apareceran aqui</div></div>';
+    return;
+  }
+  var totalSessions=log.length;
+  var totalBought=log.reduce(function(s,e){return s+(e.bought||0);},0);
+  var totalSpent=log.reduce(function(s,e){return s+(e.spent||0);},0);
+  var html='<div class="hunt-history-summary">'+
+    '<div class="hunt-summary-item"><div class="hunt-summary-lbl">Sesiones</div><div class="hunt-summary-val">'+totalSessions+'</div></div>'+
+    '<div class="hunt-summary-item"><div class="hunt-summary-lbl">Comprados</div><div class="hunt-summary-val">'+totalBought+'</div></div>'+
+    '<div class="hunt-summary-item"><div class="hunt-summary-lbl">Invertido</div><div class="hunt-summary-val">'+Math.round(totalSpent)+'EUR</div></div>'+
+  '</div>';
+  log.forEach(function(entry){
+    var d=new Date(entry.date);
+    var dateStr=d.toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'});
+    var timeStr=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    var place=entry.place&&entry.place.trim()?entry.place:'Sesion de caza';
+    html+='<div class="hunt-session-card">'+
+      '<div class="hunt-session-top">'+
+        '<div><div class="hunt-session-place">'+place+'</div><div class="hunt-session-date">'+dateStr+' - '+timeStr+'</div></div>'+
+        '<div class="hunt-session-duration">'+entry.durationMin+' min</div>'+
+      '</div>'+
+      '<div class="hunt-session-stats">'+
+        '<div class="hunt-session-stat"><div class="hunt-session-stat-num">'+entry.seen+'</div><div class="hunt-session-stat-lbl">Vistos</div></div>'+
+        '<div class="hunt-session-stat"><div class="hunt-session-stat-num">'+entry.bought+'</div><div class="hunt-session-stat-lbl">Comprados</div></div>'+
+        '<div class="hunt-session-stat"><div class="hunt-session-stat-num">'+Math.round(entry.spent)+'EUR</div><div class="hunt-session-stat-lbl">Gastado</div></div>'+
+      '</div>'+
+    '</div>';
+  });
+  body.innerHTML=html;
 }
 
 // RELATED PHONE THUMBNAIL - a small vintage-phone SVG icon colored to
