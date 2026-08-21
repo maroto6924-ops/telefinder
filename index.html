@@ -70,6 +70,10 @@ body{font-family:'Inter',sans-serif;background:var(--mist);color:var(--ink);min-
 /* ─── PAGES ─────────────────────────────────────────────── */
 .page{display:none;padding:0 0 80px;max-width:640px;margin:0 auto;}
 .page.active{display:block;}
+/* When the result page is shown from within hunt mode, it must float
+   ABOVE the hunt overlay (not replace it) so hunt mode stays intact
+   underneath and reappears the moment the result is closed. */
+#page-result.over-hunt-mode{position:fixed;inset:0;z-index:870;background:var(--mist);overflow-y:auto;max-width:none;margin:0;padding-bottom:80px;}
 
 /* ─── HERO ───────────────────────────────────────────────── */
 .hero{position:relative;background:#080808;overflow:hidden;margin-bottom:0;min-height:420px;display:flex;flex-direction:column;justify-content:flex-end;}
@@ -170,6 +174,11 @@ textarea::placeholder{color:var(--fog);}
 
 /* ─── LOADING ───────────────────────────────────────────── */
 .loading-wrap{display:none;padding:20px 16px;}
+/* When analyzing from inside hunt mode, float the loading card above
+   the hunt overlay too, so the whole flow stays visually "in place"
+   without ever revealing the home screen underneath. */
+.loading-wrap.over-hunt-mode{position:fixed;inset:0;z-index:870;background:#0b0f0e;display:flex;align-items:center;justify-content:center;padding:20px;}
+.loading-wrap.over-hunt-mode .loading-inner{width:100%;max-width:360px;background:#121715;border:1px solid rgba(94,196,174,.15);}
 .loading-inner{background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--mist3);padding:40px 24px;text-align:center;box-shadow:var(--sh);}
 .loading-ring{width:52px;height:52px;margin:0 auto 20px;}
 .loading-ring svg{animation:spin 1.1s linear infinite;width:52px;height:52px;}
@@ -509,7 +518,7 @@ textarea::placeholder{color:var(--fog);}
 .dash-chart-wrap{background:var(--surface);border:1px solid var(--mist3);border-radius:var(--r-lg);padding:16px;box-shadow:var(--sh);margin-bottom:4px;height:160px;position:relative;}
 
 /* ─── MODAL (purchase + feedback) ─────────────────────── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:880;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
 .modal-overlay.open{display:flex;}
 .modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-width:640px;padding-bottom:env(safe-area-inset-bottom,0);box-shadow:var(--sh-xl);animation:slideUp .3s cubic-bezier(.34,1.2,.64,1);}
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
@@ -782,6 +791,8 @@ textarea::placeholder{color:var(--fog);}
 .hunt-history-overlay.open{display:flex;animation:huntModeIn .25s ease;}
 .hunt-history-header{display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top,0)) 16px 14px;background:var(--ink);border-bottom:1px solid var(--ink3);}
 .hunt-history-back{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.hunt-history-clear{width:30px;height:30px;border-radius:50%;background:rgba(192,57,43,.15);border:none;color:#e57c72;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.hunt-history-clear svg{width:14px;height:14px;}
 .hunt-history-back svg{width:15px;height:15px;}
 .hunt-history-title{font-family:'Instrument Serif',serif;font-size:19px;color:#fff;}
 .hunt-history-body{flex:1;overflow-y:auto;padding:16px;}
@@ -1732,7 +1743,9 @@ textarea::placeholder{color:var(--fog);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <div class="hunt-history-title">Historial de Caza</div>
-    <div style="width:30px"></div>
+    <button class="hunt-history-clear" onclick="clearAllHuntSessions()" id="huntClearAllBtn" title="Borrar todo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+    </button>
   </div>
   <div class="hunt-history-body" id="huntHistoryBody"></div>
 </div>
@@ -1766,10 +1779,19 @@ var CLN_ZONES=[],CLN_ACTIVE=0,CLN_PHOTO_URL=null,_pnlChart=null;
 var _chkState=[],_quickResult=null,_lotPhotos=[],_searchTimer=null,_lastPhotoDark=false;
 var _compareMode=false,_compareSelected=[];
 var _huntSession=null,_huntTimerInt=null;
+var _inHuntMode=false;
 var MAX_PHOTOS=5,MAX_DIM=512,QUALITY=0.5,DRAFT_KEY='pf_drafts',MAX_DRAFTS=5;
 
 // NAVIGATION
 function showPage(n){
+  // Defensive cleanup: if the user navigates away from the floating
+  // result while it was shown from hunt mode, tear down that layering
+  // cleanly instead of leaving stale classes/state behind.
+  var _pr=document.getElementById('page-result');
+  if(_pr&&_pr.classList.contains('over-hunt-mode')){
+    _pr.classList.remove('over-hunt-mode');
+    _inHuntMode=false;
+  }
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
   document.getElementById('page-'+n).classList.add('active');
@@ -1807,6 +1829,15 @@ function newAnalysis(){
   var row=document.getElementById('uploadRow');if(row)row.style.display='grid';
   var desc=document.getElementById('descInput');if(desc)desc.value='';
   var urlRow=document.getElementById('urlImportRow');if(urlRow)urlRow.style.display='none';
+  // If this result was shown from inside hunt mode, close the floating
+  // result layer and return to the hunt overlay (which never closed) -
+  // never fall through to the home screen.
+  if(_inHuntMode){
+    var pr=document.getElementById('page-result');
+    if(pr){pr.classList.remove('active','over-hunt-mode');}
+    _inHuntMode=false;
+    return;
+  }
   showPage('home');
 }
 function toggleUrlImport(){
@@ -2001,13 +2032,15 @@ async function analyzePhone(quickMode){
   // Reset loading UI
   document.getElementById('analyzeBtn').style.display='none';
   document.getElementById('quickBtn').style.display='none';
-  document.getElementById('loadingWrap').style.display='block';
+  var _lw=document.getElementById('loadingWrap');
+  _lw.classList.toggle('over-hunt-mode',_inHuntMode);
+  _lw.style.display=_inHuntMode?'flex':'block';
   document.getElementById('loadingError').style.display='none';
   document.getElementById('loadingRetry').style.display='none';
   var _rn=document.getElementById('loadingRetryNow');if(_rn)_rn.style.display='none';
   document.getElementById('loadingRing').style.display='block';
   document.getElementById('loadingTitle').textContent='Analizando...';
-  window.scrollTo(0,0);
+  if(!_inHuntMode)window.scrollTo(0,0);
 
   // Live timer so the user always sees something happening
   var _elapsed=0;
@@ -2126,9 +2159,15 @@ async function analyzePhone(quickMode){
       }
       CLN_PHOTO_URL=currentImages.length>0?currentImages[0].dataUrl:null;
       clnInit(result);
+      // If we came from hunt mode, float the result page above the hunt
+      // overlay instead of navigating to the normal home-based page.
+      var _pr=document.getElementById('page-result');
+      if(_pr)_pr.classList.toggle('over-hunt-mode',_inHuntMode);
       renderResult(result);
     }
-    document.getElementById('loadingWrap').style.display='none';
+    var _lwDone=document.getElementById('loadingWrap');
+    _lwDone.style.display='none';
+    _lwDone.classList.remove('over-hunt-mode');
     document.getElementById('analyzeBtn').style.display='flex';
     document.getElementById('quickBtn').style.display='flex';
 
@@ -2805,6 +2844,7 @@ function endHuntSession(){
   renderHuntWidget();
   closeHuntMode();
   hmResetCapture();
+  _inHuntMode=false;
   var summary=entry.bought>0?entry.bought+' comprado'+(entry.bought!==1?'s':'')+' en '+durationMin+' min - guardado en tu historial':'Sesion guardada - '+durationMin+' min de caza';
   showToast(summary);
 }
@@ -2951,17 +2991,35 @@ async function hmAnalyze(){
   currentImages=_hmImages.slice();
   var desc=document.getElementById('descInput');
   if(desc)desc.value='';
-  minimizeHuntMode();
+  // Stay INSIDE hunt mode - do not minimize. The hunt overlay remains
+  // open underneath; the result will float above it as its own layer
+  // once analyzePhone finishes, so the two environments never mix.
+  _inHuntMode=true;
   if(_huntSession)logHuntSeen();
   await analyzePhone(false);
   // After the standard flow finishes, reset the hunt capture zone so
-  // it's ready for the next phone next time hunt mode is reopened.
+  // it's ready for the next phone next time we return to hunt mode.
   hmResetCapture();
 }
 
 // -- HISTORIAL DE SESIONES -----------------------------------------
 function getHuntLog(){
-  try{return JSON.parse(localStorage.getItem(HUNT_LOG_KEY)||'[]');}catch(e){return[];}
+  try{
+    var log=JSON.parse(localStorage.getItem(HUNT_LOG_KEY)||'[]');
+    // Repair older sessions saved before ids existed, so every entry
+    // becomes deletable. Persist the repair so it only runs once.
+    var needsSave=false;
+    log.forEach(function(e,i){
+      if(!e.id){
+        e.id='hunt_legacy_'+i+'_'+(e.date?e.date.replace(/[^0-9]/g,''):Date.now());
+        needsSave=true;
+      }
+    });
+    if(needsSave){
+      try{localStorage.setItem(HUNT_LOG_KEY,JSON.stringify(log));}catch(e2){}
+    }
+    return log;
+  }catch(e){return[];}
 }
 function deleteHuntSession(id){
   if(!id)return;
@@ -2973,6 +3031,16 @@ function deleteHuntSession(id){
     renderHuntHistory();
     showToast('Sesion eliminada');
   }catch(e){console.error(e);showToast('Error al eliminar');}
+}
+function clearAllHuntSessions(){
+  var log=getHuntLog();
+  if(!log.length){showToast('No hay sesiones que borrar');return;}
+  if(!confirm('Eliminar TODAS las '+log.length+' sesiones del historial? No se puede deshacer.'))return;
+  try{
+    localStorage.removeItem(HUNT_LOG_KEY);
+    renderHuntHistory();
+    showToast('Historial vaciado');
+  }catch(e){console.error(e);showToast('Error al vaciar el historial');}
 }
 function openHuntHistory(){
   var ov=document.getElementById('huntHistoryOverlay');
