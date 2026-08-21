@@ -109,7 +109,7 @@ body{font-family:'Inter',sans-serif;background:var(--mist);color:var(--ink);min-
 @keyframes scanLine{0%{top:0;opacity:1;}75%{top:100%;opacity:.3;}100%{top:100%;opacity:0;}}
 
 /* ─── UPLOAD CARD ───────────────────────────────────────── */
-.card-home{background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:22px 20px 18px;margin:0;position:relative;z-index:6;margin-top:-20px;}
+.card-home{background:var(--surface);border-radius:var(--r-lg);padding:22px 20px 18px;margin:0;position:relative;z-index:6;box-shadow:var(--sh);}
 .card-home::before{content:'';position:absolute;top:-20px;left:0;right:0;height:24px;background:var(--surface);border-radius:20px 20px 0 0;}
 .card-label{font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--fog2);margin-bottom:14px;font-family:'JetBrains Mono',monospace;}
 .upload-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
@@ -154,6 +154,17 @@ textarea::placeholder{color:var(--fog);}
 .btn-quick:hover,.btn-quick:active{background:rgba(212,134,42,.1);border-color:var(--amber);}
 .btn-quick svg{width:15px;height:15px;}
 .btn-lot{width:calc(100% - 32px);margin:8px 16px 20px;background:transparent;color:var(--indigo);border:1.5px dashed rgba(44,79,138,.3);border-radius:var(--r);padding:10px 20px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+/* More options collapsible - keeps home focused on ONE primary action */
+.more-options-wrap{margin:6px 16px 16px;}
+.more-options-toggle{width:100%;background:none;border:none;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;color:var(--fog2);font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;}
+.more-options-toggle svg{width:14px;height:14px;transition:transform .2s;}
+.more-options-toggle.expanded svg{transform:rotate(180deg);}
+.more-options-panel{padding-top:4px;animation:fadeInUp .25s ease;}
+.more-options-panel .btn-quick,.more-options-panel .btn-lot{margin-left:0;margin-right:0;width:100%;}
+/* Drafts collapsible toggle */
+.drafts-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;color:var(--fog2);font-size:11.5px;font-weight:600;letter-spacing:.3px;}
+.drafts-toggle svg{width:14px;height:14px;transition:transform .2s;}
+.drafts-toggle.expanded svg{transform:rotate(180deg);}
 .btn-lot:hover{background:var(--indigo-light);border-color:var(--indigo);}
 .btn-lot svg{width:14px;height:14px;}
 
@@ -400,14 +411,14 @@ textarea::placeholder{color:var(--fog);}
 .col-sub{font-size:12px;color:var(--fog);}
 .col-search-wrap{padding:14px 16px 10px;background:var(--ink);position:sticky;top:56px;z-index:100;border-bottom:1px solid var(--ink3);}
 /* Hunt diary widget */
-.hunt-widget{padding:0 16px 14px;background:var(--ink);}
-.hunt-idle{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-lg);padding:14px 16px;}
+.hunt-widget{padding:16px 16px 6px;}
+.hunt-idle{display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px solid var(--mist3);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--sh);}
 .hunt-idle-icon{font-size:24px;flex-shrink:0;}
 .hunt-idle-text{flex:1;min-width:0;}
-.hunt-idle-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;}
-.hunt-idle-sub{font-size:11px;color:rgba(255,255,255,.4);}
+.hunt-idle-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px;}
+.hunt-idle-sub{font-size:11px;color:var(--fog2);}
 .hunt-start-btn{flex-shrink:0;background:var(--amber);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
-.hunt-active{background:linear-gradient(135deg,#1c2e28 0%,#152420 100%);border:1px solid rgba(94,196,174,.3);border-radius:var(--r-lg);padding:14px 16px;}
+.hunt-active{background:linear-gradient(135deg,#1c2e28 0%,#152420 100%);border:1px solid rgba(94,196,174,.3);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--sh-lg);}
 .hunt-active-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
 .hunt-active-pulse{width:10px;height:10px;border-radius:50%;background:#5ec4ae;flex-shrink:0;animation:huntPulse 1.6s ease-in-out infinite;}
 @keyframes huntPulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(94,196,174,.5);}50%{opacity:.7;box-shadow:0 0 0 6px rgba(94,196,174,0);}}
@@ -918,6 +929,33 @@ textarea::placeholder{color:var(--fog);}
     </div>
   </div>
 
+  <!-- Diario de Caza: primer bloque de accion, antes de subir fotos -->
+  <div class="hunt-widget" id="huntWidget">
+    <div class="hunt-idle" id="huntIdle">
+      <div class="hunt-idle-icon">&#127890;</div>
+      <div class="hunt-idle-text">
+        <div class="hunt-idle-title">Diario de Caza</div>
+        <div class="hunt-idle-sub">Registra tu sesion en el rastro</div>
+      </div>
+      <button class="hunt-start-btn" onclick="startHuntSession()">Empezar</button>
+    </div>
+    <div class="hunt-active" id="huntActive" style="display:none">
+      <div class="hunt-active-top">
+        <div class="hunt-active-pulse"></div>
+        <div class="hunt-active-info">
+          <div class="hunt-active-title">Sesion activa</div>
+          <div class="hunt-active-timer" id="huntTimer">00:00</div>
+        </div>
+        <button class="hunt-end-btn" onclick="endHuntSession()">Terminar</button>
+      </div>
+      <div class="hunt-active-stats">
+        <div class="hunt-stat"><span class="hunt-stat-num" id="huntSeenNum">0</span><span class="hunt-stat-lbl">vistos</span></div>
+        <div class="hunt-stat"><span class="hunt-stat-num" id="huntBoughtNum">0</span><span class="hunt-stat-lbl">comprados</span></div>
+        <div class="hunt-stat"><span class="hunt-stat-num" id="huntSpentNum">0EUR</span><span class="hunt-stat-lbl">gastado</span></div>
+      </div>
+    </div>
+  </div>
+
   <div class="card-home">
     <div class="card-label">Fotografias <span style="font-weight:400;color:var(--fog)">hasta 5 — puedes seleccionar varias</span></div>
     <div class="upload-row" id="uploadRow">
@@ -952,14 +990,24 @@ textarea::placeholder{color:var(--fog);}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <span>Identificar y Valorar</span>
   </button>
-  <button class="btn-quick" id="quickBtn" onclick="analyzePhone(true)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-    Tasacion rapida — precio en 8 segundos
-  </button>
-  <button class="btn-lot" onclick="openLotMode()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-    Modo Lote — analizar varios a la vez
-  </button>
+
+  <!-- Opciones secundarias: colapsadas para no competir con la accion principal -->
+  <div class="more-options-wrap">
+    <button class="more-options-toggle" onclick="toggleMoreOptions()" id="moreOptionsToggle">
+      <span>Mas opciones</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="moreOptionsChevron"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="more-options-panel" id="moreOptionsPanel" style="display:none">
+      <button class="btn-quick" id="quickBtn" onclick="analyzePhone(true)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Tasacion rapida — precio en 8 segundos
+      </button>
+      <button class="btn-lot" onclick="openLotMode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        Modo Lote — analizar varios a la vez
+      </button>
+    </div>
+  </div>
 
   <div class="loading-wrap" id="loadingWrap">
     <div class="loading-inner">
@@ -1005,9 +1053,13 @@ textarea::placeholder{color:var(--fog);}
     </div>
   </div>
 
-  <!-- Drafts -->
+  <!-- Drafts: colapsado, discreto -->
   <div id="draftsSection" style="display:none">
-    <div class="drafts-section">
+    <div class="drafts-toggle" onclick="toggleDraftsPanel()" id="draftsToggle">
+      <span>Recientes sin guardar</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="draftsChevron"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="drafts-section" id="draftsPanel" style="display:none">
       <div class="drafts-header">
         <span class="drafts-title">Recientes sin guardar</span>
         <button class="drafts-clear" onclick="clearDrafts()">Borrar</button>
@@ -1294,32 +1346,6 @@ textarea::placeholder{color:var(--fog);}
       </div>
     </div>
   </div>
-  <!-- Diario de Caza -->
-  <div class="hunt-widget" id="huntWidget">
-    <div class="hunt-idle" id="huntIdle">
-      <div class="hunt-idle-icon">&#127890;</div>
-      <div class="hunt-idle-text">
-        <div class="hunt-idle-title">Diario de Caza</div>
-        <div class="hunt-idle-sub">Registra tu sesion en el rastro</div>
-      </div>
-      <button class="hunt-start-btn" onclick="startHuntSession()">Empezar</button>
-    </div>
-    <div class="hunt-active" id="huntActive" style="display:none">
-      <div class="hunt-active-top">
-        <div class="hunt-active-pulse"></div>
-        <div class="hunt-active-info">
-          <div class="hunt-active-title">Sesion activa</div>
-          <div class="hunt-active-timer" id="huntTimer">00:00</div>
-        </div>
-        <button class="hunt-end-btn" onclick="endHuntSession()">Terminar</button>
-      </div>
-      <div class="hunt-active-stats">
-        <div class="hunt-stat"><span class="hunt-stat-num" id="huntSeenNum">0</span><span class="hunt-stat-lbl">vistos</span></div>
-        <div class="hunt-stat"><span class="hunt-stat-num" id="huntBoughtNum">0</span><span class="hunt-stat-lbl">comprados</span></div>
-        <div class="hunt-stat"><span class="hunt-stat-num" id="huntSpentNum">0EUR</span><span class="hunt-stat-lbl">gastado</span></div>
-      </div>
-    </div>
-  </div>
   <div class="col-search-wrap">
     <div class="col-search-inner">
       <span class="col-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
@@ -1544,6 +1570,8 @@ function showPage(n){
     var meta=document.getElementById('photoMeta');
     if(meta) meta.style.display='none';
     renderHomeSnapshot();
+    if(!_huntSession)_huntSession=loadHuntSession();
+    renderHuntWidget();
     // Leaving collection - reset compare mode so it's fresh next time
     if(_compareMode){_compareMode=false;_compareSelected=[];var bar=document.getElementById('compareBar');if(bar)bar.classList.remove('open');var btn=document.getElementById('compareModeBtn');if(btn){btn.style.background='';btn.style.borderColor='';btn.style.color='';}}
   }
@@ -1569,6 +1597,20 @@ function toggleUrlImport(){
   var row=document.getElementById('urlImportRow');
   if(!row)return;
   row.style.display=row.style.display==='none'?'flex':'none';
+}
+function toggleMoreOptions(){
+  var panel=document.getElementById('moreOptionsPanel'),btn=document.getElementById('moreOptionsToggle');
+  if(!panel||!btn)return;
+  var isOpen=panel.style.display!=='none';
+  panel.style.display=isOpen?'none':'block';
+  btn.classList.toggle('expanded',!isOpen);
+}
+function toggleDraftsPanel(){
+  var panel=document.getElementById('draftsPanel'),toggle=document.getElementById('draftsToggle');
+  if(!panel||!toggle)return;
+  var isOpen=panel.style.display!=='none';
+  panel.style.display=isOpen?'none':'block';
+  toggle.classList.toggle('expanded',!isOpen);
 }
 function switchTab(e,n){
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
@@ -3014,7 +3056,8 @@ window.addEventListener('firebase-ready',async function(){
   }catch(e){console.error('firebase-ready preload:',e);}
 });
 _huntSession=loadHuntSession();
-if(document.readyState!=='loading'){renderDrafts();}else{document.addEventListener('DOMContentLoaded',renderDrafts);}
+function _initHuntWidgetOnLoad(){renderHuntWidget();renderDrafts();}
+if(document.readyState!=='loading'){_initHuntWidgetOnLoad();}else{document.addEventListener('DOMContentLoaded',_initHuntWidgetOnLoad);}
 </script>
 </body>
 </html>
