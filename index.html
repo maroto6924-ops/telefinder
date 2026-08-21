@@ -493,7 +493,7 @@ textarea::placeholder{color:var(--fog);}
 .pp-cell.profit-cell .pp-lbl{color:var(--teal);}
 .pp-val{font-family:'Instrument Serif',serif;font-size:15px;color:var(--ink2);letter-spacing:-.3px;line-height:1;}
 .pp-cell.profit-cell .pp-val{color:var(--teal);}
-.phone-delete{width:32px;height:32px;border-radius:50%;background:var(--ruby-light);color:var(--ruby);border:1px solid rgba(192,57,43,.2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.phone-delete{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;background:var(--ruby-light);color:var(--ruby);border:1px solid rgba(192,57,43,.2);cursor:pointer;font-size:11.5px;font-weight:600;font-family:'Inter',sans-serif;transition:all .15s;flex-shrink:0;}
 .phone-delete:hover,.phone-delete:active{background:var(--ruby);color:#fff;}
 .card-edit-btn{font-size:11px;font-weight:600;color:var(--amber2);background:none;border:none;cursor:pointer;padding:4px 2px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;}
 .card-edit-row{text-align:right;padding:0 0 2px;display:flex;align-items:center;justify-content:space-between;}
@@ -792,6 +792,8 @@ textarea::placeholder{color:var(--fog);}
 .hunt-session-place{font-size:14.5px;font-weight:700;color:var(--ink);margin-bottom:2px;}
 .hunt-session-date{font-size:11.5px;color:var(--fog2);}
 .hunt-session-duration{background:var(--teal-light);color:var(--teal);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.hunt-session-delete{width:28px;height:28px;border-radius:50%;background:var(--ruby-light);color:var(--ruby);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.hunt-session-delete svg{width:13px;height:13px;}
 .hunt-session-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 .hunt-session-stat{text-align:center;background:var(--mist);border-radius:10px;padding:9px 6px;}
 .hunt-session-stat-num{font-family:'Instrument Serif',serif;font-size:19px;color:var(--ink);line-height:1;}
@@ -1698,53 +1700,24 @@ textarea::placeholder{color:var(--fog);}
     </div>
   </div>
 
-  <!-- Cuerpo: cambia entre captura / analizando / resultado, todo sin navegar -->
+  <!-- Cuerpo: zona de captura. Al analizar, se minimiza y se ve el
+       informe completo real (el mismo que analizando desde casa). -->
   <div class="hm-body" id="hmBody">
-
-    <!-- ESTADO 1: listo para capturar -->
-    <div class="hm-stage" id="hmStageCapture">
-      <div class="hm-capture-zone" id="hmCaptureZone">
-        <div class="hm-capture-strip" id="hmCaptureStrip"></div>
-        <label class="hm-capture-btn" for="hmCameraInput">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4.2"/></svg>
-          <span>Hacer foto</span>
-        </label>
-        <input type="file" id="hmCameraInput" accept="image/*" capture="environment" onchange="hmAddPhoto(this)" style="display:none">
-        <label class="hm-capture-alt" for="hmGalleryInput">o elige de la galeria</label>
-        <input type="file" id="hmGalleryInput" accept="image/*" multiple onchange="hmAddPhotos(this)" style="display:none">
-      </div>
-      <button class="hm-analyze-btn" id="hmAnalyzeBtn" onclick="hmAnalyze()" disabled>
-        <span>Analizar</span>
-      </button>
-      <div class="hm-log-label">Actividad de la sesion</div>
-      <div class="hm-log" id="huntModeLog"></div>
+    <div class="hm-capture-zone" id="hmCaptureZone">
+      <div class="hm-capture-strip" id="hmCaptureStrip"></div>
+      <label class="hm-capture-btn" for="hmCameraInput">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4.2"/></svg>
+        <span>Hacer foto</span>
+      </label>
+      <input type="file" id="hmCameraInput" accept="image/*" capture="environment" onchange="hmAddPhoto(this)" style="display:none">
+      <label class="hm-capture-alt" for="hmGalleryInput">o elige de la galeria</label>
+      <input type="file" id="hmGalleryInput" accept="image/*" multiple onchange="hmAddPhotos(this)" style="display:none">
     </div>
-
-    <!-- ESTADO 2: analizando -->
-    <div class="hm-stage" id="hmStageLoading" style="display:none">
-      <div class="hm-loading-ring">
-        <svg viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="22" stroke="rgba(255,255,255,.12)" stroke-width="3"/><circle cx="26" cy="26" r="22" stroke="#5ec4ae" stroke-width="3" stroke-dasharray="30 110" stroke-linecap="round"/></svg>
-      </div>
-      <div class="hm-loading-txt" id="hmLoadingTxt">Identificando modelo...</div>
-      <div class="hm-loading-timer" id="hmLoadingTimer">0s</div>
-    </div>
-
-    <!-- ESTADO 3: resultado compacto -->
-    <div class="hm-stage" id="hmStageResult" style="display:none">
-      <div class="hm-result-card" id="hmResultCard"></div>
-      <div class="hm-result-actions">
-        <button class="hm-result-btn hm-result-btn-secondary" onclick="hmDiscardResult()">Descartar</button>
-        <button class="hm-result-btn hm-result-btn-primary" onclick="hmSaveResult()">Guardar en coleccion</button>
-      </div>
-      <button class="hm-next-btn" onclick="hmNextPhone()">Siguiente telefono &#8594;</button>
-    </div>
-
-    <!-- ESTADO ERROR -->
-    <div class="hm-stage" id="hmStageError" style="display:none">
-      <div class="hm-error-box" id="hmErrorBox"></div>
-      <button class="hm-analyze-btn" onclick="hmRetry()"><span>Reintentar</span></button>
-      <button class="hm-next-btn" onclick="hmNextPhone()">Volver a intentar con otra foto</button>
-    </div>
+    <button class="hm-analyze-btn" id="hmAnalyzeBtn" onclick="hmAnalyze()" disabled>
+      <span>Analizar - informe completo</span>
+    </button>
+    <div class="hm-log-label">Actividad de la sesion</div>
+    <div class="hm-log" id="huntModeLog"></div>
   </div>
 
   <div class="hunt-mode-bottombar">
@@ -2651,7 +2624,7 @@ function phoneCardHTML(e){
   pricesDiv.appendChild(c1);pricesDiv.appendChild(c2);pricesDiv.appendChild(c3);
   cardDiv.appendChild(topDiv);cardDiv.appendChild(pricesDiv);
   var actDiv=document.createElement('div');actDiv.className='card-edit-row';
-  actDiv.innerHTML='<button class="card-edit-btn" onclick="openPurchaseModal(\''+fidSafe+'\',\''+nameSafe+'\',\''+bpStr+'\',\''+smn+'\',\''+smx+'\',\''+qty+'\')">'+editLabel+'</button><button class="phone-delete" onclick="deleteEntry(event,\''+fidSafe+'\')">&#128465;</button>';
+  actDiv.innerHTML='<button class="card-edit-btn" onclick="openPurchaseModal(\''+fidSafe+'\',\''+nameSafe+'\',\''+bpStr+'\',\''+smn+'\',\''+smx+'\',\''+qty+'\')">'+editLabel+'</button><button class="phone-delete" onclick="deleteEntry(event,\''+fidSafe+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span>Eliminar</span></button>';
   tmp.appendChild(cardDiv);
   if(!_compareMode)tmp.appendChild(actDiv);
   return tmp.innerHTML;
@@ -2813,6 +2786,7 @@ function endHuntSession(){
   if(!_huntSession)return;
   var durationMin=Math.round((Date.now()-_huntSession.startedAt)/60000);
   var entry={
+    id:'hunt_'+Date.now()+'_'+Math.random().toString(36).substring(2,8),
     date:new Date().toISOString(),
     place:_huntSession.place||'',
     durationMin:durationMin,
@@ -2915,12 +2889,14 @@ function renderHuntModeBody(){
 }
 
 // -- ANALISIS EN VIVO DENTRO DEL MODO CAZA --------------------------
-// Pipeline propio: captura, comprime, llama a la API y muestra el
-// resultado sin salir nunca del overlay de sesion.
+// El modo caza solo cambia el AMBIENTE de captura (pantalla dedicada,
+// cronometro, contador de sesion). El analisis en si usa exactamente
+// el mismo pipeline que analizar desde casa: analyzePhone() + el
+// informe completo de siempre (renderResult, con todos sus tabs).
+// Aqui solo capturamos fotos y delegamos al flujo real.
 var _hmImages=[];
-var _hmCurrentResult=null;
 function hmShowStage(stage){
-  ['hmStageCapture','hmStageLoading','hmStageResult','hmStageError'].forEach(function(id){
+  ['hmStageCapture','hmStageLoading','hmStageError'].forEach(function(id){
     var el=document.getElementById(id);
     if(el)el.style.display=(id===stage)?'block':'none';
   });
@@ -2959,127 +2935,44 @@ function hmRenderStrip(){
 }
 function hmResetCapture(){
   _hmImages=[];
-  _hmCurrentResult=null;
   var strip=document.getElementById('hmCaptureStrip');if(strip)strip.innerHTML='';
   var btn=document.getElementById('hmAnalyzeBtn');if(btn)btn.disabled=true;
   hmShowStage('hmStageCapture');
 }
-function hmNextPhone(){
-  hmResetCapture();
-}
 function hmRetry(){
-  hmAnalyze();
+  hmShowStage('hmStageCapture');
 }
+// Delegate to the REAL analyzePhone pipeline - same report as from home.
+// We load the captured photos into currentImages, minimize the hunt mode
+// overlay so the standard result page is visible, and let analyzePhone
+// run exactly as it does everywhere else in the app.
 async function hmAnalyze(){
   if(!_hmImages.length)return;
-  hmShowStage('hmStageLoading');
-  var elapsed=0;
-  var loadTxt=document.getElementById('hmLoadingTxt'),loadTimer=document.getElementById('hmLoadingTimer');
-  var tickInt=setInterval(function(){
-    elapsed++;
-    if(loadTimer)loadTimer.textContent=elapsed+'s';
-    if(loadTxt){
-      if(elapsed<3)loadTxt.textContent='Enviando imagen...';
-      else if(elapsed<9)loadTxt.textContent='Identificando modelo...';
-      else if(elapsed<18)loadTxt.textContent='Calculando valor de mercado...';
-      else loadTxt.textContent='Casi listo...';
-    }
-  },1000);
-
-  var userContent=[];
-  _hmImages.slice(0,3).forEach(function(img){
-    userContent.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.b64}});
-  });
-  userContent.push({type:'text',text:'Identifica el telefono en la imagen y devuelve el JSON.'});
-
-  var systemPrompt=[
-    'Eres PHONEFINDER, tasador experto de telefonia vintage para el mercado espanol. Conoces catalogos de fabricantes (Ericsson, Siemens, Western Electric, Standard Electrica, CGCT, GPO), museos de telecomunicaciones y guias de coleccionista (ATCA, TCI). Valoras con precios reales de Todocoleccion, Wallapop, eBay y Catawiki.',
-    'REGLA: responde SOLO el objeto JSON, sin texto ni markdown ni backticks.',
-    'precio_compra es el rango justo para comprar y revender con margen. precio_venta es el rango real de venta en Espana hoy.',
-    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos","material":"Material","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia en 3 frases","detalles_tecnicos":"Specs en 2 frases","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["p1","p2","p3"],"alertas":["a1","a2"],"estado_minimo":"Estado minimo","como_limpiar":["p1","p2","p3"],"como_negociar":"Estrategia en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"3-4 fuentes","zonas_limpieza":[]}'
-  ].join(' ');
-
-  var ctrl=new AbortController();
-  var timeout=setTimeout(function(){ctrl.abort();},55000);
-
-  try{
-    var resp=await fetch('/api/analyze',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,system:systemPrompt,messages:[{role:'user',content:userContent}]}),
-      signal:ctrl.signal
-    });
-    clearTimeout(timeout);
-    clearInterval(tickInt);
-    var rawResp=await resp.text();
-    if(!resp.ok){
-      var msg='Error del servidor ('+resp.status+'). Reintenta.';
-      try{var ej=JSON.parse(rawResp);if(ej.error&&ej.error.message)msg=ej.error.message;}catch(e){}
-      hmShowError(msg);
-      return;
-    }
-    var data=JSON.parse(rawResp);
-    var raw=(data.content||[]).map(function(c){return c.text||'';}).join('');
-    var result=extractJSON(raw);
-    if(!result){hmShowError('La IA no devolvio un resultado valido. Reintenta con una foto mas clara.');return;}
-
-    _hmCurrentResult=result;
-    if(_huntSession)logHuntSeen(result.nombre);
-    hmRenderResult(result);
-    hmShowStage('hmStageResult');
-
-  }catch(err){
-    clearTimeout(timeout);clearInterval(tickInt);
-    if(err.name==='AbortError'){hmShowError('Tardo demasiado y se cancelo. Reintenta.');}
-    else{hmShowError('Error de conexion: '+(err.message||'revisa tu internet'));}
-  }
-}
-function hmShowError(msg){
-  var box=document.getElementById('hmErrorBox');
-  if(box)box.textContent=msg;
-  hmShowStage('hmStageError');
-}
-function hmRenderResult(r){
-  var card=document.getElementById('hmResultCard');
-  if(!card)return;
-  var rareza=(r.rareza||'').toUpperCase();
-  var rColor='#5ec4ae',rBg='rgba(94,196,174,.15)';
-  if(rareza.indexOf('MUY')!==-1){rColor='#f0a83a';rBg='rgba(212,134,42,.2)';}
-  else if(rareza==='RARO'){rColor='#e0954a';rBg='rgba(212,134,42,.15)';}
-  else if(rareza.indexOf('POCO')!==-1){rColor='#6fa3e0';rBg='rgba(44,79,138,.15)';}
-  card.innerHTML=
-    '<span class="hm-result-rareza" style="background:'+rBg+';color:'+rColor+'">'+(r.rareza||'--')+'</span>'+
-    '<div class="hm-result-name">'+(r.nombre||'--')+'</div>'+
-    '<div class="hm-result-meta">'+(r.fabricante||'')+' - '+(r.periodo||'')+'</div>'+
-    '<div class="hm-result-prices">'+
-      '<div class="hm-result-price-box"><div class="hm-result-price-lbl">Comprar hasta</div><div class="hm-result-price-val">'+(r.precio_compra_max||0)+'EUR</div></div>'+
-      '<div class="hm-result-price-box"><div class="hm-result-price-lbl">Venta</div><div class="hm-result-price-val">'+(r.precio_venta_min||0)+'-'+(r.precio_venta_max||0)+'EUR</div></div>'+
-    '</div>';
-}
-function hmDiscardResult(){
+  currentImages=_hmImages.slice();
+  var desc=document.getElementById('descInput');
+  if(desc)desc.value='';
+  minimizeHuntMode();
+  if(_huntSession)logHuntSeen();
+  await analyzePhone(false);
+  // After the standard flow finishes, reset the hunt capture zone so
+  // it's ready for the next phone next time hunt mode is reopened.
   hmResetCapture();
-}
-async function hmSaveResult(){
-  if(!_hmCurrentResult)return;
-  if(!window._firebaseReady){showToast('Firebase cargando...');return;}
-  var r=_hmCurrentResult;
-  var entry={savedAt:new Date().toISOString(),thumb:_hmImages.length>0?_hmImages[0].dataUrl:null,data:r,purchase:{buyPrice:null,sellPrice:null,qty:1,soldAt:null}};
-  try{
-    showToast('Guardando...');
-    await window._fbSave(entry);
-    _colCache=null;_colIndex=[];
-    if(_huntSession)logHuntPurchase(r.precio_compra_max||0,r.nombre);
-    showToast('Guardado en tu coleccion');
-    hmResetCapture();
-  }catch(e){
-    console.error(e);
-    showToast('Error al guardar: '+e.message);
-  }
 }
 
 // -- HISTORIAL DE SESIONES -----------------------------------------
 function getHuntLog(){
   try{return JSON.parse(localStorage.getItem(HUNT_LOG_KEY)||'[]');}catch(e){return[];}
+}
+function deleteHuntSession(id){
+  if(!id)return;
+  if(!confirm('Eliminar esta sesion del historial? No se puede deshacer.'))return;
+  try{
+    var log=getHuntLog();
+    log=log.filter(function(e){return e.id!==id;});
+    localStorage.setItem(HUNT_LOG_KEY,JSON.stringify(log));
+    renderHuntHistory();
+    showToast('Sesion eliminada');
+  }catch(e){console.error(e);showToast('Error al eliminar');}
 }
 function openHuntHistory(){
   var ov=document.getElementById('huntHistoryOverlay');
@@ -3112,10 +3005,16 @@ function renderHuntHistory(){
     var dateStr=d.toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'});
     var timeStr=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
     var place=entry.place&&entry.place.trim()?entry.place:'Sesion de caza';
+    var eid=entry.id||'';
     html+='<div class="hunt-session-card">'+
       '<div class="hunt-session-top">'+
         '<div><div class="hunt-session-place">'+place+'</div><div class="hunt-session-date">'+dateStr+' - '+timeStr+'</div></div>'+
-        '<div class="hunt-session-duration">'+entry.durationMin+' min</div>'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<div class="hunt-session-duration">'+entry.durationMin+' min</div>'+
+          '<button class="hunt-session-delete" onclick="deleteHuntSession(\''+eid+'\')" title="Eliminar sesion">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'+
+          '</button>'+
+        '</div>'+
       '</div>'+
       '<div class="hunt-session-stats">'+
         '<div class="hunt-session-stat"><div class="hunt-session-stat-num">'+entry.seen+'</div><div class="hunt-session-stat-lbl">Vistos</div></div>'+
