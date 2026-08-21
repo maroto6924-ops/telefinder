@@ -388,6 +388,15 @@ textarea::placeholder{color:var(--fog);}
 .diff-dot{width:10px;height:10px;border-radius:50%;background:var(--mist2);}
 .diff-dot.on{background:var(--amber);}
 .btn-save{width:100%;background:var(--teal);color:#fff;border:none;border-radius:var(--r);padding:15px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;}
+/* Hunt decision bar: Comprar / Rechazar, shown only for results coming
+   from a live hunt-mode analysis. Big, thumb-friendly, unambiguous. */
+.hunt-decision-bar{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:4px;}
+.hunt-decision-btn{border:none;border-radius:var(--r);padding:16px;font-family:'Inter',sans-serif;font-size:14.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s;}
+.hunt-decision-btn svg{width:18px;height:18px;flex-shrink:0;}
+.hunt-decision-reject{background:var(--ruby-light);color:var(--ruby);border:1.5px solid rgba(192,57,43,.25);}
+.hunt-decision-reject:active{background:rgba(192,57,43,.18);transform:scale(.98);}
+.hunt-decision-buy{background:var(--teal);color:#fff;box-shadow:0 6px 20px rgba(42,125,107,.3);}
+.hunt-decision-buy:active{opacity:.9;transform:scale(.98);}
 .btn-save:hover{opacity:.9;transform:translateY(-1px);box-shadow:var(--sh-lg);}
 .btn-save svg{width:16px;height:16px;}
 .photo-viewer-photos{display:flex;gap:8px;overflow-x:auto;padding:0 0 4px;margin-bottom:14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
@@ -701,7 +710,7 @@ textarea::placeholder{color:var(--fog);}
 .cmp-reasons-list li:last-child{border-bottom:none;}
 .cmp-reasons-list li .cmp-dot{width:6px;height:6px;border-radius:50%;background:var(--plum);flex-shrink:0;margin-top:6px;}
 /* Milestone celebration overlay */
-.milestone-overlay{position:fixed;inset:0;z-index:700;display:none;align-items:center;justify-content:center;pointer-events:none;}
+.milestone-overlay{position:fixed;inset:0;z-index:890;display:none;align-items:center;justify-content:center;pointer-events:none;}
 .milestone-overlay.open{display:flex;}
 .milestone-card{background:linear-gradient(135deg,var(--ink) 0%,#2b1f35 100%);border-radius:24px;padding:36px 44px;text-align:center;box-shadow:0 20px 70px rgba(0,0,0,.4);border:1px solid rgba(212,134,42,.3);animation:milestonePop .5s cubic-bezier(.2,1.4,.4,1);}
 @keyframes milestonePop{
@@ -846,7 +855,7 @@ textarea::placeholder{color:var(--fog);}
 /* Photo strip cursor hint */
 .photo-viewer-img{cursor:pointer;}
 /* Jackpot overlay: MUY RARO + alto valor */
-.jackpot-overlay{position:fixed;inset:0;z-index:800;display:none;align-items:center;justify-content:center;cursor:pointer;background:rgba(8,6,4,.88);backdrop-filter:blur(4px);}
+.jackpot-overlay{position:fixed;inset:0;z-index:890;display:none;align-items:center;justify-content:center;cursor:pointer;background:rgba(8,6,4,.88);backdrop-filter:blur(4px);}
 .jackpot-overlay.open{display:flex;animation:jackpotBgIn .3s ease;}
 @keyframes jackpotBgIn{from{opacity:0;}to{opacity:1;}}
 .jackpot-rays{position:absolute;inset:-50%;background:conic-gradient(from 0deg,transparent 0deg,rgba(212,134,42,.15) 15deg,transparent 30deg,transparent 90deg,rgba(212,134,42,.12) 105deg,transparent 120deg,transparent 180deg,rgba(212,134,42,.15) 195deg,transparent 210deg,transparent 270deg,rgba(212,134,42,.12) 285deg,transparent 300deg);animation:jackpotSpin 12s linear infinite;pointer-events:none;}
@@ -1464,7 +1473,20 @@ textarea::placeholder{color:var(--fog);}
         <button class="sell-regen-btn" onclick="generateNegoMsg()">Regenerar mensajes</button>
       </div>
     </div>
-    <button class="btn-save" onclick="saveToCollection()">
+    <!-- Decision de caza: solo visible cuando el resultado viene del
+         modo caza. Comprar guarda en coleccion, Rechazar descarta y
+         vuelve directo a la zona de captura para el siguiente telefono. -->
+    <div class="hunt-decision-bar" id="huntDecisionBar" style="display:none">
+      <button class="hunt-decision-btn hunt-decision-reject" onclick="huntRejectPhone()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <span>Rechazar</span>
+      </button>
+      <button class="hunt-decision-btn hunt-decision-buy" onclick="huntBuyPhone()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Comprar</span>
+      </button>
+    </div>
+    <button class="btn-save" id="btnSaveNormal" onclick="saveToCollection()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       Guardar en Mi Coleccion
     </button>
@@ -1831,14 +1853,17 @@ var _chkState=[],_quickResult=null,_lotPhotos=[],_searchTimer=null,_lastPhotoDar
 var _compareMode=false,_compareSelected=[];
 var _huntSession=null,_huntTimerInt=null;
 var _inHuntMode=false;
+var _huntPendingReturnToCapture=false;
 var MAX_PHOTOS=5,MAX_DIM=512,QUALITY=0.5,DRAFT_KEY='pf_drafts',MAX_DRAFTS=5;
 
 // NAVIGATION
 function showPage(n){
-  // Defensive cleanup: if we were showing the report inside hunt mode's
-  // own DOM slot and the app navigates away for any reason, put the
-  // real nodes back where they belong first.
-  if(_inHuntMode){
+  // Defensive cleanup: only kicks in if the app tries to navigate to
+  // something OTHER than the result page while in hunt mode (e.g. the
+  // user taps "Tasar" or "Coleccion" mid-flow). Showing the result
+  // itself must NOT trigger this - that's the normal, expected case
+  // where the report has to appear inside the hunt slot.
+  if(_inHuntMode&&n!=='result'){
     hmExitResultSlot();
     _inHuntMode=false;
   }
@@ -2236,8 +2261,13 @@ function renderResult(r){
   _sellAdData=null;_negoMsgs={msg1:'',msg2:''};_negoGoal='low';
   resetAskHistory();
   resetCertificate();
-  if(!_huntSession)_huntSession=loadHuntSession();
-  if(_huntSession)logHuntSeen();
+  // Show the Comprar/Rechazar bar only when this result came from a
+  // live hunt-mode analysis; otherwise show the normal save button.
+  var hdb=document.getElementById('huntDecisionBar'),bsn=document.getElementById('btnSaveNormal');
+  if(hdb&&bsn){
+    hdb.style.display=_inHuntMode?'grid':'none';
+    bsn.style.display=_inHuntMode?'none':'flex';
+  }
   document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',i===0);});
   document.querySelectorAll('.tab-panel').forEach(function(p,i){p.classList.toggle('active',i===0);});
   var ey=document.getElementById('r-eyebrow');
@@ -2751,7 +2781,17 @@ function openPurchaseModal(fid,name,buyPrice,mSellMin,mSellMax,qty){
   if(_colCache&&fid){var entry=_colCache.find(function(e){return e.firestoreId===fid;});if(entry&&entry.purchase&&entry.purchase.soldAt){_isSold=true;if(tog)tog.classList.add('active');if(lbl)lbl.textContent='Vendido';if(dw){dw.style.display='block';var di=document.getElementById('modalSoldDate');if(di)di.value=entry.purchase.soldAt.split('T')[0];}}}
   var mo=document.getElementById('purchaseModal');if(mo)mo.classList.add('open');
 }
-function closePurchaseModal(){var mo=document.getElementById('purchaseModal');if(mo)mo.classList.remove('open');_pendingModalFid=null;}
+function closePurchaseModal(){
+  var mo=document.getElementById('purchaseModal');if(mo)mo.classList.remove('open');_pendingModalFid=null;
+  // If we're mid hunt-mode purchase flow, return to the capture zone
+  // for the next phone as soon as the price entry is done.
+  if(_inHuntMode&&_huntPendingReturnToCapture){
+    _huntPendingReturnToCapture=false;
+    document.getElementById('page-result').classList.remove('active');
+    hmExitResultSlot();
+    hmResetCapture();
+  }
+}
 function closePurchaseModalIfOutside(e){if(e.target===document.getElementById('purchaseModal'))closePurchaseModal();}
 function updateProfitPreview(){
   var buy=parseFloat(document.getElementById('modalBuyPrice').value)||0;
@@ -3084,6 +3124,23 @@ async function hmAnalyze(){
     hmResetCapture();
     _inHuntMode=false;
   }
+}
+// Comprar: guarda en la coleccion y abre el precio de compra igual que
+// desde casa. Al cerrar ese modal (closePurchaseModal), la sesion de
+// caza vuelve automaticamente a la zona de captura para el siguiente
+// telefono - ver _huntPendingReturnToCapture.
+function huntBuyPhone(){
+  if(!currentResult)return;
+  _huntPendingReturnToCapture=true;
+  saveToCollection();
+}
+// Rechazar: no se guarda nada. Vuelve directo a la captura para seguir
+// con el siguiente telefono, sin abrir ningun modal.
+function huntRejectPhone(){
+  document.getElementById('page-result').classList.remove('active');
+  hmExitResultSlot();
+  hmResetCapture();
+  showToast('Descartado');
 }
 
 // -- HISTORIAL DE SESIONES -----------------------------------------
