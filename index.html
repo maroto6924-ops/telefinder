@@ -980,11 +980,6 @@ textarea::placeholder{color:var(--fog);}
 .spec-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--mist2);margin-bottom:10px;}
 .spec-label{font-size:12px;font-weight:500;color:var(--fog3);}
 .spec-val{font-size:12px;font-weight:600;color:var(--ink2);font-family:'JetBrains Mono',monospace;}
-.rel-card{background:var(--mist);border:1px solid var(--mist3);border-radius:var(--r);padding:10px 14px;margin-bottom:8px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:12px;}
-.rel-thumb{flex-shrink:0;width:44px;height:44px;border-radius:9px;background:var(--mist2);overflow:hidden;display:flex;align-items:center;justify-content:center;}
-.rel-thumb svg{display:block;}
-.rel-card:hover,.rel-card:active{border-color:var(--indigo);background:var(--indigo-light);transform:translateX(2px);}
-.rel-card:last-child{margin-bottom:0;}
 .rel-arrow{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--indigo-light);color:var(--indigo);display:flex;align-items:center;justify-content:center;font-size:14px;}
 .rel-info{flex:1;min-width:0;}
 .rel-name{font-weight:600;font-size:13px;color:var(--ink);margin-bottom:2px;}
@@ -1387,11 +1382,6 @@ textarea::placeholder{color:var(--fog);}
       <div class="sec" id="epocaSec" style="display:none">
         <div class="sec-head"><div class="sec-icon si-amber">&#128333;&#65039;</div><div class="sec-title">Su Epoca</div></div>
         <div class="prose-text" id="r-epoca" style="margin-bottom:0"></div>
-      </div>
-      <!-- Telefonos relacionados -->
-      <div class="sec" id="relSec" style="display:none">
-        <div class="sec-head"><div class="sec-icon si-indigo">&#128279;</div><div class="sec-title">Telefonos Relacionados</div></div>
-        <div id="r-relacionados"></div>
       </div>
       <div class="sec">
         <div class="sec-head"><div class="sec-icon si-ink">&#127891;</div><div class="sec-title">Confianza &amp; Fuentes</div></div>
@@ -1874,6 +1864,12 @@ textarea::placeholder{color:var(--fog);}
   <div class="photo-lightbox-dots" id="photoLightboxDots"></div>
 </div>
 
+<!-- Truco de haptics para iOS Safari: WebKit da feedback tactil nativo
+     SOLO al pulsar un input checkbox con el atributo switch (iOS 18+).
+     No hay API programable equivalente a navigator.vibrate en iOS, asi
+     que simulamos un toque en este switch oculto justo cuando aparece
+     el aviso de rareza, para conseguir un golpe hactico real en iPhone. -->
+<input type="checkbox" switch id="iosHapticSwitch" style="position:fixed;top:-999px;left:-999px;width:1px;height:1px;opacity:0;pointer-events:none;">
 <div class="jackpot-overlay" id="jackpotOverlay" onclick="closeJackpotOverlay()">
   <div class="jackpot-rays"></div>
   <div class="jackpot-card">
@@ -2126,21 +2122,6 @@ function repairJSON(s){
   return s;
 }
 
-// Analyze a related phone by its name (text-only, reuses the full flow)
-function analyzeRelated(name){
-  if(!name)return;
-  currentImages=[];
-  currentResult=null;
-  _lastPhotoDark=false;
-  var strip=document.getElementById('photoStrip');if(strip)strip.innerHTML='';
-  var meta=document.getElementById('photoMeta');if(meta)meta.style.display='none';
-  var row=document.getElementById('uploadRow');if(row)row.style.display='grid';
-  var desc=document.getElementById('descInput');if(desc)desc.value='Telefono vintage: '+name+'. Identifica este modelo concreto y tasalo.';
-  showPage('home');
-  showToast('Analizando '+name+'...');
-  setTimeout(function(){analyzePhone(false);},300);
-}
-
 // ANALYZE
 async function analyzePhone(quickMode){
   var desc=document.getElementById('descInput').value.trim();
@@ -2207,8 +2188,8 @@ async function analyzePhone(quickMode){
     'REGLA: responde SOLO el objeto JSON, sin texto ni markdown ni backticks.',
     'precio_compra es el rango justo para comprar y revender. precio_venta es el rango real de venta en Espana hoy.',
     'Devuelve EXACTAMENTE esta estructura:',
-    'Incluye tambien: dato_curioso (una frase sorprendente de este modelo), contexto_epoca (una frase de contexto historico), relacionados (exactamente 2 modelos conectados, con nombre, gancho breve, y color hex aproximado del cuerpo del telefono, ej negro baquelita #1a1a1a o marfil #ede4d3), y alternativa (SOLO si genuinamente dudas entre 2 modelos similares por la foto, pon el nombre del segundo candidato; si estas seguro, pon null).',
-    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos","material":"Material","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia en 3 frases","detalles_tecnicos":"Specs en 2 frases","dato_curioso":"Frase sorprendente","contexto_epoca":"Frase de contexto","alternativa":"Si dudas entre 2 modelos posibles, nombre del segundo candidato mas probable, si no null","relacionados":[{"nombre":"Modelo 1","gancho":"Frase","color":"color hex aproximado del cuerpo ej #2b2b2b"},{"nombre":"Modelo 2","gancho":"Frase","color":"color hex aproximado"}],"precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["p1","p2","p3"],"alertas":["a1","a2"],"estado_minimo":"Estado minimo","como_limpiar":["p1","p2","p3"],"como_negociar":"Estrategia en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"3-4 fuentes","zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"mat","product":"producto","avoid":"evitar","steps":["p1","p2"]}]}'
+    'Incluye tambien: dato_curioso (una frase sorprendente de este modelo), contexto_epoca (una frase de contexto historico), y alternativa (SOLO si genuinamente dudas entre 2 modelos similares por la foto, pon el nombre del segundo candidato; si estas seguro, pon null).',
+    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos","material":"Material","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia en 3 frases","detalles_tecnicos":"Specs en 2 frases","dato_curioso":"Frase sorprendente","contexto_epoca":"Frase de contexto","alternativa":"Si dudas entre 2 modelos posibles, nombre del segundo candidato mas probable, si no null","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["p1","p2","p3"],"alertas":["a1","a2"],"estado_minimo":"Estado minimo","como_limpiar":["p1","p2","p3"],"como_negociar":"Estrategia en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"3-4 fuentes","zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"mat","product":"producto","avoid":"evitar","steps":["p1","p2"]}]}'
     ].join('\n');
 
   var _ctrl=new AbortController();
@@ -2361,20 +2342,6 @@ function renderResult(r){
   var epocaSec=document.getElementById('epocaSec'),epocaText=document.getElementById('r-epoca');
   if(r.contexto_epoca&&epocaText){epocaText.textContent=r.contexto_epoca;if(epocaSec)epocaSec.style.display='block';}
   else if(epocaSec){epocaSec.style.display='none';}
-  // Telefonos relacionados
-  var relSec=document.getElementById('relSec'),relEl=document.getElementById('r-relacionados');
-  if(r.relacionados&&r.relacionados.length&&relEl){
-    relEl.innerHTML='';
-    r.relacionados.forEach(function(rel,idx){
-      var card=document.createElement('div');
-      card.className='rel-card';
-      var thumbHtml=buildRelThumbSVG(rel.color||'#8A5010');
-      card.innerHTML='<div class="rel-thumb">'+thumbHtml+'</div><div class="rel-info"><div class="rel-name">'+(rel.nombre||'')+'</div><div class="rel-hook">'+(rel.gancho||'')+'</div></div><div class="rel-arrow">&#8594;</div>';
-      (function(n){card.onclick=function(){analyzeRelated(n);};})(rel.nombre||'');
-      relEl.appendChild(card);
-    });
-    if(relSec)relSec.style.display='block';
-  }else if(relSec){relSec.style.display='none';}
   var confEl=document.getElementById('r-conf');if(confEl){confEl.textContent=r.confianza||'--';confEl.className='conf-badge '+(r.confianza==='ALTA'?'conf-alta':r.confianza==='MEDIA'?'conf-media':'conf-baja');}
   var src=document.getElementById('r-sources');if(src)src.textContent=r.fuentes_usadas?'Fuentes: '+r.fuentes_usadas:'--';
   showPage('result');
@@ -2410,19 +2377,47 @@ function celebrateFind(r){
   hmVibrateForRarity(key);
   showRarityOverlay(r,key);
 }
-// Vibra al revelar la rareza, con intensidad distinta por nivel. Falla
-// en silencio en dispositivos/navegadores sin soporte (p.ej. iOS Safari).
+// Vibra al revelar la rareza, con intensidad distinta por nivel.
+// Android/Chrome: Vibration API estandar con patrones reales.
+// iOS Safari: navigator.vibrate no existe (WebKit nunca lo implemento).
+// La unica via real en iPhone es el haptic no estandar que WebKit anade
+// a <input type=checkbox switch> al tocarlo (iOS 18+). Simulamos ese
+// toque en un switch oculto tantas veces como pida la intensidad.
 function hmVibrateForRarity(key){
-  if(!('vibrate' in navigator))return;
-  try{
-    var patterns={
-      COMUN:[40],
-      POCO_COMUN:[50,60,50],
-      RARO:[70,70,70,70,120],
-      MUY_RARO:[90,60,90,60,90,60,200]
-    };
-    navigator.vibrate(patterns[key]||[40]);
-  }catch(e){}
+  var taps={COMUN:1,POCO_COMUN:2,RARO:3,MUY_RARO:5}[key]||1;
+  // Android / navegadores con Vibration API real
+  if('vibrate' in navigator){
+    try{
+      var patterns={
+        COMUN:[40],
+        POCO_COMUN:[50,60,50],
+        RARO:[70,70,70,70,120],
+        MUY_RARO:[90,60,90,60,90,60,200]
+      };
+      navigator.vibrate(patterns[key]||[40]);
+    }catch(e){}
+  }
+  // iOS Safari: toques simulados sobre el switch oculto
+  hmIosHapticTaps(taps);
+}
+function hmIosHapticTaps(count){
+  var sw=document.getElementById('iosHapticSwitch');
+  if(!sw)return;
+  // iOS 18.4+ solo concede el haptic dentro de la ventana de interaccion
+  // del usuario (aprox. 1s tras un tap/click real), asi que el primer
+  // toque es el que con mas probabilidad se siente; los siguientes son
+  // un intento honesto pero pueden no vibrar en versiones recientes.
+  sw.checked=!sw.checked;
+  sw.dispatchEvent(new Event('change',{bubbles:true}));
+  var i=1;
+  function tap(){
+    if(i>=count)return;
+    sw.checked=!sw.checked;
+    sw.dispatchEvent(new Event('change',{bubbles:true}));
+    i++;
+    setTimeout(tap,140);
+  }
+  if(count>1)setTimeout(tap,140);
 }
 function showRarityOverlay(r,key){
   var cfg=RARITY_LEVELS[key];
@@ -3333,21 +3328,6 @@ function renderHuntHistory(){
       deleteHuntSession(id);
     };
   });
-}
-
-// RELATED PHONE THUMBNAIL - a small vintage-phone SVG icon colored to
-// match the model's real body color (from the AI). Instant, offline,
-// always renders - no dependency on external image search reliability.
-function buildRelThumbSVG(hexColor){
-  var c=/^#[0-9a-fA-F]{6}$/.test(hexColor||'')?hexColor:'#8A5010';
-  return '<svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg">'+
-    '<rect x="7" y="16" width="30" height="15" rx="3" fill="'+c+'"/>'+
-    '<rect x="7" y="16" width="30" height="15" rx="3" fill="black" opacity="0.08"/>'+
-    '<circle cx="14" cy="23.5" r="5.2" fill="'+c+'" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>'+
-    '<circle cx="14" cy="23.5" r="2.6" fill="rgba(0,0,0,0.2)"/>'+
-    '<rect x="22" y="20" width="12" height="7" rx="1.5" fill="rgba(255,255,255,0.18)"/>'+
-    '<path d="M12 16c0-4 2-7 8-7s8 3 8 7" stroke="'+c+'" stroke-width="3" fill="none" stroke-linecap="round"/>'+
-  '</svg>';
 }
 
 // PHOTO LIGHTBOX - full screen photo viewer
