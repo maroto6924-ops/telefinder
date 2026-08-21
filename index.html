@@ -73,7 +73,7 @@ body{font-family:'Inter',sans-serif;background:var(--mist);color:var(--ink);min-
 /* When the result page is shown from within hunt mode, it must float
    ABOVE the hunt overlay (not replace it) so hunt mode stays intact
    underneath and reappears the moment the result is closed. */
-#page-result.over-hunt-mode{position:fixed;inset:0;z-index:870;background:var(--mist);overflow-y:auto;max-width:none;margin:0;padding-bottom:80px;}
+
 
 /* ─── HERO ───────────────────────────────────────────────── */
 .hero{position:relative;background:#080808;overflow:hidden;margin-bottom:0;min-height:420px;display:flex;flex-direction:column;justify-content:flex-end;}
@@ -177,8 +177,7 @@ textarea::placeholder{color:var(--fog);}
 /* When analyzing from inside hunt mode, float the loading card above
    the hunt overlay too, so the whole flow stays visually "in place"
    without ever revealing the home screen underneath. */
-.loading-wrap.over-hunt-mode{position:fixed;inset:0;z-index:870;background:#0b0f0e;display:flex;align-items:center;justify-content:center;padding:20px;}
-.loading-wrap.over-hunt-mode .loading-inner{width:100%;max-width:360px;background:#121715;border:1px solid rgba(94,196,174,.15);}
+
 .loading-inner{background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--mist3);padding:40px 24px;text-align:center;box-shadow:var(--sh);}
 .loading-ring{width:52px;height:52px;margin:0 auto 20px;}
 .loading-ring svg{animation:spin 1.1s linear infinite;width:52px;height:52px;}
@@ -716,12 +715,25 @@ textarea::placeholder{color:var(--fog);}
 .milestone-text{font-size:13px;color:rgba(255,255,255,.6);margin-top:6px;font-weight:500;letter-spacing:.3px;}
 /* MODO CAZA: pantalla completa dedicada */
 /* MODO CAZA - diseno tipo panel de control profesional */
-.hunt-mode-overlay{position:fixed;inset:0;z-index:850;display:none;flex-direction:column;background:#0b0f0e;}
+.hunt-mode-overlay{position:fixed;inset:0;z-index:850;display:none;flex-direction:column;background:radial-gradient(ellipse at 30% 0%,#152420 0%,#0b0f0e 55%,#080b0a 100%);overflow:hidden;}
 .hunt-mode-overlay.open{display:flex;animation:huntModeIn .25s ease;}
 @keyframes huntModeIn{from{opacity:0;}to{opacity:1;}}
 
+/* Decoracion de fondo del modo caza */
+.hm-bg-grain{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");}
+.hm-bg-grid{position:absolute;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(94,196,174,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(94,196,174,.035) 1px,transparent 1px);background-size:36px 36px;mask-image:radial-gradient(ellipse 75% 60% at 50% 20%,black 30%,transparent 100%);}
+.hm-bg-orb{position:absolute;border-radius:50%;pointer-events:none;z-index:0;filter:blur(2px);}
+.hm-bg-orb1{width:280px;height:280px;background:radial-gradient(circle,rgba(94,196,174,.16) 0%,transparent 70%);top:-60px;right:-60px;animation:hmOrbDrift1 14s ease-in-out infinite;}
+.hm-bg-orb2{width:220px;height:220px;background:radial-gradient(circle,rgba(212,134,42,.1) 0%,transparent 70%);bottom:10%;left:-70px;animation:hmOrbDrift2 18s ease-in-out infinite;}
+@keyframes hmOrbDrift1{0%,100%{transform:translate(0,0);}50%{transform:translate(-25px,20px);}}
+@keyframes hmOrbDrift2{0%,100%{transform:translate(0,0);}50%{transform:translate(20px,-15px);}}
+.hm-bg-phone{position:absolute;z-index:0;pointer-events:none;left:50%;top:52%;transform:translate(-50%,-50%);width:340px;max-width:82vw;opacity:.9;animation:hmPhoneBreathe 6s ease-in-out infinite;}
+.hm-bg-phone svg{width:100%;height:auto;display:block;}
+@keyframes hmPhoneBreathe{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.85;}50%{transform:translate(-50%,-50%) scale(1.015);opacity:1;}}
+.hm-header,.hm-body,.hunt-mode-bottombar,.hm-result-slot{position:relative;z-index:1;}
+
 /* Header: panel de datos fijo, siempre visible */
-.hm-header{background:#121715;border-bottom:1px solid rgba(94,196,174,.15);padding:calc(12px + env(safe-area-inset-top,0)) 14px 14px;flex-shrink:0;}
+.hm-header{background:rgba(18,23,21,.82);backdrop-filter:blur(10px);border-bottom:1px solid rgba(94,196,174,.15);padding:calc(12px + env(safe-area-inset-top,0)) 14px 14px;flex-shrink:0;}
 .hm-header-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
 .hm-icon-btn{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.65);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 .hm-icon-btn svg{width:16px;height:16px;}
@@ -742,7 +754,7 @@ textarea::placeholder{color:var(--fog);}
 .hm-stage{max-width:400px;margin:0 auto;}
 
 /* Estado 1: captura */
-.hm-capture-zone{background:#121715;border:1.5px dashed rgba(94,196,174,.25);border-radius:18px;padding:28px 20px;text-align:center;margin-bottom:16px;}
+.hm-capture-zone{background:rgba(18,23,21,.72);backdrop-filter:blur(6px);border:1.5px dashed rgba(94,196,174,.3);border-radius:18px;padding:28px 20px;text-align:center;margin-bottom:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);}
 .hm-capture-strip{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;}
 .hm-capture-strip:empty{display:none;}
 .hm-capture-thumb{width:56px;height:56px;border-radius:10px;object-fit:cover;border:1.5px solid rgba(94,196,174,.3);}
@@ -784,6 +796,10 @@ textarea::placeholder{color:var(--fog);}
 .hm-error-box{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.25);border-radius:14px;padding:16px;color:#e88a80;font-size:13px;line-height:1.55;margin-bottom:16px;}
 
 .hunt-mode-bottombar{padding:12px 16px calc(16px + env(safe-area-inset-bottom,0));flex-shrink:0;}
+/* Result slot: when active, takes over the ENTIRE hunt overlay so the
+   loading state and the full report render inside hunt mode itself. */
+.hm-result-slot{flex:1;overflow-y:auto;background:var(--mist);}
+.hm-result-slot.active{display:block!important;}
 .hunt-mode-end-btn{width:100%;background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;}
 
 /* Historial de caza */
@@ -1675,6 +1691,35 @@ textarea::placeholder{color:var(--fog);}
 <!-- Photo full-screen viewer -->
 <!-- MODO CAZA: sesion en directo, analisis integrado sin salir de la pantalla -->
 <div class="hunt-mode-overlay" id="huntModeOverlay">
+  <!-- Decoracion de fondo: silueta de telefono vintage + textura +
+       orbes de luz ambar/verde, para dar personalidad al "modo caza" -->
+  <div class="hm-bg-grain"></div>
+  <div class="hm-bg-grid"></div>
+  <div class="hm-bg-orb hm-bg-orb1"></div>
+  <div class="hm-bg-orb hm-bg-orb2"></div>
+  <div class="hm-bg-phone">
+    <svg viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="220" width="240" height="200" rx="22" fill="none" stroke="rgba(94,196,174,0.14)" stroke-width="2"/>
+      <rect x="36" y="226" width="228" height="188" rx="18" fill="none" stroke="rgba(94,196,174,0.08)" stroke-width="1"/>
+      <rect x="100" y="238" width="100" height="14" rx="7" fill="none" stroke="rgba(94,196,174,0.14)" stroke-width="1.5"/>
+      <rect x="90" y="262" width="120" height="18" rx="4" fill="none" stroke="rgba(94,196,174,0.1)" stroke-width="1"/>
+      <circle cx="150" cy="332" r="78" fill="none" stroke="rgba(94,196,174,0.14)" stroke-width="1.5"/>
+      <circle cx="150" cy="332" r="64" fill="none" stroke="rgba(94,196,174,0.1)" stroke-width="1" stroke-dasharray="8 4"/>
+      <circle cx="150" cy="268" r="11" fill="none" stroke="rgba(94,196,174,0.16)" stroke-width="1.2"/>
+      <circle cx="193" cy="284" r="11" fill="none" stroke="rgba(94,196,174,0.16)" stroke-width="1.2"/>
+      <circle cx="212" cy="326" r="11" fill="none" stroke="rgba(94,196,174,0.16)" stroke-width="1.2"/>
+      <circle cx="196" cy="368" r="11" fill="none" stroke="rgba(94,196,174,0.14)" stroke-width="1.2"/>
+      <circle cx="150" cy="388" r="11" fill="none" stroke="rgba(94,196,174,0.14)" stroke-width="1.2"/>
+      <circle cx="104" cy="368" r="11" fill="none" stroke="rgba(94,196,174,0.14)" stroke-width="1.2"/>
+      <circle cx="88" cy="326" r="11" fill="none" stroke="rgba(94,196,174,0.16)" stroke-width="1.2"/>
+      <circle cx="107" cy="284" r="11" fill="none" stroke="rgba(94,196,174,0.16)" stroke-width="1.2"/>
+      <circle cx="150" cy="332" r="24" fill="none" stroke="rgba(94,196,174,0.2)" stroke-width="1.5"/>
+      <path d="M52 220 Q50 110 150 80 Q250 110 248 220" stroke="rgba(94,196,174,0.12)" stroke-width="30" fill="none" stroke-linecap="round"/>
+      <ellipse cx="52" cy="222" rx="30" ry="42" fill="none" stroke="rgba(94,196,174,0.14)" stroke-width="1.2"/>
+      <ellipse cx="248" cy="222" rx="30" ry="42" fill="none" stroke="rgba(94,196,174,0.14)" stroke-width="1.2"/>
+      <path d="M150 420 Q145 440 155 450 Q145 460 155 470" stroke="rgba(94,196,174,0.12)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
   <!-- Header de datos: siempre visible, estilo panel de control -->
   <div class="hm-header">
     <div class="hm-header-top">
@@ -1731,7 +1776,13 @@ textarea::placeholder{color:var(--fog);}
     <div class="hm-log" id="huntModeLog"></div>
   </div>
 
-  <div class="hunt-mode-bottombar">
+  <!-- Slot donde se ENCAJA fisicamente el loading y el resultado real
+       mientras se analiza desde dentro de la sesion de caza. Al mover
+       aqui los nodos reales (no una copia), es imposible que se vea
+       la pantalla principal de fondo: nunca se llega a mostrar. -->
+  <div class="hm-result-slot" id="hmResultSlot" style="display:none"></div>
+
+  <div class="hunt-mode-bottombar" id="huntModeBottombar">
     <button class="hunt-mode-end-btn" onclick="confirmEndHuntSession()">Terminar sesion</button>
   </div>
 </div>
@@ -1784,12 +1835,11 @@ var MAX_PHOTOS=5,MAX_DIM=512,QUALITY=0.5,DRAFT_KEY='pf_drafts',MAX_DRAFTS=5;
 
 // NAVIGATION
 function showPage(n){
-  // Defensive cleanup: if the user navigates away from the floating
-  // result while it was shown from hunt mode, tear down that layering
-  // cleanly instead of leaving stale classes/state behind.
-  var _pr=document.getElementById('page-result');
-  if(_pr&&_pr.classList.contains('over-hunt-mode')){
-    _pr.classList.remove('over-hunt-mode');
+  // Defensive cleanup: if we were showing the report inside hunt mode's
+  // own DOM slot and the app navigates away for any reason, put the
+  // real nodes back where they belong first.
+  if(_inHuntMode){
+    hmExitResultSlot();
     _inHuntMode=false;
   }
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
@@ -1829,12 +1879,13 @@ function newAnalysis(){
   var row=document.getElementById('uploadRow');if(row)row.style.display='grid';
   var desc=document.getElementById('descInput');if(desc)desc.value='';
   var urlRow=document.getElementById('urlImportRow');if(urlRow)urlRow.style.display='none';
-  // If this result was shown from inside hunt mode, close the floating
-  // result layer and return to the hunt overlay (which never closed) -
-  // never fall through to the home screen.
+  // If we were showing the report inside hunt mode, put the real result
+  // page node back where it lives normally, close it, and return to the
+  // capture screen inside hunt mode - never touch the home screen.
   if(_inHuntMode){
-    var pr=document.getElementById('page-result');
-    if(pr){pr.classList.remove('active','over-hunt-mode');}
+    document.getElementById('page-result').classList.remove('active');
+    hmExitResultSlot();
+    hmResetCapture();
     _inHuntMode=false;
     return;
   }
@@ -2032,9 +2083,7 @@ async function analyzePhone(quickMode){
   // Reset loading UI
   document.getElementById('analyzeBtn').style.display='none';
   document.getElementById('quickBtn').style.display='none';
-  var _lw=document.getElementById('loadingWrap');
-  _lw.classList.toggle('over-hunt-mode',_inHuntMode);
-  _lw.style.display=_inHuntMode?'flex':'block';
+  document.getElementById('loadingWrap').style.display='block';
   document.getElementById('loadingError').style.display='none';
   document.getElementById('loadingRetry').style.display='none';
   var _rn=document.getElementById('loadingRetryNow');if(_rn)_rn.style.display='none';
@@ -2159,15 +2208,13 @@ async function analyzePhone(quickMode){
       }
       CLN_PHOTO_URL=currentImages.length>0?currentImages[0].dataUrl:null;
       clnInit(result);
-      // If we came from hunt mode, float the result page above the hunt
-      // overlay instead of navigating to the normal home-based page.
-      var _pr=document.getElementById('page-result');
-      if(_pr)_pr.classList.toggle('over-hunt-mode',_inHuntMode);
+      // renderResult -> showPage('result') just toggles .active. Since
+      // page-result already lives inside hmResultSlot (moved there by
+      // hmEnterResultSlot before this call), it simply appears inside
+      // hunt mode's own DOM tree - home is never touched or shown.
       renderResult(result);
     }
-    var _lwDone=document.getElementById('loadingWrap');
-    _lwDone.style.display='none';
-    _lwDone.classList.remove('over-hunt-mode');
+    document.getElementById('loadingWrap').style.display='none';
     document.getElementById('analyzeBtn').style.display='flex';
     document.getElementById('quickBtn').style.display='flex';
 
@@ -2842,6 +2889,9 @@ function endHuntSession(){
   _huntSession=null;
   saveHuntSession();
   renderHuntWidget();
+  // If a result was showing inside hunt mode, put its real node back
+  // where it belongs before closing hunt mode entirely.
+  if(_inHuntMode){document.getElementById('page-result').classList.remove('active');hmExitResultSlot();}
   closeHuntMode();
   hmResetCapture();
   _inHuntMode=false;
@@ -2983,23 +3033,57 @@ function hmRetry(){
   hmShowStage('hmStageCapture');
 }
 // Delegate to the REAL analyzePhone pipeline - same report as from home.
-// We load the captured photos into currentImages, minimize the hunt mode
-// overlay so the standard result page is visible, and let analyzePhone
-// run exactly as it does everywhere else in the app.
+// Instead of relying on z-index layering (fragile), we physically MOVE
+// the real loadingWrap and page-result DOM nodes into a slot inside the
+// hunt overlay. Since home is never shown, it is IMPOSSIBLE to glimpse
+// it - there is no frame where it could render, because the nodes that
+// display the loading/result state live inside hunt mode's own DOM tree.
+var _homeAnchor=null,_resultAnchor=null;
+function hmEnterResultSlot(){
+  var slot=document.getElementById('hmResultSlot');
+  var lw=document.getElementById('loadingWrap');
+  var pr=document.getElementById('page-result');
+  if(!slot||!lw||!pr)return;
+  // Remember exactly where each node came from so we can put them back.
+  if(!_homeAnchor)_homeAnchor=document.createComment('loadingWrap-anchor');
+  if(!_resultAnchor)_resultAnchor=document.createComment('page-result-anchor');
+  if(lw.parentNode&&lw.parentNode!==slot){lw.parentNode.insertBefore(_homeAnchor,lw);}
+  if(pr.parentNode&&pr.parentNode!==slot){pr.parentNode.insertBefore(_resultAnchor,pr);}
+  slot.appendChild(lw);
+  slot.appendChild(pr);
+  slot.style.display='block';
+  slot.classList.add('active');
+  // Hide the capture zone and bottombar while the report takes over.
+  var body=document.getElementById('hmBody');if(body)body.style.display='none';
+  var bottombar=document.getElementById('huntModeBottombar');if(bottombar)bottombar.style.display='none';
+}
+function hmExitResultSlot(){
+  var lw=document.getElementById('loadingWrap');
+  var pr=document.getElementById('page-result');
+  if(_homeAnchor&&_homeAnchor.parentNode&&lw){_homeAnchor.parentNode.insertBefore(lw,_homeAnchor);_homeAnchor.remove();_homeAnchor=null;}
+  if(_resultAnchor&&_resultAnchor.parentNode&&pr){_resultAnchor.parentNode.insertBefore(pr,_resultAnchor);_resultAnchor.remove();_resultAnchor=null;}
+  var slot=document.getElementById('hmResultSlot');
+  if(slot){slot.style.display='none';slot.classList.remove('active');slot.innerHTML='';}
+  var body=document.getElementById('hmBody');if(body)body.style.display='block';
+  var bottombar=document.getElementById('huntModeBottombar');if(bottombar)bottombar.style.display='block';
+}
 async function hmAnalyze(){
   if(!_hmImages.length)return;
   currentImages=_hmImages.slice();
   var desc=document.getElementById('descInput');
   if(desc)desc.value='';
-  // Stay INSIDE hunt mode - do not minimize. The hunt overlay remains
-  // open underneath; the result will float above it as its own layer
-  // once analyzePhone finishes, so the two environments never mix.
   _inHuntMode=true;
+  hmEnterResultSlot();
   if(_huntSession)logHuntSeen();
   await analyzePhone(false);
-  // After the standard flow finishes, reset the hunt capture zone so
-  // it's ready for the next phone next time we return to hunt mode.
-  hmResetCapture();
+  // If the result page never got shown (e.g. quick mode branch, which
+  // hunt mode never uses, or an early return), make sure we still end
+  // up back in a sane hunt-mode state.
+  if(_inHuntMode&&!document.getElementById('page-result').classList.contains('active')){
+    hmExitResultSlot();
+    hmResetCapture();
+    _inHuntMode=false;
+  }
 }
 
 // -- HISTORIAL DE SESIONES -----------------------------------------
@@ -3052,6 +3136,11 @@ function closeHuntHistory(){
   var ov=document.getElementById('huntHistoryOverlay');
   if(ov)ov.classList.remove('open');
 }
+function escapeHtml(s){
+  var d=document.createElement('div');
+  d.textContent=s==null?'':String(s);
+  return d.innerHTML;
+}
 function renderHuntHistory(){
   var body=document.getElementById('huntHistoryBody');
   if(!body)return;
@@ -3068,18 +3157,18 @@ function renderHuntHistory(){
     '<div class="hunt-summary-item"><div class="hunt-summary-lbl">Comprados</div><div class="hunt-summary-val">'+totalBought+'</div></div>'+
     '<div class="hunt-summary-item"><div class="hunt-summary-lbl">Invertido</div><div class="hunt-summary-val">'+Math.round(totalSpent)+'EUR</div></div>'+
   '</div>';
-  log.forEach(function(entry){
+  log.forEach(function(entry,idx){
     var d=new Date(entry.date);
     var dateStr=d.toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'});
     var timeStr=d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-    var place=entry.place&&entry.place.trim()?entry.place:'Sesion de caza';
-    var eid=entry.id||'';
+    var place=entry.place&&entry.place.trim()?escapeHtml(entry.place):'Sesion de caza';
+    var eid=escapeHtml(entry.id);
     html+='<div class="hunt-session-card">'+
       '<div class="hunt-session-top">'+
         '<div><div class="hunt-session-place">'+place+'</div><div class="hunt-session-date">'+dateStr+' - '+timeStr+'</div></div>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
           '<div class="hunt-session-duration">'+entry.durationMin+' min</div>'+
-          '<button class="hunt-session-delete" onclick="deleteHuntSession(\''+eid+'\')" title="Eliminar sesion">'+
+          '<button class="hunt-session-delete" data-hunt-id="'+eid+'" title="Eliminar sesion">'+
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'+
           '</button>'+
         '</div>'+
@@ -3092,6 +3181,14 @@ function renderHuntHistory(){
     '</div>';
   });
   body.innerHTML=html;
+  // Delegated listener: robust against any special characters in ids,
+  // never breaks from bad string interpolation like inline onclick did.
+  body.querySelectorAll('.hunt-session-delete').forEach(function(btn){
+    btn.onclick=function(){
+      var id=btn.getAttribute('data-hunt-id');
+      deleteHuntSession(id);
+    };
+  });
 }
 
 // RELATED PHONE THUMBNAIL - a small vintage-phone SVG icon colored to
