@@ -996,9 +996,13 @@ textarea::placeholder{color:var(--fog);}
 .hunt-session-phones{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--mist2);}
 .hunt-session-card.expanded .hunt-session-phones{display:block;}
 .hunt-session-phone-item{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:12px;color:var(--ink2);}
-.hunt-session-phone-icon{font-size:12px;flex-shrink:0;}
+.hunt-session-phone-icon{font-size:12px;flex-shrink:0;width:28px;text-align:center;}
+.hunt-session-phone-thumb{width:28px;height:28px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid var(--mist3);}
 .hunt-session-phone-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .hunt-session-phone-time{font-size:10px;color:var(--fog2);font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.hunt-session-phone-openable{cursor:pointer;border-radius:8px;margin:0 -6px;padding:7px 6px;transition:background .15s;}
+.hunt-session-phone-openable:active{background:var(--amber-glow);}
+.hunt-session-phone-arrow{width:13px;height:13px;color:var(--amber2);flex-shrink:0;}
 .hunt-session-stat{text-align:center;background:var(--mist);border-radius:10px;padding:9px 6px;}
 .hunt-session-stat-num{font-family:'Instrument Serif',serif;font-size:19px;color:var(--ink);line-height:1;}
 .hunt-session-stat-lbl{font-size:9px;color:var(--fog2);text-transform:uppercase;letter-spacing:.4px;font-weight:600;margin-top:2px;}
@@ -3010,7 +3014,7 @@ async function savePurchaseData(){
     await window._fbUpdate(_pendingModalFid,{purchase:{buyPrice:buy,sellPrice:sell,qty:qty,soldAt:soldAt}});
     if(_colCache){var entry=_colCache.find(function(e){return e.firestoreId===_pendingModalFid;});if(entry)entry.purchase={buyPrice:buy,sellPrice:sell,qty:qty,soldAt:soldAt};}
     // If a hunt session is active and this is a NEW purchase price, log it
-    if(_huntSession&&hadNoBuyPriceBefore&&buy!=null){logHuntPurchase(buy*qty);}
+    if(_huntSession&&hadNoBuyPriceBefore&&buy!=null){var _hpThumb=currentImages&&currentImages[0]?currentImages[0].dataUrl:null;logHuntPurchase(buy*qty,currentResult&&currentResult.nombre,currentResult,_hpThumb);}
     showToast(_isSold?'Marcado como vendido':'Datos de compra guardados');
     closePurchaseModal();renderStats(_colCache);renderCollectionList();renderDashboard(_colCache);
   }catch(e){console.error(e);showToast('Error: '+e.message);}
@@ -3074,22 +3078,28 @@ function updateHuntPlace(val){
   _huntSession.place=val;
   saveHuntSession();
 }
-function logHuntSeen(phoneName){
+function logHuntSeen(phoneName,resultData,thumb){
   if(!_huntSession)return;
   _huntSession.seen++;
   var name=phoneName||(currentResult&&currentResult.nombre)||'Telefono';
-  _huntSession.events.unshift({type:'seen',text:'Visto: '+name,at:Date.now()});
+  var ev={type:'seen',text:'Visto: '+name,at:Date.now()};
+  if(resultData)ev.result=resultData;
+  if(thumb)ev.thumb=thumb;
+  _huntSession.events.unshift(ev);
   if(_huntSession.events.length>30)_huntSession.events=_huntSession.events.slice(0,30);
   saveHuntSession();
   renderHuntWidget();
   renderHuntModeBody();
 }
-function logHuntPurchase(price,phoneName){
+function logHuntPurchase(price,phoneName,resultData,thumb){
   if(!_huntSession)return;
   _huntSession.bought++;
   _huntSession.spent+=(price||0);
   var name=phoneName||(currentResult&&currentResult.nombre)||'Telefono';
-  _huntSession.events.unshift({type:'bought',text:'Comprado: '+name+' - '+Math.round(price||0)+'EUR',at:Date.now()});
+  var ev={type:'bought',text:'Comprado: '+name+' - '+Math.round(price||0)+'EUR',at:Date.now()};
+  if(resultData)ev.result=resultData;
+  if(thumb)ev.thumb=thumb;
+  _huntSession.events.unshift(ev);
   if(_huntSession.events.length>30)_huntSession.events=_huntSession.events.slice(0,30);
   saveHuntSession();
   renderHuntWidget();
@@ -3113,7 +3123,19 @@ function endHuntSession(){
     log.unshift(entry);
     if(log.length>100)log=log.slice(0,100);
     localStorage.setItem(HUNT_LOG_KEY,JSON.stringify(log));
-  }catch(e){}
+  }catch(e){
+    // Almacenamiento lleno (fotos guardadas ocupan espacio real). Recorta
+    // el historial a la mitad y reintenta una vez antes de avisar.
+    try{
+      var log2=JSON.parse(localStorage.getItem(HUNT_LOG_KEY)||'[]');
+      log2=log2.slice(0,Math.floor(log2.length/2));
+      log2.unshift(entry);
+      localStorage.setItem(HUNT_LOG_KEY,JSON.stringify(log2));
+      showToast('Historial antiguo recortado por falta de espacio');
+    }catch(e2){
+      showToast('No se pudo guardar la sesion: almacenamiento lleno');
+    }
+  }
   _huntSession=null;
   saveHuntSession();
   renderHuntWidget();
@@ -3311,12 +3333,17 @@ function hmExitResultSlot(){
 async function hmAnalyze(){
   if(!_hmImages.length)return;
   currentImages=_hmImages.slice();
+  var _hmThumbForLog=_hmImages[0]?_hmImages[0].dataUrl:null;
   var desc=document.getElementById('descInput');
   if(desc)desc.value='';
   _inHuntMode=true;
   hmEnterResultSlot();
-  if(_huntSession)logHuntSeen();
   await analyzePhone(false);
+  // Log "visto" only AFTER analysis succeeds, so the event can carry the
+  // full result + thumbnail and be reopened later from the history.
+  if(_huntSession&&currentResult&&document.getElementById('page-result').classList.contains('active')){
+    logHuntSeen(currentResult.nombre,currentResult,_hmThumbForLog);
+  }
   // If the result page never got shown (e.g. quick mode branch, which
   // hunt mode never uses, or an early return), make sure we still end
   // up back in a sane hunt-mode state.
@@ -3366,6 +3393,31 @@ function getHuntLog(){
 function toggleHuntSessionPhones(topEl){
   var card=topEl.closest('.hunt-session-card');
   if(card)card.classList.toggle('expanded');
+}
+// Reabre el informe completo de un telefono visto/comprado durante una
+// sesion de caza pasada, tal y como se ve desde la coleccion (mismos
+// tabs, mismo detalle) - usa el resultado y la miniatura guardados
+// junto al evento en el historial.
+function openHuntLoggedResult(sessionIdx,eventIdx){
+  var log=getHuntLog();
+  var entry=log[sessionIdx];
+  if(!entry)return;
+  var ev=(entry.events||[])[eventIdx];
+  if(!ev||!ev.result)return;
+  currentResult=ev.result;
+  currentImages=ev.thumb?[{dataUrl:ev.thumb,b64:ev.thumb.split(',')[1]}]:[];
+  CLN_ZONES=[];CLN_PHOTO_URL=ev.thumb||null;CLN_ACTIVE=0;
+  if(ev.result.zonas_limpieza&&ev.result.zonas_limpieza.length){
+    CLN_ZONES=ev.result.zonas_limpieza.map(function(z){return{id:z.id||'z',label:z.label||'Zona',emoji:(z.emoji&&z.emoji.length<=4)?z.emoji:'*',material:z.material||'',product:z.product||z.producto||'Pano de microfibra',avoid:z.avoid||z.evitar||'Agua directa',steps:z.steps||z.pasos||[]};});
+  }
+  clnInit(ev.result);
+  closeHuntHistory();
+  // Always open as the normal result page, never inside the live hunt
+  // slot - this is a past record, not an in-progress analysis.
+  if(_inHuntMode){hmExitResultSlot();_inHuntMode=false;}
+  var huntOv=document.getElementById('huntModeOverlay');
+  if(huntOv)huntOv.classList.remove('open');
+  renderResult(ev.result);
 }
 function deleteHuntSession(id){
   if(!id)return;
@@ -3430,10 +3482,12 @@ function renderHuntHistory(){
     var eventsHtml='';
     if(hasEvents){
       eventsHtml='<div class="hunt-session-phones">';
-      events.forEach(function(ev){
+      events.forEach(function(ev,evIdx){
         var icon=ev.type==='bought'?String.fromCharCode(0x1F4B0):String.fromCharCode(0x1F441);
         var evTime=ev.at?new Date(ev.at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
-        eventsHtml+='<div class="hunt-session-phone-item"><span class="hunt-session-phone-icon">'+icon+'</span><span class="hunt-session-phone-text">'+escapeHtml(ev.text||'')+'</span><span class="hunt-session-phone-time">'+evTime+'</span></div>';
+        var canOpen=!!ev.result;
+        var thumbHtml=ev.thumb?'<img class="hunt-session-phone-thumb" src="'+ev.thumb+'" alt="">':'<span class="hunt-session-phone-icon">'+icon+'</span>';
+        eventsHtml+='<div class="hunt-session-phone-item'+(canOpen?' hunt-session-phone-openable':'')+'"'+(canOpen?' data-session-idx="'+idx+'" data-event-idx="'+evIdx+'" onclick="event.stopPropagation();openHuntLoggedResult('+idx+','+evIdx+')"':'')+'>'+thumbHtml+'<span class="hunt-session-phone-text">'+escapeHtml(ev.text||'')+'</span><span class="hunt-session-phone-time">'+evTime+'</span>'+(canOpen?'<svg class="hunt-session-phone-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>':'')+'</div>';
       });
       eventsHtml+='</div>';
     }
