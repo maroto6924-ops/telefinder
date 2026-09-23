@@ -834,7 +834,7 @@ textarea::placeholder{color:var(--fog);}
    excluyen los elementos que ya tienen su propio gesto definido, para
    no pisar animaciones especificas ya afinadas. */
 button,.phone-card,.rel-card,.draft-card,.upload-tile,.haggle-card,
-.cert-trigger,.col-action-btn,.hunt-session-card,.compare-hint{
+.cert-trigger,.col-action-btn,.hunt-session-card,.compare-hint,.vitrina-trigger{
   -webkit-tap-highlight-color:transparent;
 }
 button:not(:disabled){transition:transform var(--t-instant) var(--e-soft),opacity var(--t-instant) var(--e-soft);}
@@ -842,7 +842,7 @@ button:not(:disabled){transition:transform var(--t-instant) var(--e-soft),opacit
 /* Elementos con superficie propia: al pulsar se "hunden" ligeramente */
 .upload-tile:active,.draft-card:active,.haggle-card:active,
 .cert-trigger:active,.col-action-btn:active,.sell-copy-btn:active,
-.nego-goal-btn:active,.sell-plat-btn:active,.feedback-opt:active{
+.nego-goal-btn:active,.sell-plat-btn:active,.feedback-opt:active,.vitrina-trigger:active{
   transform:scale(.975);
 }
 
@@ -879,6 +879,36 @@ button svg{transition:transform var(--t-quick) var(--e-out);}
 .cert-divider{width:60px;height:2px;background:var(--amber-mid);margin:0 auto 16px;}
 .cert-text{font-size:13.5px;line-height:1.85;color:var(--ink2);text-align:left;font-style:italic;}
 .cert-footer{margin-top:18px;font-size:10px;color:var(--fog2);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;}
+/* Ficha para vitrina (imprimible) */
+.vitrina-trigger{display:flex;align-items:center;gap:14px;background:var(--teal-light);border:1px solid rgba(42,125,107,.25);border-radius:var(--r-lg);padding:16px 18px;margin-top:14px;cursor:pointer;transition:all .18s;}
+.vitrina-trigger:hover,.vitrina-trigger:active{border-color:var(--teal);transform:translateY(-1px);}
+.vitrina-trigger-icon{font-size:26px;flex-shrink:0;}
+.vitrina-trigger-text{flex:1;}
+.vitrina-trigger-title{font-size:13.5px;font-weight:700;color:var(--teal);margin-bottom:2px;}
+.vitrina-trigger-sub{font-size:11.5px;color:var(--fog3);line-height:1.4;}
+.vitrina-trigger-arrow{font-size:18px;color:var(--teal);flex-shrink:0;}
+.vitrina-loading{display:flex;align-items:center;gap:10px;padding:14px 4px;font-size:13px;color:var(--fog2);}
+.vitrina-size-row{display:flex;gap:8px;margin-bottom:16px;}
+.vitrina-size-btn{flex:1;padding:9px 8px;border-radius:var(--r-sm);border:1.5px solid var(--mist3);background:var(--surface);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--fog3);cursor:pointer;transition:all .18s;}
+.vitrina-size-btn.active{border-color:var(--teal);background:var(--teal-light);color:var(--teal);}
+.vitrina-card{background:#FFFDF9;border:1.5px solid var(--ink);border-radius:6px;padding:20px 20px 16px;text-align:center;position:relative;width:100%;max-width:340px;box-shadow:var(--sh-lg);}
+.vitrina-card::before{content:'';position:absolute;inset:5px;border:1px solid var(--mist3);border-radius:3px;pointer-events:none;}
+.vitrina-card-name{font-family:'Instrument Serif',serif;font-size:20px;color:var(--ink);letter-spacing:-.2px;line-height:1.2;}
+.vitrina-card-meta{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--fog3);margin-top:5px;}
+.vitrina-card-divider{width:40px;height:1.5px;background:var(--amber-mid);margin:13px auto;}
+.vitrina-card-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:9px;}
+.vitrina-card-body{text-align:left;}
+.vitrina-step{font-size:12.5px;line-height:1.6;color:var(--ink2);margin-bottom:6px;padding-left:15px;position:relative;}
+.vitrina-step::before{content:'—';position:absolute;left:0;color:var(--amber2);}
+.vitrina-card-footer{font-size:11px;font-style:italic;color:var(--fog3);margin-top:13px;line-height:1.5;border-top:1px dashed var(--mist3);padding-top:11px;}
+.vitrina-print-hint{font-size:11px;color:var(--fog3);text-align:center;margin-top:12px;line-height:1.5;}
+#vitrinaPrintArea{display:flex;align-items:center;justify-content:center;background:var(--mist);border-radius:var(--r-lg);padding:22px 16px;}
+@media print{
+  body *{visibility:hidden;}
+  #vitrinaPrintArea,#vitrinaPrintArea *{visibility:visible;}
+  #vitrinaPrintArea{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:0;padding:0;}
+  .vitrina-card{box-shadow:none;max-width:420px;border-width:1.5px;}
+}
 /* Follow-up chat */
 .ask-row{display:flex;gap:8px;margin-top:6px;}
 .ask-input{flex:1;background:var(--mist);border:1.5px solid var(--mist3);border-radius:var(--r-sm);padding:11px 14px;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color .2s;}
@@ -1624,6 +1654,19 @@ button svg{transition:transform var(--t-quick) var(--e-out);}
         <div class="diff-row"><span class="diff-label">Dificultad hallazgo</span><div class="diff-dots" id="r-diff-dots"></div></div>
         <div class="spec-row" id="r-prod-row" style="display:none"><span class="spec-label">Produccion</span><span class="spec-val" id="r-produccion"></span></div>
         <div id="r-tech-details" class="prose-text" style="margin-bottom:0"></div>
+        <!-- Ficha para vitrina -->
+        <div class="vitrina-trigger" id="vitrinaTrigger" onclick="generateVitrinaCard()">
+          <div class="vitrina-trigger-icon">&#128220;</div>
+          <div class="vitrina-trigger-text">
+            <div class="vitrina-trigger-title">Crear ficha para vitrina</div>
+            <div class="vitrina-trigger-sub">Explicacion imprimible de como funciona, para poner junto al telefono</div>
+          </div>
+          <div class="vitrina-trigger-arrow">&#8594;</div>
+        </div>
+        <div class="vitrina-loading" id="vitrinaLoading" style="display:none">
+          <svg style="width:18px;height:18px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-dasharray="30 50"/></svg>
+          Redactando ficha...
+        </div>
       </div>
       <!-- Contexto de epoca -->
       <div class="sec" id="epocaSec" style="display:none">
@@ -1937,6 +1980,31 @@ button svg{transition:transform var(--t-quick) var(--e-out);}
         <svg style="width:26px;height:26px;animation:spin 1s linear infinite;margin-bottom:12px" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-dasharray="30 50"/></svg>
         <div style="font-size:13px">Comparando...</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ficha para vitrina: vista previa + impresion -->
+<div class="modal-overlay" id="vitrinaModal" onclick="closeVitrinaModalIfOutside(event)">
+  <div class="modal-sheet" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Ficha para vitrina</div>
+      <button class="modal-close" onclick="closeVitrinaModal()">x</button>
+    </div>
+    <div class="modal-body">
+      <div id="vitrinaPrintArea">
+        <div class="vitrina-card" id="vitrinaCard">
+          <div class="vitrina-card-name" id="vitCardName"></div>
+          <div class="vitrina-card-meta" id="vitCardMeta"></div>
+          <div class="vitrina-card-divider"></div>
+          <div class="vitrina-card-label">Como funciona</div>
+          <div class="vitrina-card-body" id="vitCardBody"></div>
+          <div class="vitrina-card-footer" id="vitCardFooter"></div>
+        </div>
+      </div>
+      <div class="vitrina-print-hint">Se imprimira solo esta tarjeta. Recortala y colocala debajo del telefono en la vitrina.</div>
+      <button class="sell-copy-btn sell-copy-all" style="width:100%;margin-top:14px" onclick="printVitrinaCard()">Imprimir ficha</button>
     </div>
   </div>
 </div>
@@ -2512,6 +2580,7 @@ function renderResult(r){
   _sellAdData=null;_negoMsgs={msg1:'',msg2:''};_negoGoal='low';
   resetAskHistory();
   resetCertificate();
+  resetVitrinaCard();
   // Show the Comprar/Rechazar bar only when this result came from a
   // live hunt-mode analysis; otherwise show the normal save button.
   var hdb=document.getElementById('huntDecisionBar'),bsn=document.getElementById('btnSaveNormal');
@@ -3997,6 +4066,65 @@ function copyCertificate(){
   copyToClipboard(full);
   showToast('Certificado copiado');
 }
+
+// -- FICHA PARA VITRINA (imprimible) ------------------------------
+var _vitrinaData=null;
+function resetVitrinaCard(){
+  _vitrinaData=null;
+  var trigger=document.getElementById('vitrinaTrigger'),loading=document.getElementById('vitrinaLoading');
+  if(trigger)trigger.style.display='flex';
+  if(loading)loading.style.display='none';
+}
+async function generateVitrinaCard(){
+  if(!currentResult){showToast('Analiza un telefono primero');return;}
+  if(_vitrinaData){renderVitrinaCard();openVitrinaModal();return;}
+  var trigger=document.getElementById('vitrinaTrigger'),loading=document.getElementById('vitrinaLoading');
+  if(trigger)trigger.style.display='none';
+  if(loading)loading.style.display='flex';
+  var r=currentResult;
+  var parts=['Eres un conservador de museo experto en telefonia antigua que escribe cartelas explicativas breves para vitrinas de exposicion.',
+    'Telefono: '+(r.nombre||'')+', fabricante '+(r.fabricante||'')+', pais '+(r.pais||'')+', periodo '+(r.periodo||'')+', material '+(r.material||'')+'.',
+    'Datos tecnicos conocidos: '+(r.detalles_tecnicos||'')+'.',
+    'REGLA: responde SOLO el objeto JSON, sin texto ni markdown ni backticks, con este formato exacto: {"como_funciona":["frase 1","frase 2","frase 3"],"dato_destacado":"una frase corta y curiosa sobre este telefono"}',
+    'Cada elemento de como_funciona debe ser una frase MUY corta (menos de 14 palabras) explicando de forma sencilla como se usaba o funcionaba este telefono (descolgar, marcar, disco o teclado, transmision de voz, timbre...). Maximo 4 elementos, minimo 3. Lenguaje claro para publico general, sin tecnicismos innecesarios.'];
+  var prompt=parts.join(' ');
+  try{
+    var resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:prompt}]})});
+    var data=await resp.json();
+    var text=(data.content||[]).map(function(c){return c.text||'';}).join('').trim();
+    text=text.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    var parsed=JSON.parse(text);
+    if(!parsed.como_funciona||!parsed.como_funciona.length)throw new Error('empty');
+    _vitrinaData=parsed;
+    if(loading)loading.style.display='none';
+    if(trigger)trigger.style.display='flex';
+    renderVitrinaCard();
+    openVitrinaModal();
+  }catch(e){
+    console.error(e);
+    if(loading)loading.style.display='none';
+    if(trigger)trigger.style.display='flex';
+    showToast('No se pudo generar la ficha. Intentalo de nuevo.');
+  }
+}
+function renderVitrinaCard(){
+  if(!_vitrinaData||!currentResult)return;
+  var r=currentResult;
+  var nameEl=document.getElementById('vitCardName');if(nameEl)nameEl.textContent=r.nombre||'';
+  var metaParts=[r.fabricante,r.pais,r.periodo].filter(Boolean);
+  var metaEl=document.getElementById('vitCardMeta');if(metaEl)metaEl.textContent=metaParts.join(' '+String.fromCharCode(183)+' ');
+  var bodyEl=document.getElementById('vitCardBody');
+  if(bodyEl){
+    var steps=_vitrinaData.como_funciona||[];
+    bodyEl.innerHTML=steps.map(function(s){return '<div class="vitrina-step">'+escapeHtml(s)+'</div>';}).join('');
+  }
+  var footEl=document.getElementById('vitCardFooter');
+  if(footEl)footEl.textContent=_vitrinaData.dato_destacado||'';
+}
+function openVitrinaModal(){var m=document.getElementById('vitrinaModal');if(m)m.classList.add('open');}
+function closeVitrinaModal(){var m=document.getElementById('vitrinaModal');if(m)m.classList.remove('open');}
+function closeVitrinaModalIfOutside(e){if(e.target===document.getElementById('vitrinaModal'))closeVitrinaModal();}
+function printVitrinaCard(){window.print();}
 
 function copyToClipboard(text){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){fallbackCopy(text);});}else{fallbackCopy(text);}}
 function fallbackCopy(text){var ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0;top:0;left:0;';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);}
