@@ -359,7 +359,6 @@ textarea::placeholder{color:var(--fog);}
 .tag-common{background:rgba(42,125,107,.2);color:#5ec4ae;border:1px solid rgba(42,125,107,.3);}
 .result-body{padding:0 16px;}
 .desc-block{background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--mist3);padding:18px 18px 18px 20px;margin-bottom:14px;box-shadow:var(--sh);border-left:3px solid var(--amber);font-size:13.5px;line-height:1.75;color:var(--ink2);}
-.compare-hint{background:var(--indigo-light);border:1px solid rgba(44,79,138,.2);border-radius:var(--r-sm);padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:var(--indigo);line-height:1.5;cursor:pointer;display:none;}
 /* Feedback button */
 .feedback-btn{display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--mist3);border-radius:var(--r-sm);padding:6px 12px;font-size:11px;font-weight:600;color:var(--fog2);cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;margin-bottom:14px;width:100%;justify-content:center;}
 .feedback-btn:hover{border-color:var(--ruby);color:var(--ruby);}
@@ -380,13 +379,6 @@ textarea::placeholder{color:var(--fog);}
 .price-hero{background:var(--ink);border-radius:var(--r-lg);padding:20px;margin-bottom:14px;box-shadow:var(--sh-lg);position:relative;overflow:hidden;}
 .price-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(212,134,42,.15) 0%,transparent 70%);pointer-events:none;}
 .price-hero-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--fog);margin-bottom:12px;font-family:'JetBrains Mono',monospace;}
-/* Detective mode alert */
-.detective-alert{display:flex;align-items:center;gap:12px;background:var(--indigo-light);border:1px solid rgba(44,79,138,.25);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;}
-.detective-icon{font-size:22px;flex-shrink:0;}
-.detective-text{flex:1;min-width:0;}
-.detective-title{font-size:12.5px;font-weight:700;color:var(--indigo);margin-bottom:2px;}
-.detective-sub{font-size:11.5px;color:var(--fog3);line-height:1.4;}
-.detective-btn{flex-shrink:0;background:var(--indigo);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
 /* Rarity meter */
 .rarity-meter-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
 .rarity-meter{display:flex;gap:3px;flex:1;}
@@ -834,7 +826,7 @@ textarea::placeholder{color:var(--fog);}
    excluyen los elementos que ya tienen su propio gesto definido, para
    no pisar animaciones especificas ya afinadas. */
 button,.phone-card,.rel-card,.draft-card,.upload-tile,.haggle-card,
-.cert-trigger,.col-action-btn,.hunt-session-card,.compare-hint,.vitrina-trigger{
+.cert-trigger,.col-action-btn,.hunt-session-card,.vitrina-trigger{
   -webkit-tap-highlight-color:transparent;
 }
 button:not(:disabled){transition:transform var(--t-instant) var(--e-soft),opacity var(--t-instant) var(--e-soft);}
@@ -1556,16 +1548,6 @@ button svg{transition:transform var(--t-quick) var(--e-out);}
   <div class="result-body">
     <div class="photo-viewer-photos" id="resultPhotos"></div>
     <div class="desc-block" id="r-desc">--</div>
-    <!-- Modo Detective: aviso de identificacion ambigua -->
-    <div class="detective-alert" id="detectiveAlert" style="display:none">
-      <div class="detective-icon">&#128269;</div>
-      <div class="detective-text">
-        <div class="detective-title">No estoy 100% seguro</div>
-        <div class="detective-sub">Tambien podria ser: <strong id="detectiveAlt"></strong></div>
-      </div>
-      <button class="detective-btn" onclick="analyzeAsAlternative()">Probar</button>
-    </div>
-    <div class="compare-hint" id="compareHint"></div>
     <!-- Feedback button (Phase 2) -->
     <button class="feedback-btn" onclick="openFeedback()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -2177,6 +2159,178 @@ button svg{transition:transform var(--t-quick) var(--e-out);}
 </div>
 
 <script>
+/* ============================================================
+   PHONEFINDER - BASE DE CONOCIMIENTO (version 2026-10)
+   Todo el texto es ASCII y sin apostrofes ni barras invertidas,
+   para que no rompa el script. Para ampliar la base basta con
+   anadir lineas a PF_KB_GUIDE o filas a PF_KB_MODELS.
+   Datos verificados en: Museo de Telecomunicaciones UPM,
+   catalogos CTNE 1967-71, museo ASELEC, britishtelephones.com,
+   antiquegpophones.co.uk, stevemorse.org (Western Electric),
+   Ericsson History, Orange Histoire (S63), Wikipedia (W48, DBH
+   1001, Model 302) y anuncios reales en Wallapop y Todocoleccion.
+   ============================================================ */
+var PF_KB_VERSION='2026-10';
+
+var PF_KB_GUIDE=[
+'## A. METODO DE IDENTIFICACION Y CONFIANZA',
+'Orden de pruebas: 1) marcas estampadas o grabadas (base inferior, placa de chasis entre las campanas, mango del auricular, aro del disco, caja de timbres); 2) silueta y material; 3) sistema (magneto con manivela, bateria local, bateria central; disco, teclado o sin marcador); 4) pais por rotulos (CTNE o Telefonica, PTT, GPO o BT, Bell System, Deutsche Bundespost, Televerket, KTAS, Swiss PTT); 5) color y accesorios originales.',
+'CONFIANZA: ALTA solo si hay modelo o fabricante legible, o un rasgo unico inconfundible (cuerpo del Ericofon, placa Standard Electrica, silueta del DBH 1001 con rotulos). MEDIA si la silueta encaja con una sola familia pero no se ve ninguna marca. BAJA si solo se distingue la categoria general. Sube la confianza cuando coincidan al menos dos rasgos de la base, nunca por intuicion.',
+'Si dudas entre dos modelos, pon en nombre el mas probable y explica en alertas con cual se puede confundir y que marca o detalle los distingue. En que_revisar pon PRIMERO la marca o detalle que confirma o descarta la identificacion y donde esta (por ejemplo: placa del chasis, fecha bajo el aro del disco, rotulo del disco).',
+'Un telefono vintage suele ser una mezcla: auricular, disco, cable o campanas pueden no ser originales. Comprueba que fechas y codigos de fabricante de las piezas casen entre si (1-2 anos de diferencia es normal por reparaciones de fabrica).',
+'## B. HISTORIA DE LA TELEFONIA EN ESPANA (cronologia verificada)',
+'1877: primeras pruebas en territorio espanol (La Habana en octubre, Barcelona en diciembre, Madrid en enero de 1878). 1878: Enrique Iturriaga construye los primeros telefonos hechos en Espana.',
+'1882-1890: los decretos alternan explotacion publica y privada. 1885: primera red publica de Madrid, del Estado. 1886: vuelve a manos privadas. 1890: sistema mixto. 1890: Sociedad General de Telefonos (Barcelona). 1894: Compania Peninsular de Telefonos (Barcelona), la mayor corporacion hasta 1924. 1895: Compania Madrilena de Telefonos. Hacia 1920 habia unos 58.000 aparatos de abonado: los aparatos de antes de 1924 son poco frecuentes.',
+'19 abril 1924: se constituye la Compania Telefonica Nacional de Espana (CTNE) con participacion de la norteamericana ITT. 25 agosto 1924: monopolio. 1929: edificio de la Gran Via de Madrid. 1930: automatizadas las centrales de las capitales de provincia.',
+'Mayo 1945: las acciones de ITT pasan al Estado y Standard Electrica (filial de ITT) queda como suministrador unico de material de la CTNE con un contrato de 20 anos. Por eso la gran mayoria de los telefonos CTNE de 1945-1966 son Standard Electrica S.A. (Madrid).',
+'1954: un millon de telefonos instalados. 1961: lanzamiento del Heraldo. 1963: Telefonica crea en Malaga la fabrica de CITESA (Compania Internacional de Telecomunicacion y Electronica). 1966: fin del contrato de exclusividad y aparecen otros proveedores (Telettra Espanola 1966, Cables de Comunicacion 1970, Intelsa 1971). 1971: cinco millones de telefonos.',
+'Enero 1988: la CTNE pasa a llamarse Telefonica de Espana S.A. Un disco o placa que dice CTNE o Compania Telefonica Nacional de Espana es anterior a 1988. 1998: fin del monopolio.',
+'## C. DATADO Y MARCAS POR FABRICANTE',
+'ESPANA: el disco es transparente de plastico con la tarjeta CTNE y el numero de abonado; la placa del chasis dice Standard Electrica S.A. Madrid o Fabricado en Espana. Series: 5522 = version de pared, 5523 = sobremesa, con letra de variante (A, E, F, FZ...). El Heraldo lleva fecha de fabricacion estampada (hay ejemplares de marzo de 1962). Muchos aparatos espanoles estan adaptados a RJ11: es reversible si se conservo el cableado original; si se cortaron cables o se cambiaron piezas, pierde valor para el coleccionista.',
+'GPO y BT (Reino Unido): el marcado tipico es tipo / letra de fabricante / ano / tipo de disco / numero de marca. Ejemplo 162 / S / 32 / F / 234 = tipo 162, Siemens, 1932, disco con cifras, mark 234. Bajo el aro del disco hay otra fecha y codigo de fabricante, y el disco es un No. 10 o No. 12. Prefijos en piezas: N = Ericsson, L = ATM o ATE, TEL o ST = GEC. Condensador cuadrado = mas antiguo, redondo = mas moderno. Cajas de preguerra: urea con acabado mate tipo cascara de huevo y tacto granulado; de posguerra: acetato de celulosa brillante. Una pegatina de plastico en la base indica reacondicionado oficial (normal). Los auriculares de color de 1954-56 llevan tipo y ano pero no codigo de fabricante.',
+'WESTERN ELECTRIC y Bell System: las piezas (disco, auricular, bobina, bloques) llevan fecha mes-ano estampada (4-52 = abril de 1952); el conjunto suele ser del mismo ano mas o menos dos. Calcomania Bell System Property Not for Sale. Los 302 tempranos tienen carcasa de aleacion de cinc fundida; hacia 1941 ya son de Tenite (termoplastico). Colores del 302 en termoplastico: marfil, rojo Pekin, verde, azul y rosa; se interrumpieron en la guerra y volvieron hacia 1949. Disco con rueda de dedos metalica negra al principio; acero cepillado en los de color; rueda de plastico transparente desde 1941. Cable de tela marron hasta 1952, despues neopreno.',
+'ERICSSON DBH 1001: 1931-1962 (maqueta de arcilla en 1930), disenado por Johan Christian Bjerknes y Jean Heiberg con Elektrisk Bureau, Televerket y Ericsson; primer telefono de baquelita con horquilla, disco y timbre integrados; pesa casi 3 kg; llamado el telefono sueco en media Europa. 1933: formato mas pequeno. 1947: rediseno M50 con aristas redondeadas, rotor de disco de plastico y cable espiral; tambien hubo version blanca de melamina. Denominaciones posteriores: M33, N1020, ED 702. Lo sustituye el Dialog en 1962. Colores normales: negro; tambien pardo apagado, rojo y verde.',
+'ERICSSON DIALOG: desarrollado por Ericsson y Televerket, disenado por los arquitectos AOS (Ahlgren-Olsson-Silow), presentado en 1962 y lanzado al publico sueco en mayo de 1965; estandar de Televerket desde marzo de 1969. Termoplastico, colores blanco, gris (el mas elegido, 54 por ciento) y negro; asa integrada, control de volumen del timbre bajo la base, ajuste automatico del nivel segun la longitud de linea, carcasa sujeta con un solo tornillo.',
+'ERICOFON: Ericsson 1954, microfono, auricular y disco en una sola pieza; plastico ABS (desarrollado en 1948 y no comercializado hasta 1954); apodado Cobra; conservado en el MoMA de Nueva York. Empezo a producirse en 1954 en instituciones suecas como hospitales y llego a Europa, Australia y al mercado independiente de EE UU hacia 1956. Los colores raros valen mas.',
+'SIEMENS W48: Wahlfernsprecher 1948, desarrollado por Siemens & Halske, homologado en 1948 por la Deutsche Bundespost y fabricado por varias empresas con licencia hasta 1961, cuando lo sustituye el FeTAp 611; rasgos de diseno heredados del W28 (1928) y del W36 y W38. Se considera el telefono clasico aleman. Aun se fabrican pequenas series con los moldes originales: hay que desconfiar de ejemplares demasiado nuevos.',
+'FRANCIA S63: desarrollo 1963 (CNET), servicio desde 1965, gris como color de referencia, carcasa de ABS (sus antecesores M24 y U43 eran de baquelita); version de sobremesa y de pared. Hasta 1974 con resistencias de regulacion; 1975 termistor; 1978 timbre regulable y primeras versiones de teclado decimal; 1982 marcacion por frecuencias vocales (DTMF); fin de fabricacion 1985. Colores: gris (el mas usado), marfil, azul, marron, naranja; rojo reservado a emergencias; negro reservado a la administracion y por tanto raro; existio una carcasa transparente solo de exposicion, nunca comercializada.',
+'CANDELEROS Y MARCACION: el W-26 es el candelero estandar de la Post Office britanica de 1924. Los candeleros funcionan con una caja de timbres separada. Los primeros telefonos de disco comerciales aparecen en 1919; la marcacion por tonos DTMF la introduce AT&T en 1961 y se instala desde los anos 70.',
+'## D. FALSIFICACIONES, REPLICAS Y MONTAJES',
+'GPO tipo 300 (332 y similares): los auriculares genuinos 164 tienen ovalo hundido con letras en relieve; las replicas suelen tener ovalo en relieve, a veces marcado 164 PL35 o con las letras limadas, y a veces solo dos terminales. Las patas genuinas van atornilladas (patas a presion o pegadas sugieren un telefono indio ITI). La base genuina tiene orificios de sonido a los lados (rejillas oblongas de malla fina = indio). Cuatro tornillos en las esquinas son normales; tornillos visibles en el centro indican componentes fijados a la base, cosa que no se hacia. Debe haber una placa de chasis separada con el numero de tipo entre las campanas y los numeros de base y chasis deben casar. Los 300 genuinos nunca llevaron pasacables de goma en la entrada del cable; los cables rizados de plastico suelen delatar una replica (aunque hubo reacondicionados de los 60 con ellos). Colores de replica: demasiado blancos, rojos chillones o verdes muy oscuros; los genuinos se ven apagados y a menudo descoloridos. Defectos de molde: rebabas, bordes limados, pelicula grasa de desmoldeante, boquillas quebradizas, auriculares pequenos. El tope del disco debe estar junto al 0, el aro de retencion partido por abajo y los dedos de acero inoxidable (no laton). Internamente: condensador con ITI, campanas distintas, gancho en la parte delantera, cableado desordenado. En cajas pintadas, comprueba en una esquina oculta si el color es pintura sobre otro material.',
+'CANDELERO GPO No. 150 y No. 2: marcas estampadas en vez de grabadas, base y vastago de laton aunque esten pintados, acabado cromado o negro y oro, la palabra GEC en letra cursiva en el vastago, boquillas o auriculares demasiado grandes, base con escalon, falta del inserto de goma, aberturas de disco en un modelo que no las llevaba y cabezas moldeadas de una sola pieza son senales de replica o hibrido. El genuino es de acero sobre base de hierro fundido con inserto de goma y un tornillo central, todo pintado de negro, sin laton ni calcomanias. Hay replicas de cordon trenzado genuino, asi que el cable solo no prueba nada.',
+'GENERAL: los telefonos de madera de pared tipo roble con manivela y campanas se reproducen mucho; desconfia de tornilleria moderna (Phillips), metal ligero o laton brillante sin desgaste, cableado moderno, falta de oxido o suciedad coherente con la edad, y textos demasiado nitidos. Muchos telefonos de baquelita llevan fundas, cables o discos cambiados. La baquelita agrietada, marron y con grumos no se recupera con limpieza.',
+'## E. ESTADO Y FACTORES DE VALOR',
+'Suben el valor: originalidad completa (disco, auricular, cable y placa de la epoca), color poco frecuente para su modelo, marcas claras, fecha documentada, funcionamiento del timbre y del disco, caja o embalaje, procedencia, piezas con mecanismo de magneto intacto. Bajan el valor: fisuras en baquelita, discos o auriculares de otro modelo, cables cortados, pintura sobre el original, oxido, repintados, adaptaciones irreversibles a RJ11.',
+'Fallos habituales: disco con retorno lento (suele bastar limpiar el eje) o sin retorno (muelle roto, reparacion cara); falta de la placa metalica interior del auricular (sin ella no hay voz); capsulas de carbon secas; cordones de tela quebradizos; baquelita agrietada.',
+'## F. MERCADO EN ESPANA (octubre 2026)',
+'Canales: Wallapop, Todocoleccion, eBay, Catawiki, tiendas de antiguedades tecnicas y rastros (Rastro de Madrid, Els Encants de Barcelona, mercadillos locales). Los precios de anuncio estan por encima de lo que se cierra; las tiendas pulen y adaptan los aparatos y piden bastante mas que un particular.',
+'Referencias reales de anuncios: baquelita espanola Standard Electrica o CTNE 5522 o 5523: 45-140 EUR en particulares y 225-385 EUR en tiendas (el de placa en relieve a 385). Heraldo y Gondola: 15-45 EUR en Todocoleccion; en tiendas 99-200 EUR (el rojo y los de pared mas caros). Alemanes W38, W48 y similares: 47-165 EUR. Franceses y belgas de baquelita: 35-90 EUR. Suizos de baquelita de los 40: 90-400 EUR. Ericsson de baquelita: 125-250 EUR. Telefono de fichas de la CTNE funcionando: 665 EUR; de pesetas con monedas en tienda: 1.690 EUR. Cabina de pared CTNE: 425-750 EUR. Magnetos y telefonos de pared de madera: 80-540 EUR segun origen y estado. Telefonos de campana militares: 40-160 EUR.',
+'En una coleccion grande el valor suele concentrarse en pocas piezas: magnetos y madera, candeleros, publicos de fichas o monedas, Ericofon, DBH 1001 de epoca, modelos de diseno (Grillo, Trimline, Ericofon), colores raros y piezas completas sin restaurar mal. El resto (Heraldo, Gondola, Teide, S63, teclados de los 80) es volumen de poco valor unitario: no inflar su valor. Un lote sube de valor cuando la proporcion de piezas buenas es alta y baja si hay muchos duplicados.',
+'## G. FUENTES REALES (cita en fuentes_usadas solo las que uses; nunca inventes titulos, paginas o ISBN)',
+'Museo de Telecomunicaciones de la UPM (blogs.upm.es/museotelecomunicaciones); museo ASELEC; Espacio Fundacion Telefonica; historiatelefonia.com; catalogos comerciales CTNE de 1967, 1968 y 1971; britishtelephones.com; antiquegpophones.co.uk; stevemorse.org (identificacion de Western Electric); Ericsson History (ericsson.com); Orange Histoire (telefono S63); Wikipedia (W48, DBH 1001, Model 302); anuncios de Wallapop y Todocoleccion.',
+'Libros de referencia reales: Kate E. Dooner, Telephones: Antique to Modern, A Collectors Guide (Schiffer); Kate E. Dooner, Telephone Collecting: Seven Decades of Design with Price Guide (Schiffer); Ralph O. Meyer, Old-Time Telephones! Design, History, and Restoration (Schiffer). Asociaciones: Antique Telephone Collectors Association (ATCA), Telephone Collectors International (TCI), Telecommunications Heritage Group (Reino Unido).'
+];
+
+/* Catalogo de modelos.
+   Formato: [nombre, fabricante/pais, epoca, rasgos de identificacion, rareza, venta realista en Espana EUR]
+   Rareza: C comun, PC poco comun, R raro, MR muy raro.
+   Precios orientativos: buen estado, mercado espanol octubre 2026. Ajustar por estado, originalidad y color. */
+var PF_KB_MODELS=[
+// ---- ESPANA: CTNE, Standard Electrica, CITESA, Telefonica ----
+['Magneto telefonico Standard Electrica (pared)','Standard Electrica, Espana','1940 y anteriores','Caja de madera o metal con manivela (generador de magneto), bateria local con pilas, campanas arriba, sin disco','PC','90-300'],
+['Sobremesa metalico negro de los anos 20','Standard Electrica o similar, Espana','1920s','Cuerpo negro de metal de los inicios de la CTNE, visto en tiendas como Standard Electrica; comprobar placa y si conserva el disco original','PC','150-350'],
+['Standard Electrica 5523 A','Standard Electrica, Espana','finales 1940s','El sobremesa clasico espanol de baquelita negra; disco transparente con tarjeta CTNE; timbre interno; bateria central','C','70-150'],
+['Standard Electrica 5523 E / F / FZ','Standard Electrica, Espana','1950-1960s','Variantes del 5523 en baquelita negra, disco transparente con CTNE; el 5523 FZ aparece en el museo UPM como ca. 1950 y en otra ficha como 1957; usado muy ampliamente por la CTNE en los 50 y 60','C','60-130'],
+['Standard Electrica 5522 / 5522 E (pared)','Standard Electrica, Espana','1950s (un 5522 E fechado en 1957)','Version de pared del 5523: baquelita negra, unos 23x17x12 cm, timbre en el mismo cuerpo','C','45-130'],
+['Standard Electrica con placa frontal en relieve','Standard Electrica, Espana','1950s','Sobremesa de baquelita con placa en relieve Standard Electrica S.A. Fabricado en Espana','PC','120-250'],
+['Baquelita espanola en color (verde, crema, blanco, marron)','Standard Electrica, Espana','1950-60s','Mismos moldes que el 5523 en colores distintos del negro; el modelo 5630-AVII marron aparece en anuncios hacia 150 EUR','PC','100-220'],
+['Telefono publico de fichas o monedas CTNE','Standard Electrica, Espana','1950s-1960s','Metal y baquelita con ranura para fichas o monedas (hay uno que admite pesetas) y cerradura','R','400-1200'],
+['Cabina telefonica de pared CTNE','Standard Electrica, Espana','1950s-70s','Cabina o cajon de pared de metal para un telefono publico','R','350-750'],
+['Telefono publico de monedas Telefonica de los 80','Telefonica, Espana','1980s','Publico de pesetas ya de plastico y metal, con placa Telefonica','PC','60-250'],
+['Telefono de campana ferroviario RENFE SESA 5156','SESA, Espana','1950s','Aparato de servicio con marca RENFE','PC','80-150'],
+['Heraldo','CITESA (ITT), Espana','1961 - finales 1980s','Sobremesa y pared; colores blanco marfil, gris, crema, verde, azul y rojo; disco rotativo y en los 80 teclado multifrecuencia; adaptacion del Assistent aleman de SEL y del Assistant belga de BTMC (ITT); fue el primer telefono de la mayoria de los espanoles. En 1962 el ejemplar de museo lleva fecha 31-3-62 y disco con CTNE','C','20-60; rojo, de pared o impecable 80-200 en tienda'],
+['Heraldo CDM 5605 y Heraldo con volumen graduable','CITESA, Espana','1968','Variantes del Heraldo: el CDM 5605 esta documentado en 1968 y el volumen graduable aparece en el catalogo de 1968','C','25-70'],
+['Satai ejecutivo y Satai multiple','CITESA, Espana','c.1970','Variante de oficina del Heraldo para el Sistema de Aparatos Telefonicos de Abonado con Interconexion; botonera de lineas','PC','40-120'],
+['Gondola (DM380)','CITESA Malaga, Espana','1968 - 1980s','Copia del Trimline de Western Electric: base estrecha con horquilla y marcador en el microtelefono que se ilumina al descolgar, luego teclado; colores blanco marfil, gris, rojo, azul, verde claro y beige; version de pared en el catalogo de 1971; un ejemplar de 1978 lleva referencia APA-8079','C','15-45; tiendas 80-120'],
+['Teide','Standard, Amper, Alcatel, Espana','1978-1994','Sustituto de Heraldo y Gondola, lineas rectas, solo teclado (primero marcacion decadica y despues multifrecuencia con asterisco y almohadilla)','C','8-30'],
+['Benjamin (Telyco)','Telyco, Espana','mediados 1980s - mediados 1990s','Compacto blanco y rojo con tapa que oculta el teclado y cuelga al cerrarla','C','8-30'],
+['Aparatos especiales Telefonica 1967-1971','CITESA y otros, Espana','1967-1971','Telefono Estilo (1968), secretaria electronica o contestador (1968), avisador movil o buscapersonas (1968), marcador automatico de 40 numeros y telefono con altavoz manos libres (1971), conmutadores Duplex','R','40-250'],
+['Referencias vistas en anuncios espanoles sin datos tecnicos','varios, Espana','1950-70s','Standard Electrica 2650A (pared), Ericsson 4411A de baquelita blanca, Ericsson 11421/2 (pared), Elasa ecualizado CTNE; identificar siempre por la placa','PC','40-150'],
+// ---- ALEMANIA ----
+['Siemens W28','Siemens & Halske, Alemania','1928 - anos 30','Primer sobremesa ampliamente distribuido de S&H, fabricado con licencia para la Reichspost','PC','120-300'],
+['Siemens W38 (y Modell 36)','Siemens & Halske y licenciatarios, Alemania','1938','Baquelita negra; homologado en 1938 tras modificar el modelo presentado en Leipzig en 1936','PC','50-130'],
+['Siemens W48 (y variante W49)','Siemens & Halske y licenciatarios, Alemania','1948 - 1961','El telefono clasico aleman, baquelita negra, disco, cable de tela; fabricado por varias empresas; ojo con series nuevas hechas con los moldes originales','C','50-120'],
+['Siemens FeTAp 611','Siemens y licenciatarios, Alemania','desde 1961','Sucesor del W48, carcasa de plastico en varios colores','C','20-60'],
+['Krone de baquelita beige','Krone, Alemania','1960','Baquelita beige; visto en anuncios espanoles hacia 72 EUR','C','40-90'],
+['Feldfernsprecher 33 (FF33)','Alemania (ejercito)','1933 y WWII','Telefono de campana militar portatil de baquelita y metal','PC','100-200'],
+// ---- SUECIA, NORUEGA, DINAMARCA ----
+['Ericsson DBH 1001 (Ericsson sueco, M33, N1020, ED 702)','L.M. Ericsson, Suecia','1931-1962','Baquelita negra de una pieza con horquilla, disco y timbre integrados; casi 3 kg; formato menor desde 1933; M50 de 1947 con aristas redondeadas y cable espiral; version blanca de melamina rara','R','150-450'],
+['Ericsson Dialog','Ericsson y Televerket, Suecia','1962-1970s','Termoplastico blanco, gris o negro, asa integrada, un solo tornillo, regulador de timbre bajo la base','C','20-60'],
+['Ericofon (Cobra)','L.M. Ericsson, Suecia','1954-1970s','Una sola pieza con disco en la base y microfono y auricular en los extremos, plastico ABS; en el MoMA; colores raros valen mas','PC','80-300'],
+['Telefono de pared Ericsson de madera con magneto','L.M. Ericsson, Suecia','1890s-1920s','Caja de madera de nogal u otras maderas, manivela, campanas arriba, modelos como el 305 de 1918 o antiguos de 1891','R','150-500'],
+['KTAS candelero AC300 y magnetos daneses','K.T.A.S., Dinamarca','1904 - 1912','Candelero de metal AC300 de 1904 y magnetos de madera de 1912 (por ejemplo el modelo Admiral)','R','150-450'],
+// ---- REINO UNIDO ----
+['Candelero GPO No. 2 / No. 150','GPO, Reino Unido','antes de 1929 - anos 30','Cuerpo de acero sobre base de hierro fundido con inserto de goma y tornillo central; todo negro, sin laton ni calcomanias; cabeza daffodil (metal con boquilla de baquelita) o redonda de baquelita; requiere caja de timbres Bellset No. 1 o No. 25; marca de cabeza tipo PX25 (fabricante mas ano)','PC','120-300'],
+['Candelero W-26 (Post Office)','British Post Office, Reino Unido','1924','Candelero estandar de la Post Office de 1924','PC','120-300'],
+['GPO 162 y 232 (serie 200)','GPO, Reino Unido','1929-1959','Baquelita con disco; el 162 se fecha por marcado tipo / fabricante / ano (ej. 162/S/32)','PC','60-150'],
+['GPO 312 / 328 / 330 / 332 (serie 300)','GPO, Reino Unido','1937-1968','Baquelita; diseno derivado del Ericsson DBH 1001 de 1932; el 312 es de 1949; colores distintos del negro son mas raros (el blanco 312L de 1956); muchas replicas indias ITI del 332','C','60-160; colores hasta 250'],
+['GPO 706','GPO, Reino Unido','1959-1967','Plastico, primer GPO de serie 700, avanzado para su epoca; versiones sin aro de numeros','C','25-70'],
+['GPO 746','GPO, Reino Unido','1967-1986','Mejora del 706; las primeras versiones no tienen hueco en el auricular','C','20-60'],
+['Trimphone','STC o GPO, Reino Unido','mediados 1960s - 1980s','Esbelto, disco iluminado y timbre de gorjeo','PC','25-80'],
+['Plessey PBT100 / PBT101','Plessey para BT, Reino Unido','1986','Teclado electronico con tecla de rellamada','C','15-40'],
+['GEC K7867 telefono de conmutacion','GEC, Reino Unido','principios 1900s - 1935','Caja de nogal tipo intercomunicador con selector de habitacion y pulsador para timbre','R','150-400'],
+// ---- FRANCIA, BELGICA, SUIZA, ITALIA, ESTE ----
+['Appareil Mle 1910 (magneto)','PTT, Francia','1910-1919','Magneto de pared o sobremesa de la administracion francesa','PC','100-250'],
+['Modelo 1924 (B.C.I., Dunyach & Leclerc)','Francia','1924','Aparato de baquelita de los anos 20; visto en anuncios hacia 85 EUR','PC','80-200'],
+['Thomson-Houston','Thomson-Houston, Francia','1920','Sobremesa temprano; visto en anuncios hacia 160 EUR','PC','100-250'],
+['PTT U43 y M24','PTT, Francia','1943 y antes','Baquelita negra, antecesores del S63','C','50-130'],
+['PTT S63 (Socotel)','CNET, Socotel y otros, Francia','1965-1985','ABS gris, marfil, azul, marron, naranja; teclado desde 1978; negro y rojo son raros; transparente no se vendio','C','10-35; negro o color raro 40-100'],
+['Bell Telephone Manufacturing (Assistant)','BTMC Amberes, Belgica (ITT)','antes de 1961','Origen belga del Heraldo; copia del Assistent aleman','PC','40-100'],
+['ATEA Belgica de baquelita','ATEA, Belgica','1940-50s','Visto en anuncios hacia 89 EUR','PC','50-110'],
+['Baquelita suiza de los 40 (PTT)','Autophon AG Solothurn y Hasler, Suiza','1940s','Baquelita de las PTT suizas; valores muy variables, hasta 400 en tienda','PC','90-300'],
+['Siemens Grillo','Siemens Italiana, Italia','1965','Disenado por Marco Zanuso y Richard Sapper, plegable tipo concha','R','80-250'],
+['Telefono sovietico TAI-43 y navales de magneto','URSS','1940s-60s','Aparatos de campana de manivela; hay navales antiexplosion en rojo','PC','40-120'],
+// ---- EEUU y CANADA ----
+['Western Electric candelero 20B / 20AL / 40AL / 50AL / 51AL / 151AL','Western Electric, EEUU','1904-1941','20B 1904-12, 20AL 1912-17, 40AL 1917-25, 50AL 1919-25, 51AL 1925-31, 151AL 1931-41; caja de timbres separada','R','150-500'],
+['Western Electric B1 / 102, D1 / 202','Western Electric, EEUU','1927-1937','B1 con base circular (1927-30); D1 o 202 con base oval (1930-37); sobremesa con auricular de mango','PC','120-350'],
+['Western Electric 302','Western Electric y Northern Electric (Canada), EEUU','1937-1955; 5302 de 1955 a los 60','Primer aparato Bell con timbre y circuito en el cuerpo; cinc fundido al principio, Tenite desde c.1941; colores marfil, rojo Pekin, verde, azul, rosa','C','70-200; colores 150-300'],
+['Western Electric 500','Western Electric, EEUU','1949-1984','El telefono de disco mas famoso de Bell; auricular tipo G','C','40-120'],
+['Western Electric 1500 / 2500 / 3500','Western Electric, EEUU','1963-1984','1500 con 10 teclas (1963-67), 2500 con 12 teclas (1968-84), 3500 con 16 teclas (AUTOVON)','C','25-80'],
+['Western Electric Princess y Trimline','Western Electric, EEUU','1959 y 1965','Princess 701 y 702 (1959); Trimline 220 AD (1965), con marcador en el microtelefono; modelo que copia la Gondola','PC','30-100'],
+['Western Electric pared 653 / 354 / 554','Western Electric, EEUU','1910-1984','653 (1910-46), 354 (1947-56), 554 (1956-84)','C','40-120'],
+['Magnetos de pared de madera EEUU (Kellogg, Stromberg-Carlson, North Electric, Chicago)','EEUU y Canada','1890s-1930s','Cajas de roble con manivela y campanas; visto un Chicago de 1906 hacia 540 EUR; replicas modernas abundantes','R','150-550'],
+['Automatic Electric','Automatic Electric, EEUU','desde 1925','Primer telefono con bakelita y caja de timbres separada (1925); discos de marcado comercial desde 1919','PC','80-250'],
+// ---- OTRAS CATEGORIAS ----
+['EE-8 y telefonos de campana militares','EEUU, Alemania, URSS, otros','1930s-1960s','Portatiles de baquelita y metal con manivela y pilas; visto desde 40 hasta 160 EUR','PC','40-160'],
+['Centralitas e intercomunicadores','varios','1900-1970','Centralitas de 6 lineas o intercomunicadores de madera; seleccionar por marca','PC','50-200'],
+['Telefonos novedad (formas de objetos o personajes)','varios','1980s-1990s','Plasticos con forma de objeto; mercado propio, salvo licencias raras','C','10-40'],
+['Telefonos de teclado y plastico','varios','1970s-1990s','Aparatos de uso general sin rasgos especiales','C','5-25']
+];
+
+/* Construye el texto que se inyecta en el prompt.
+   compact=true devuelve solo el catalogo reducido (modo rapido y lotes). */
+function pfKbText(compact){
+  var RR={C:'COMUN',PC:'POCO COMUN',R:'RARO',MR:'MUY RARO'};
+  var out=[];
+  if(!compact){
+    out.push('=== BASE DE CONOCIMIENTO PHONEFINDER (version '+PF_KB_VERSION+') ===');
+    out.push('Los precios de la base son rangos orientativos de venta realista en Espana en octubre de 2026, buen estado. Usalos como ancla y ajusta por estado, originalidad, color y marcas.');
+    for(var i=0;i<PF_KB_GUIDE.length;i++)out.push(PF_KB_GUIDE[i]);
+    out.push('## H. CATALOGO DE MODELOS (nombre | fabricante y pais | epoca | rasgos | rareza | venta ES EUR)');
+    for(var j=0;j<PF_KB_MODELS.length;j++){
+      var m=PF_KB_MODELS[j];
+      out.push('- '+m[0]+' | '+m[1]+' | '+m[2]+' | '+m[3]+' | '+(RR[m[4]]||m[4])+' | '+m[5]);
+    }
+  }else{
+    out.push('=== CATALOGO REDUCIDO (nombre | epoca | rareza | venta ES EUR aprox.) ===');
+    for(var k=0;k<PF_KB_MODELS.length;k++){
+      var q=PF_KB_MODELS[k];
+      out.push('- '+q[0]+' | '+q[2]+' | '+(RR[q[4]]||q[4])+' | '+q[5]);
+    }
+  }
+  return out.join('\n');
+}
+
+/* Llamada a /api/analyze con la base de conocimiento como primer bloque del sistema,
+   marcado como cacheable: dentro de 5 minutos las siguientes llamadas la reutilizan
+   (mas rapido y mucho mas barato). Si el servidor rechazara ese formato (error 400),
+   reintenta una vez con el sistema como texto plano, que es como funcionaba antes. */
+async function pfAnalyzeFetch(payload,kbText,instr,signal){
+  function send(sys){
+    var body={};
+    for(var k in payload){body[k]=payload[k];}
+    body.system=sys;
+    return fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:signal});
+  }
+  var blocks=[{type:'text',text:kbText,cache_control:{type:'ephemeral'}},{type:'text',text:instr}];
+  var r=await send(blocks);
+  if(r.status===400){
+    r=await send(kbText+'\n\n'+instr);
+  }
+  return r;
+}
+</script>
+<script>
 // STATE
 var currentResult=null,currentImages=[],chartInstance=null;
 var _colCache=null,_colIndex=[],_activeFilter='todos',_searchQuery='';
@@ -2475,26 +2629,29 @@ async function analyzePhone(quickMode){
 
   // System prompt
   var systemPrompt = _qm ?
-    'Eres PHONEFINDER. Responde SOLO JSON sin texto. Devuelve: {"nombre":"","fabricante":"","precio_compra_min":0,"precio_compra_max":0,"precio_venta_min":0,"precio_venta_max":0,"material":"","rareza":"COMUN","periodo":"","pais":"","descripcion":"","detalles_tecnicos":"","dificultad":1,"ultimo_precio":"","proyeccion":[0,0,0,0,0,0,0],"que_revisar":[],"alertas":[],"estado_minimo":"","como_limpiar":[],"como_negociar":"","confianza":"MEDIA","fuentes_usadas":"","zonas_limpieza":[]}' :
     [
-    'Eres PHONEFINDER, tasador experto de telefonia vintage para el mercado espanol. Conoces catalogos de fabricantes (Ericsson, Siemens, Western Electric, Standard Electrica, CGCT, GPO), museos de telecomunicaciones y guias de coleccionista (ATCA, TCI). Valoras con precios reales de Todocoleccion, Wallapop, eBay y Catawiki.',
+    'Eres PHONEFINDER, tasador experto de telefonia vintage para el mercado espanol. Responde SOLO JSON sin texto. Devuelve: {"nombre":"","fabricante":"","precio_compra_min":0,"precio_compra_max":0,"precio_venta_min":0,"precio_venta_max":0,"material":"","rareza":"COMUN","periodo":"","pais":"","descripcion":"","detalles_tecnicos":"","dificultad":1,"ultimo_precio":"","proyeccion":[0,0,0,0,0,0,0],"que_revisar":[],"alertas":[],"estado_minimo":"","como_limpiar":[],"como_negociar":"","confianza":"MEDIA","fuentes_usadas":"","zonas_limpieza":[]}',
+    'Usa este catalogo como referencia de modelos, epocas y precios (venta realista en Espana). Si el telefono no aparece en el, estima con prudencia y baja la confianza.'
+    ].join('\n') :
+    [
+    'Eres PHONEFINDER, tasador experto de telefonia vintage y anticuario especializado en el mercado espanol. Conoces catalogos de fabricantes (Ericsson, Siemens, Western Electric, Standard Electrica, CITESA, CGCT, GPO), museos de telecomunicaciones y guias de coleccionista (ATCA, TCI). Valoras con precios reales de Todocoleccion, Wallapop, eBay y Catawiki.',
+    'Tu BASE DE CONOCIMIENTO (metodo de identificacion, historia, datado por marcas, falsificaciones, mercado espanol y catalogo de modelos) esta en el bloque anterior del sistema. Consultala SIEMPRE antes de responder.',
+    '=== INSTRUCCIONES DE USO DE LA BASE ===',
+    'Si el telefono coincide con una entrada del catalogo, usa sus rasgos, epoca y rango de precio como ancla y ajustalos por estado, completitud, color y originalidad que veas en la foto. Si no aparece, razona con las pautas de identificacion y datado, y reflejalo en una confianza menor. No inventes modelos, fechas ni referencias que no puedas sostener.',
+    'confianza: aplica los criterios de la seccion A. En que_revisar pon primero la marca o detalle que confirma el modelo y donde buscarlo. En alertas incluye cualquier riesgo de confusion con otro modelo (con la marca que los distingue) y los riesgos de replica o montaje de las secciones D y E.',
+    'fuentes_usadas: cita solo fuentes reales de la seccion G que hayas usado de verdad; nunca inventes libros, paginas ni enlaces.',
     'REGLA: responde SOLO el objeto JSON, sin texto ni markdown ni backticks.',
-    'precio_compra es el rango justo para comprar y revender. precio_venta es el rango real de venta en Espana hoy.',
+    'precio_compra es el rango justo para comprar y revender con margen (normalmente entre el 40 y el 60 por ciento del valor de venta, mas alto solo en piezas raras). precio_venta es el rango real de venta en Espana hoy.',
     'Devuelve EXACTAMENTE esta estructura:',
-    'Incluye tambien: dato_curioso (una frase sorprendente de este modelo), contexto_epoca (una frase de contexto historico), y alternativa (SOLO si genuinamente dudas entre 2 modelos similares por la foto, pon el nombre del segundo candidato; si estas seguro, pon null).',
-    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos","material":"Material","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia en 3 frases","detalles_tecnicos":"Specs en 2 frases","dato_curioso":"Frase sorprendente","contexto_epoca":"Frase de contexto","alternativa":"Si dudas entre 2 modelos posibles, nombre del segundo candidato mas probable, si no null","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["p1","p2","p3"],"alertas":["a1","a2"],"estado_minimo":"Estado minimo","como_limpiar":["p1","p2","p3"],"como_negociar":"Estrategia en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"3-4 fuentes","zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"mat","product":"producto","avoid":"evitar","steps":["p1","p2"]}]}'
+    'Incluye tambien: dato_curioso (una frase sorprendente de este modelo) y contexto_epoca (una frase de contexto historico).',
+    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos","material":"Material","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia en 3 frases","detalles_tecnicos":"Specs en 2 frases","dato_curioso":"Frase sorprendente","contexto_epoca":"Frase de contexto","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["p1","p2","p3"],"alertas":["a1","a2"],"estado_minimo":"Estado minimo","como_limpiar":["p1","p2","p3"],"como_negociar":"Estrategia en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"3-4 fuentes","zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"mat","product":"producto","avoid":"evitar","steps":["p1","p2"]}]}'
     ].join('\n');
 
   var _ctrl=new AbortController();
   var _timeout=setTimeout(function(){_ctrl.abort();},55000);
 
   try{
-    var resp=await fetch('/api/analyze',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:_qm?500:4096,system:systemPrompt,messages:[{role:'user',content:userContent}]}),
-      signal:_ctrl.signal
-    });
+    var resp=await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:_qm?500:4096,messages:[{role:'user',content:userContent}]},pfKbText(_qm),systemPrompt,_ctrl.signal);
     clearTimeout(_timeout);
 
     // Read response as text first so we can show what came back even if not JSON
@@ -2602,9 +2759,7 @@ function renderResult(r){
     if(r._lowConf)tags.innerHTML+='<span class="tag" style="background:rgba(192,57,43,.2);color:#e57c72;border:1px solid rgba(192,57,43,.3)">Confianza '+r.confianza+'</span>';
   }
   var desc=document.getElementById('r-desc');if(desc)desc.textContent=r.descripcion||'';
-  checkComparatorHint(r);
   renderRarityMeter(r);
-  renderDetectiveAlert(r);
   var photos=document.getElementById('resultPhotos');if(photos){photos.innerHTML='';currentImages.forEach(function(img,i){var el=document.createElement('img');el.className='photo-viewer-img'+(i===0?' active':'');el.src=img.dataUrl;el.onclick=function(){photos.querySelectorAll('.photo-viewer-img').forEach(function(x){x.classList.remove('active');});el.classList.add('active');openPhotoLightbox(i);};photos.appendChild(el);});}
   var priceHero=document.querySelector('.price-hero');
   if(priceHero){priceHero.classList.remove('price-reveal');void priceHero.offsetWidth;priceHero.classList.add('price-reveal');}
@@ -3719,19 +3874,6 @@ function closePhotoLightbox(e){
   if(lb)lb.classList.remove('open');
 }
 
-// COMPARATOR
-function checkComparatorHint(r){
-  var hint=document.getElementById('compareHint');if(!hint)return;
-  if(!_colCache||!_colCache.length){hint.style.display='none';return;}
-  var name=(r.nombre||'').toLowerCase();
-  var similar=_colCache.filter(function(e){var en=(e.data.nombre||'').toLowerCase();return(name.length>4&&en.indexOf(name.substring(0,5))!==-1)||(r.fabricante&&e.data.fabricante&&r.fabricante===e.data.fabricante);});
-  if(similar.length){
-    hint.style.display='block';
-    var avgBuy=similar.reduce(function(s,e){return s+(e.purchase&&e.purchase.buyPrice!=null?e.purchase.buyPrice:(e.data.precio_compra_max||0));},0)/similar.length;
-    hint.innerHTML='<strong>Tienes '+similar.length+' telefono'+(similar.length>1?'s':'')+' similar'+(similar.length>1?'es':'')+' en coleccion</strong> - pagaste de media '+Math.round(avgBuy)+'EUR. Este vale '+(r.precio_compra_min||0)+'--'+(r.precio_compra_max||0)+'EUR.';
-    hint.onclick=function(){showPage('collection');};
-  }else{hint.style.display='none';}
-}
 function renderRarityMeter(r){
   var meter=document.getElementById('rarityMeter'),lbl=document.getElementById('rarityMeterLbl');
   if(!meter||!lbl)return;
@@ -3747,30 +3889,6 @@ function renderRarityMeter(r){
     if(i<level){seg.classList.add(level>=4?'filled-max':'filled');}
   });
   lbl.textContent=r.rareza||'--';
-}
-// Modo Detective: aviso de identificacion ambigua
-var _lastAlternativeName='';
-function renderDetectiveAlert(r){
-  var alert=document.getElementById('detectiveAlert'),altText=document.getElementById('detectiveAlt');
-  if(!alert||!altText)return;
-  if(r.alternativa&&r.alternativa!=='null'&&r.alternativa.trim().length>1){
-    _lastAlternativeName=r.alternativa;
-    altText.textContent=r.alternativa;
-    alert.style.display='flex';
-  }else{
-    alert.style.display='none';
-  }
-}
-function analyzeAsAlternative(){
-  if(!_lastAlternativeName)return;
-  var descInput=document.getElementById('descInput');
-  if(descInput)descInput.value='Es concretamente un: '+_lastAlternativeName+'. Confirma o corrige la identificacion y tasalo.';
-  showToast('Analizando como '+_lastAlternativeName+'...');
-  var imgsKept=currentImages.slice();
-  showPage('home');
-  currentImages=imgsKept;
-  renderPhotoStrip();
-  setTimeout(function(){analyzePhone(false);},300);
 }
 
 // DRAFTS
@@ -3824,7 +3942,8 @@ async function analyzeLot(){
   _lotPhotos.forEach(function(p,i){content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:p.b64}});content.push({type:'text',text:'Telefono '+(i+1)+':'});});
   content.push({type:'text',text:'Analiza cada telefono. SOLO array JSON: [{"nombre":"...","precio_compra_min":0,"precio_compra_max":0,"precio_venta_min":0,"precio_venta_max":0,"rareza":"COMUN"},...]'});
   try{
-    var resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:content}]})});
+    var lotSys='Eres PHONEFINDER, tasador experto de telefonia vintage para el mercado espanol. Identifica cada telefono con ayuda de la base de conocimiento anterior y tasalo con sus rangos como ancla, ajustando por estado y originalidad; si no puedes identificar uno con seguridad, da el nombre generico mas probable y valoralo con prudencia.';
+    var resp=await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:content}]},pfKbText(false),lotSys);
     var data=await resp.json();
     var raw=data.content.map(function(c){return c.text||'';}).join('');
     var arr=null;
@@ -3997,13 +4116,14 @@ async function askAboutPhone(){
   qaWrap.scrollIntoView({behavior:'smooth',block:'nearest'});
 
   var r=currentResult;
-  var parts=['Eres telefinder, experto en telefonia vintage. El usuario ya tiene la tasacion de este telefono: '+(r.nombre||'')+', fabricante '+(r.fabricante||'')+', periodo '+(r.periodo||'')+', material '+(r.material||'')+', rareza '+(r.rareza||'')+'.',
+  var parts=['El usuario ya tiene la tasacion de este telefono: '+(r.nombre||'')+', fabricante '+(r.fabricante||'')+', periodo '+(r.periodo||'')+', material '+(r.material||'')+', rareza '+(r.rareza||'')+'.',
     'Pregunta del usuario: '+question,
     'Responde de forma directa y util en maximo 3 frases. Sin JSON, texto plano normal.'];
   var prompt=parts.join(' ');
 
   try{
-    var resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:300,messages:[{role:'user',content:prompt}]})});
+    var askSys='Eres PHONEFINDER, anticuario experto en telefonia vintage. Responde con ayuda de la base de conocimiento anterior; si algo no esta en ella y no lo sabes con seguridad, dilo en lugar de inventar.';
+    var resp=await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:300,messages:[{role:'user',content:prompt}]},pfKbText(false),askSys);
     var data=await resp.json();
     var answer=(data.content||[]).map(function(c){return c.text||'';}).join('').trim();
     var loadingEl=document.getElementById('askLoadingNow');
