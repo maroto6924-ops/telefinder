@@ -16,20 +16,115 @@
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, collection, addDoc, getDocs, orderBy, query, deleteDoc, doc, updateDoc }
+  import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, orderBy, query, deleteDoc, doc, updateDoc, writeBatch, limit, serverTimestamp }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, sendEmailVerification, updateProfile, deleteUser, reauthenticateWithCredential, EmailAuthProvider }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   const firebaseConfig = {
     apiKey:"AIzaSyB9mSF3RsWs1iYoShocPkI3nXl3UCUMh8E",authDomain:"telefinder-ea033.firebaseapp.com",
     projectId:"telefinder-ea033",storageBucket:"telefinder-ea033.firebasestorage.app",
     messagingSenderId:"395387321523",appId:"1:395387321523:web:62ed43629c0a11fd6d04c6"
   };
-  const app=initializeApp(firebaseConfig), db=getFirestore(app);
-  window._fbSave   = async(e) => { const r=await addDoc(collection(db,'coleccion'),e); return r.id; };
-  window._fbLoad   = async() => { const q=query(collection(db,'coleccion'),orderBy('savedAt','desc')); const s=await getDocs(q); return s.docs.map(d=>({firestoreId:d.id,...d.data()})); };
-  window._fbDelete = async(id) => deleteDoc(doc(db,'coleccion',id));
-  window._fbUpdate = async(id,fields) => updateDoc(doc(db,'coleccion',id),fields);
-  window._firebaseReady=true;
-  window.dispatchEvent(new Event('firebase-ready'));
+  const ADMIN_EMAIL = 'sobrinocompra@gmail.com';
+  const app=initializeApp(firebaseConfig), db=getFirestore(app), auth=getAuth(app);
+  try{ auth.languageCode='es'; }catch(e){}
+  let U=null, registering=false, lastCount=-1;
+  const mine=()=>collection(db,'users',U.uid,'coleccion');
+  const stamp=(v)=>{ try{ if(v&&v.toMillis) return v.toMillis(); if(v&&v.seconds) return v.seconds*1000; if(typeof v==='string') return Date.parse(v)||0; }catch(e){} return 0; };
+
+  // ---- Coleccion: cada usuario tiene la suya ----
+  window._fbSave = async(e) => {
+    if(!U) throw new Error('Inicia sesión para guardar');
+    if(e && e.type==='feedback'){ await addDoc(collection(db,'feedback'),Object.assign({},e,{uid:U.uid,email:U.email})); return 'feedback'; }
+    const r=await addDoc(mine(),e); return r.id;
+  };
+  window._fbLoad = async() => {
+    if(!U) return [];
+    const q=query(mine(),orderBy('savedAt','desc')); const s=await getDocs(q);
+    const out=s.docs.map(d=>({firestoreId:d.id,...d.data()}));
+    if(out.length!==lastCount){ lastCount=out.length; updateDoc(doc(db,'users',U.uid),{colCount:out.length}).catch(()=>{}); }
+    return out;
+  };
+  window._fbDelete = async(id) => deleteDoc(doc(db,'users',U.uid,'coleccion',id));
+  window._fbUpdate = async(id,fields) => updateDoc(doc(db,'users',U.uid,'coleccion',id),fields);
+
+  // ---- Cuentas ----
+  const isAdmin=()=>!!(U && U.email && U.email.toLowerCase()===ADMIN_EMAIL && U.emailVerified);
+  window._pfAuth = {
+    adminEmail: ADMIN_EMAIL,
+    user: ()=>U ? {uid:U.uid,email:U.email,name:U.displayName||'',verified:U.emailVerified} : null,
+    isAdmin: isAdmin,
+    isAdminEmail: ()=>!!(U && U.email && U.email.toLowerCase()===ADMIN_EMAIL),
+    async register(name,email,pass){
+      registering=true;
+      try{
+        const c=await createUserWithEmailAndPassword(auth,email,pass);
+        U=c.user;
+        try{ await updateProfile(c.user,{displayName:name}); }catch(e){}
+        await setDoc(doc(db,'users',c.user.uid),{email:c.user.email,name:name,plan:'free',createdAt:serverTimestamp(),lastSeen:serverTimestamp(),colCount:0,platform:(/iPhone|iPad/.test(navigator.userAgent)?'iOS':/Android/.test(navigator.userAgent)?'Android':'web')});
+        try{ sendEmailVerification(c.user).catch(()=>{}); }catch(e){}
+        try{ const t=await c.user.getIdToken(); fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken:t,name:name})}).catch(()=>{}); }catch(e){}
+        return c.user;
+      } finally { registering=false; }
+    },
+    login:(email,pass)=>signInWithEmailAndPassword(auth,email,pass).then(c=>c.user),
+    logout:()=>signOut(auth),
+    reset:(email)=>sendPasswordResetEmail(auth,email),
+    resend:()=>sendEmailVerification(U),
+    async refresh(){ if(!U) return; await U.reload(); await U.getIdToken(true); window.dispatchEvent(new CustomEvent('pf-auth-refresh')); },
+    async deleteAccount(pass){
+      const cred=EmailAuthProvider.credential(U.email,pass);
+      await reauthenticateWithCredential(U,cred);
+      const s=await getDocs(mine());
+      for(const d of s.docs){ await deleteDoc(d.ref); }
+      await deleteDoc(doc(db,'users',U.uid));
+      await deleteUser(U);
+    },
+    // ---- Administracion ----
+    async listUsers(){
+      const s=await getDocs(query(collection(db,'users'),orderBy('createdAt','desc')));
+      return s.docs.map(d=>{ const x=d.data(); return {uid:d.id,email:x.email||'',name:x.name||'',plan:x.plan||'free',colCount:x.colCount||0,platform:x.platform||'',createdAt:stamp(x.createdAt),lastSeen:stamp(x.lastSeen)}; });
+    },
+    async userCollection(uid){
+      const s=await getDocs(query(collection(db,'users',uid,'coleccion'),orderBy('savedAt','desc')));
+      return s.docs.map(d=>({firestoreId:d.id,...d.data()}));
+    },
+    async legacyCount(){
+      const s=await getDocs(collection(db,'coleccion'));
+      return s.docs.filter(d=>(d.data()||{}).type!=='feedback').length;
+    },
+    async migrateLegacy(onProgress){
+      const s=await getDocs(collection(db,'coleccion'));
+      const items=s.docs; let done=0, moved=0;
+      for(const d of items){
+        const x=d.data();
+        if(x && x.type==='feedback'){ await setDoc(doc(db,'feedback',d.id),Object.assign({},x,{uid:U.uid,email:U.email})); }
+        else { await setDoc(doc(db,'users',U.uid,'coleccion',d.id),x); moved++; }
+        done++; if(onProgress) onProgress(done,items.length);
+      }
+      lastCount=-1;
+      return moved;
+    }
+  };
+
+  window._firebaseReady=false;
+  onAuthStateChanged(auth, async(user)=>{
+    U=user||null;
+    window._pfAuthResolved=true;
+    window._firebaseReady=false;
+    if(U){
+      if(!registering){
+        try{
+          const ref=doc(db,'users',U.uid), snap=await getDoc(ref);
+          if(snap.exists()) await updateDoc(ref,{lastSeen:serverTimestamp()});
+          else await setDoc(ref,{email:U.email,name:U.displayName||'',plan:'free',createdAt:serverTimestamp(),lastSeen:serverTimestamp(),colCount:0,platform:'web'});
+        }catch(e){ console.warn('perfil',e && e.code); }
+      }
+      window._firebaseReady=true;
+    }
+    window.dispatchEvent(new CustomEvent('pf-auth'));
+    if(U) window.dispatchEvent(new Event('firebase-ready'));
+  });
 </script>
 
 <style>
@@ -1599,6 +1694,216 @@ body.pf-noanim *,body.pf-noanim *::before,body.pf-noanim *::after{animation-dura
 
 /* Foco visible para teclado */
 button:focus-visible,.pf-tab:focus-visible,.fold-head:focus-visible,.pf-nav-btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+
+/* ---------- ACCESO Y CUENTAS (v5) ---------- */
+.pf-auth{position:fixed;inset:0;z-index:980;background:radial-gradient(120% 80% at 30% 8%,#2E241C 0%,#140F0B 70%);color:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(28px + env(safe-area-inset-top)) 0 calc(28px + env(safe-area-inset-bottom));}
+.pf-auth[hidden]{display:none;}
+.pf-auth-wrap{max-width:420px;margin:0 auto;padding:0 26px;min-height:100%;display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;}
+.pf-auth-logo{width:76px;height:76px;margin:0 0 22px;filter:drop-shadow(0 8px 22px rgba(0,0,0,.45));}
+.pf-auth-logo svg{width:100%;height:100%;display:block;}
+.pf-auth-boot{height:40px;display:flex;align-items:center;}
+.pf-auth-boot[hidden]{display:none;}
+.pf-auth-boot i{width:22px;height:22px;border-radius:50%;border:3px solid rgba(255,255,255,.18);border-top-color:var(--amber);animation:pfAuthSpin .8s linear infinite;}
+@keyframes pfAuthSpin{to{transform:rotate(360deg);}}
+.pf-auth-form[hidden]{display:none;}
+.pf-auth-h{font-family:'Instrument Serif',serif;font-weight:400;font-size:38px;line-height:1.02;letter-spacing:-.4px;margin:0 0 10px;max-width:12ch;}
+.pf-auth-sub{font-size:15px;line-height:1.5;color:rgba(255,255,255,.68);margin:0 0 24px;max-width:34ch;}
+.pf-auth-field{display:block;margin-bottom:14px;}
+.pf-auth-field[hidden],.pf-auth-terms[hidden]{display:none;}
+.pf-auth-field span{display:block;font-size:13.5px;color:rgba(255,255,255,.7);margin-bottom:7px;}
+.pf-auth-field input{width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px 16px;font-family:'Inter',sans-serif;font-size:16px;color:#fff;outline:none;-webkit-appearance:none;}
+.pf-auth-field input:focus{border-color:var(--amber);}
+.pf-auth-light span{color:var(--fog3);}
+.pf-auth-light input{background:var(--mist);border-color:var(--mist3);color:var(--ink);}
+.pf-auth-terms{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;color:rgba(255,255,255,.72);margin:4px 0 12px;}
+.pf-auth-terms input{width:20px;height:20px;margin:1px 0 0;flex-shrink:0;accent-color:var(--amber);}
+.pf-auth-msg{min-height:20px;font-size:13.5px;line-height:1.4;color:var(--no);margin:2px 0 12px;}
+.pf-auth-msg.ok{color:var(--ok);}
+.pf-auth-light + .pf-auth-msg,.modal-body .pf-auth-msg{color:var(--ruby);}
+.pf-auth-go{width:100%;background:var(--amber);color:#fff;border:none;border-radius:16px;padding:16px 20px;font-family:'Inter',sans-serif;font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.pf-auth-go:active{transform:scale(.98);}
+.pf-auth-go[disabled]{opacity:.55;}
+.pf-auth-alt{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:10px;}
+.pf-auth-link{background:none;border:none;padding:11px 8px;font-family:'Inter',sans-serif;font-size:14.5px;color:rgba(255,255,255,.82);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+.pf-auth-terms .pf-auth-link{padding:0;font-size:inherit;color:var(--mid);}
+
+.pfp-acct{margin:-6px 0 18px;}
+#pfpAdminBox{margin-bottom:22px;}
+#pfpAdminBox .pfp-h{margin-top:4px;}
+.pfp-acct[hidden],#pfpAdminBox[hidden],.pfp-verify[hidden],.pfp-badge[hidden]{display:none;}
+.pfp-acct-mail{font-size:13.5px;color:var(--fog3);word-break:break-all;}
+.pfp-verify{margin-top:10px;background:#FFF6E6;border:1px solid #F1D9A8;border-radius:14px;padding:11px 14px;font-size:13.5px;line-height:1.4;color:#6B4A12;display:flex;flex-direction:column;gap:2px;}
+.pfp-verify-b{display:flex;gap:16px;}
+.pfp-verify .pf-linkbtn{padding:6px 0 0;color:#6B4A12;}
+.pfp-badge{display:inline-block;min-width:20px;padding:1px 7px;margin-left:6px;border-radius:999px;background:var(--amber);color:#fff;font-size:12px;font-weight:600;text-align:center;}
+.pf-nav-btn{position:relative;}
+.pf-nav-badge{position:absolute;top:6px;left:calc(50% + 8px);width:9px;height:9px;border-radius:50%;background:var(--amber);border:2px solid var(--surface);}
+
+.pf-adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.pf-adm-sum div{background:var(--mist);border:1px solid var(--mist3);border-radius:14px;padding:11px 10px;text-align:center;}
+.pf-adm-sum b{display:block;font-family:'Instrument Serif',serif;font-weight:400;font-size:28px;line-height:1.05;color:var(--ink);}
+.pf-adm-sum span{font-size:12px;color:var(--fog3);}
+.pf-adm-list{display:flex;flex-direction:column;gap:8px;padding-bottom:18px;}
+.pf-adm-empty{font-size:14px;color:var(--fog3);padding:18px 4px;text-align:center;}
+.pf-adm-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--mist3);border-radius:16px;padding:12px 14px;cursor:pointer;font-family:'Inter',sans-serif;}
+.pf-adm-row:active{background:var(--mist);}
+.pf-adm-av{width:40px;height:40px;border-radius:50%;background:var(--bak);color:var(--ivory);display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:21px;flex-shrink:0;}
+.pf-adm-info{flex:1;min-width:0;}
+.pf-adm-n{font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pf-adm-m{font-size:12.5px;color:var(--fog3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pf-adm-c{font-size:12.5px;color:var(--fog3);text-align:right;flex-shrink:0;line-height:1.35;}
+.pf-adm-c b{display:block;font-size:15px;color:var(--ink);font-weight:600;}
+.pf-adm-new{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--amber);color:#fff;font-size:11px;font-weight:600;vertical-align:1px;}
+.pf-adm-umeta{font-size:13.5px;line-height:1.6;color:var(--fog3);margin-bottom:12px;}
+.pf-adm-umeta b{color:var(--ink);font-weight:600;}
+.pf-adm-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--mist3);border-radius:14px;padding:10px;}
+.pf-adm-th{width:46px;height:46px;border-radius:10px;background:var(--mist2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.pf-adm-th img{width:100%;height:100%;object-fit:cover;display:block;}
+.pf-adm-legacy{background:#FFF6E6;border:1px solid #F1D9A8;border-radius:16px;padding:14px;margin-bottom:14px;font-size:13.5px;line-height:1.45;color:#6B4A12;}
+.pf-adm-legacy button{margin-top:10px;background:var(--amber);color:#fff;border:none;border-radius:12px;padding:11px 16px;font-family:'Inter',sans-serif;font-size:14.5px;font-weight:600;cursor:pointer;}
+.pf-adm-legacy button[disabled]{opacity:.6;}
+.pf-legal h3{font-family:'Instrument Serif',serif;font-weight:400;font-size:20px;margin:18px 0 4px;color:var(--ink);}
+.pf-legal h3:first-child{margin-top:4px;}
+.pf-legal p{font-size:14.5px;line-height:1.55;color:#3D3A36;margin:0;}
+.pf-del-p{font-size:14.5px;line-height:1.5;color:#3D3A36;margin:0 0 16px;}
+.pf-del-go{width:100%;background:var(--ruby);color:#fff;border:none;border-radius:14px;padding:15px;font-family:'Inter',sans-serif;font-size:15.5px;font-weight:600;cursor:pointer;margin-bottom:18px;}
+.pf-del-go[disabled]{opacity:.6;}
+
+/* ---------- v5.1: MOVIMIENTO ---------- */
+/* Las curvas estaban definidas en circulo y no funcionaban: se fijan aqui */
+:root{--e-out:cubic-bezier(.16,1,.3,1);--e-spring:cubic-bezier(.34,1.56,.64,1);}
+
+@keyframes pfRise{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+@keyframes pfFade{from{opacity:0;}to{opacity:1;}}
+@keyframes pfPop{0%{opacity:0;transform:scale(.6);}100%{opacity:1;transform:none;}}
+@keyframes pfWipe{from{clip-path:inset(0 100% 0 0);}to{clip-path:inset(0 0 0 0);}}
+@keyframes pfPanelRise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+@keyframes pfNavPop{0%{transform:scale(.82) translateY(2px);}55%{transform:scale(1.14) translateY(-3px);}100%{transform:translateY(-1px);}}
+@keyframes pfSkel{from{background-position:200% 0;}to{background-position:-200% 0;}}
+@keyframes pfShine{0%{left:-45%;}38%,100%{left:130%;}}
+@keyframes pfSavedPulse{0%{box-shadow:0 0 0 0 rgba(42,125,107,.55);}100%{box-shadow:0 0 0 18px rgba(42,125,107,0);}}
+@keyframes pfKen{from{transform:scale(1.03);}to{transform:scale(1.12) translate(-1.5%,-1%);}}
+@keyframes pfSweep{0%{top:-96px;}100%{top:100%;}}
+@keyframes pfCorner{0%,100%{opacity:.55;}50%{opacity:1;}}
+@keyframes pfCheck{0%{transform:rotate(45deg) scale(0);}70%{transform:rotate(45deg) scale(1.25);}100%{transform:rotate(45deg) scale(1);}}
+/* El disco marca numeros: tira hasta el tope y vuelve a velocidad constante */
+@keyframes pfDialing{
+  0%{transform:rotate(0);animation-timing-function:cubic-bezier(.4,0,.2,1);}
+  11%{transform:rotate(156deg);animation-timing-function:linear;}
+  14%{transform:rotate(156deg);animation-timing-function:linear;}
+  31%{transform:rotate(0);}
+  36%{transform:rotate(0);animation-timing-function:cubic-bezier(.4,0,.2,1);}
+  47%{transform:rotate(246deg);animation-timing-function:linear;}
+  50%{transform:rotate(246deg);animation-timing-function:linear;}
+  76%{transform:rotate(0);}
+  81%{transform:rotate(0);animation-timing-function:cubic-bezier(.4,0,.2,1);}
+  89%{transform:rotate(96deg);animation-timing-function:linear;}
+  91%{transform:rotate(96deg);animation-timing-function:linear;}
+  100%{transform:rotate(0);}
+}
+
+/* Paginas y pestanas */
+.page.active{animation:pfFade .26s ease-out both;}
+.tab-panel.active{animation:pfPanelRise .34s var(--e-out) both;}
+
+/* Barra inferior */
+.pf-nav-btn::before{content:'';position:absolute;top:-6px;left:50%;width:24px;height:3px;margin-left:-12px;border-radius:0 0 3px 3px;background:var(--amber);transform:scaleX(0);transition:transform .32s var(--e-spring);}
+.pf-nav-btn.active::before{transform:scaleX(1);}
+.pf-nav-btn.active svg{animation:pfNavPop .5s var(--e-spring);}
+.pf-nav-btn:active svg{transform:scale(.88);}
+
+/* Pulsaciones */
+.pf-shot,.btn-analyze,.btn-quick,.pf-tool,.pfp-row,.pf-tab,.btn-save,.pfr-share,.pf-auth-go,.pf-adm-row{transition:transform .18s var(--e-out),background-color .2s,box-shadow .2s;}
+.pf-shot:active,.btn-analyze:active,.pf-tool:active,.btn-save:active,.pfr-share:active,.pf-adm-row:active{transform:scale(.97);}
+
+/* Inicio: disco decorativo que marca al anadir fotos */
+.pf-hero-deco{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;z-index:0;}
+.pf-hero-dial{position:absolute;right:-96px;top:22px;width:272px;height:272px;}
+.pf-hero-dial svg{width:100%;height:100%;display:block;}
+.pf-hd-wheel{transform-box:view-box;transform-origin:130px 130px;}
+.pf-intro > :not(.pf-hero-deco):not(input){position:relative;z-index:1;}
+body.pf-boot .pf-intro-hi{animation:pfRise .6s var(--e-out) both .05s;}
+body.pf-boot .pf-intro-h{animation:pfWipe .9s cubic-bezier(.6,0,.2,1) both .15s;}
+body.pf-boot .pf-intro-p{animation:pfRise .6s var(--e-out) both .45s;}
+body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
+.pf-pop{animation:pfPop .48s var(--e-spring) both;}
+.btn-analyze.pf-ready::after{display:block;left:-45%;width:38%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);animation:pfShine 3.2s ease-in-out .6s infinite;}
+.btn-analyze > *{position:relative;z-index:2;}
+
+/* Escaner de carga a pantalla completa */
+#loadingWrap.pf-scanning{position:fixed;inset:0;z-index:1200;margin:0;padding:calc(56px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));background:radial-gradient(120% 80% at 30% 8%,#2E241C 0%,#140F0B 70%);overflow-y:auto;-webkit-overflow-scrolling:touch;animation:pfFade .25s ease-out both;}
+.pf-scanning .loading-inner{background:none;border:none;box-shadow:none;padding:0;max-width:400px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;text-align:left;}
+.pf-scan-cancel{position:absolute;top:calc(12px + env(safe-area-inset-top));right:14px;background:none;border:none;color:rgba(255,255,255,.62);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;padding:10px;cursor:pointer;}
+.pf-scan-cancel[hidden],.loading-wrap:not(.pf-scanning) .pf-scan-cancel{display:none;}
+.pf-scanning .pf-scan{position:relative;width:min(72vw,290px);height:auto;margin:0 auto 40px;display:block;}
+.pf-scan-stage{position:relative;aspect-ratio:1/1;border-radius:30px;overflow:hidden;background:#0B0806;box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06);}
+.pf-scan-photos img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .7s ease;filter:saturate(.92) contrast(1.04);animation:pfKen 10s ease-in-out infinite alternate;}
+.pf-scan-photos img.on{opacity:1;}
+.pf-scan-stage::after{content:'';position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(0,0,0,.55));pointer-events:none;}
+.pf-scan-line{position:absolute;left:0;right:0;height:96px;top:-96px;z-index:2;pointer-events:none;background:linear-gradient(to bottom,rgba(212,134,42,0),rgba(212,134,42,.16) 72%,rgba(242,182,97,.85) 98%,rgba(255,226,170,1));mix-blend-mode:screen;animation:pfSweep 2.6s cubic-bezier(.45,.05,.55,.95) infinite;}
+.pf-scan-c{position:absolute;width:26px;height:26px;z-index:3;border:0 solid #F2B661;animation:pfCorner 1.6s ease-in-out infinite;}
+.pf-scan-c.tl{top:16px;left:16px;border-top-width:3px;border-left-width:3px;border-top-left-radius:10px;}
+.pf-scan-c.tr{top:16px;right:16px;border-top-width:3px;border-right-width:3px;border-top-right-radius:10px;}
+.pf-scan-c.bl{bottom:16px;left:16px;border-bottom-width:3px;border-left-width:3px;border-bottom-left-radius:10px;}
+.pf-scan-c.br{bottom:16px;right:16px;border-bottom-width:3px;border-right-width:3px;border-bottom-right-radius:10px;}
+.pf-scan-bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.1);z-index:3;}
+.pf-scan-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#D4862A,#F2B661);box-shadow:0 0 12px rgba(242,182,97,.8);}
+.pf-scan-dial{position:absolute;right:-20px;bottom:-30px;width:108px;height:108px;z-index:4;filter:drop-shadow(0 12px 20px rgba(0,0,0,.55));}
+.pf-scan-dial svg{width:100%;height:100%;display:block;}
+.pf-scan-dial text{font-family:'Inter',sans-serif;font-size:8.5px;font-weight:700;fill:#3A2E25;text-anchor:middle;}
+.pf-scd-wheel{transform-box:view-box;transform-origin:60px 60px;animation:pfDialing 5.6s infinite;}
+.pf-scan-dial.pf-done .pf-scd-wheel{animation:none;transform:rotate(0);}
+.pf-scan-dial.pf-done{animation:pfPop .5s var(--e-spring);}
+.pf-scan-stage.pf-nophoto{display:none;}
+.pf-scan-stage.pf-nophoto + .pf-scan-dial{position:relative;right:auto;bottom:auto;width:190px;height:190px;margin:0 auto;}
+.pf-scanning .loading-title{font-family:'Instrument Serif',serif;font-weight:400;font-size:34px;line-height:1.05;letter-spacing:-.3px;color:#fff;margin:0 0 18px;}
+.pf-scanning .loading-sub{font-size:14px;line-height:1.45;color:rgba(255,255,255,.62);min-height:20px;margin-top:14px;}
+.pf-scanning #loadingTimer{color:rgba(255,255,255,.3)!important;}
+.pf-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:13px;}
+.pf-steps li{display:flex;align-items:center;gap:12px;font-family:'Inter',sans-serif;font-size:15.5px;color:rgba(255,255,255,.34);transition:color .35s ease;}
+.pf-steps li i{position:relative;width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.18);flex-shrink:0;box-sizing:border-box;transition:background .3s,border-color .3s;}
+.pf-steps li.on{color:#fff;}
+.pf-steps li.on i{border-color:#F2B661;border-right-color:transparent;animation:spin .9s linear infinite;}
+.pf-steps li.done{color:rgba(255,255,255,.78);}
+.pf-steps li.done i{background:#D4862A;border-color:#D4862A;}
+.pf-steps li.done i::after{content:'';position:absolute;left:5px;top:2px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);animation:pfCheck .35s var(--e-spring) both;}
+.pf-scanning #loadingError{background:rgba(242,140,127,.12)!important;border-color:rgba(242,140,127,.3)!important;color:#FFD9D3!important;}
+.pf-scanning #loadingError code{color:#fff;}
+.pf-scanning #loadingRetry{background:rgba(255,255,255,.1)!important;color:#fff!important;}
+
+/* Revelado del resultado: una sola secuencia */
+#page-result.pf-reveal .photo-viewer-photos{animation:pfRise .5s var(--e-out) both;}
+#page-result.pf-reveal .pfr-maker{animation:pfRise .5s var(--e-out) both .05s;}
+#page-result.pf-reveal .pfr-name{animation:pfWipe .75s cubic-bezier(.6,0,.2,1) both .1s;}
+#page-result.pf-reveal .pfr-tags > *{animation:pfPop .42s var(--e-spring) both .4s;}
+#page-result.pf-reveal .pfr-tags > *:nth-child(2){animation-delay:.47s;}
+#page-result.pf-reveal .pfr-tags > *:nth-child(3){animation-delay:.54s;}
+#page-result.pf-reveal .pf-refine{animation:pfRise .5s var(--e-out) both .6s;}
+#page-result.pf-reveal .pf-verdict{animation:pfRise .65s var(--e-out) both .18s;}
+#page-result.pf-reveal .pf-tabs{animation:pfRise .5s var(--e-out) both .5s;}
+#page-result.pf-reveal .tab-panel.active{animation:pfRise .5s var(--e-out) both .6s;}
+
+/* Afinar con otra foto */
+.pf-refine{display:flex;align-items:center;gap:12px;margin:14px 0 2px;padding:12px 12px 12px 14px;border-radius:16px;background:#FFF6E6;border:1px solid #F1D9A8;}
+.pf-refine[hidden]{display:none;}
+.pf-refine-t{flex:1;min-width:0;font-size:13.5px;line-height:1.4;color:#6B4A12;}
+.pf-refine-t b{display:block;font-weight:600;}
+.pf-refine button{flex-shrink:0;background:var(--amber);color:#fff;border:none;border-radius:12px;padding:10px 14px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.pf-refine button:active{transform:scale(.96);}
+
+/* Ficha que llega despues */
+.pf-skel{display:block;height:12px;border-radius:6px;margin:7px 0;background:linear-gradient(90deg,var(--mist2) 25%,#fff 50%,var(--mist2) 75%);background-size:200% 100%;animation:pfSkel 1.3s linear infinite;}
+.pf-skel-s{width:58%;}
+.pf-enrich-note{display:flex;align-items:center;gap:8px;font-size:12.5px;line-height:1.4;color:var(--fog3);margin:12px 0 0;}
+.pf-enrich-note[hidden]{display:none;}
+.pf-enrich-note::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0;animation:pfCorner 1.1s ease-in-out infinite;}
+.pf-arrive{animation:pfRise .55s var(--e-out) both;}
+
+/* Guardar */
+.btn-save.pf-saved{background:var(--teal)!important;animation:pfSavedPulse .9s ease-out;}
+
+/* Listas */
+.pf-stag{animation:pfRise .45s var(--e-out) both;}
 </style>
 </head>
 <body>
@@ -1618,6 +1923,7 @@ button:focus-visible,.pf-tab:focus-visible,.fold-head:focus-visible,.pf-nav-btn:
 <!-- HOME -->
 <div class="page active" id="page-home">
   <section class="pf-intro" id="mainHero">
+    <div class="pf-hero-deco" aria-hidden="true"><div class="pf-hero-dial" id="pfHeroDial"></div></div>
     <p class="pf-intro-hi" id="pfHello" hidden></p>
     <h1 class="pf-intro-h">&iquest;Qu&eacute; tel&eacute;fono tienes delante?</h1>
     <p class="pf-intro-p">Hazle una foto y te digo qu&eacute; es, cu&aacute;nto vale y cu&aacute;nto pagar por &eacute;l.</p>
@@ -1653,48 +1959,23 @@ button:focus-visible,.pf-tab:focus-visible,.fold-head:focus-visible,.pf-nav-btn:
 
   <div class="loading-wrap" id="loadingWrap">
     <div class="loading-inner">
-      <div class="loading-ring" id="loadingRing">
-        <svg class="dial-phone-svg" viewBox="0 0 120 120" fill="none">
-          <!-- Cuerpo del telefono -->
-          <rect x="18" y="46" width="84" height="54" rx="10" fill="none" stroke="var(--amber)" stroke-width="2.5" opacity="0.35"/>
-          <!-- Disco de marcar, gira mientras se analiza -->
-          <g class="dial-spin">
-            <circle cx="60" cy="73" r="24" fill="none" stroke="var(--amber)" stroke-width="2.5"/>
-            <circle cx="60" cy="73" r="24" fill="none" stroke="var(--mist3)" stroke-width="1" stroke-dasharray="3 4"/>
-            <circle cx="60" cy="60" r="2.6" fill="var(--amber)"/>
-            <circle cx="71" cy="65" r="2.6" fill="var(--amber)"/>
-            <circle cx="75" cy="77" r="2.6" fill="var(--amber)"/>
-            <circle cx="67" cy="87" r="2.6" fill="var(--amber)"/>
-            <circle cx="53" cy="87" r="2.6" fill="var(--amber)"/>
-            <circle cx="45" cy="77" r="2.6" fill="var(--amber)"/>
-            <circle cx="49" cy="65" r="2.6" fill="var(--amber)"/>
-            <circle cx="60" cy="73" r="7" fill="none" stroke="var(--amber)" stroke-width="2"/>
-          </g>
-          <!-- Auricular, se levanta y baja suavemente -->
-          <g class="dial-handset">
-            <path d="M22 44 Q20 20 60 14 Q100 20 98 44" stroke="var(--amber)" stroke-width="7" fill="none" stroke-linecap="round"/>
-            <ellipse cx="22" cy="46" rx="9" ry="12" fill="none" stroke="var(--amber)" stroke-width="2.5"/>
-            <ellipse cx="98" cy="46" rx="9" ry="12" fill="none" stroke="var(--amber)" stroke-width="2.5"/>
-          </g>
-        </svg>
+      <button class="pf-scan-cancel" id="pfScanCancel" onclick="pfCancelAnalysis()" hidden>Cancelar</button>
+      <div class="loading-ring pf-scan" id="loadingRing">
+        <div class="pf-scan-stage" id="pfScanStage">
+          <div class="pf-scan-photos" id="pfScanPhotos"></div>
+          <i class="pf-scan-line"></i>
+          <span class="pf-scan-c tl"></span><span class="pf-scan-c tr"></span><span class="pf-scan-c bl"></span><span class="pf-scan-c br"></span>
+          <div class="pf-scan-bar"><i id="pfScanBar"></i></div>
+        </div>
+        <div class="pf-scan-dial" id="pfScanDial"></div>
       </div>
       <div class="loading-title" id="loadingTitle">Analizando...</div>
-      <div class="loading-sub" id="loadingSub">Consultando bases de datos historicas</div>
+      <ol class="pf-steps" id="pfSteps"></ol>
+      <div class="loading-sub" id="loadingSub"></div>
       <div id="loadingTimer" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fog2);margin-top:8px"></div>
       <div id="loadingError" style="display:none;margin-top:16px;padding:14px;background:var(--ruby-light);border:1px solid rgba(192,57,43,.2);border-radius:12px;font-size:13px;color:var(--ruby);line-height:1.5;text-align:left"></div>
       <button id="loadingRetryNow" onclick="retryAnalysis()" style="display:none;margin-top:12px;width:100%;padding:13px;background:var(--amber);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">Reintentar con las mismas fotos</button>
       <button id="loadingRetry" onclick="newAnalysis()" style="display:none;margin-top:8px;width:100%;padding:12px;background:var(--mist2);color:var(--fog3);border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer">Volver al inicio</button>
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-label"><span id="progressLabel">Iniciando...</span><span id="progressPct">0%</span></div>
-        <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
-      </div>
-      <div class="loading-steps">
-        <div class="loading-step" id="step1"><div class="step-dot"></div>Procesando imagenes</div>
-        <div class="loading-step" id="step2"><div class="step-dot"></div>Identificando modelo y fabricante</div>
-        <div class="loading-step" id="step3"><div class="step-dot"></div>Consultando fuentes historicas</div>
-        <div class="loading-step" id="step4"><div class="step-dot"></div>Calculando valor de mercado</div>
-        <div class="loading-step" id="step5"><div class="step-dot"></div>Generando informe completo</div>
-      </div>
     </div>
   </div>
 
@@ -1771,6 +2052,7 @@ button:focus-visible,.pf-tab:focus-visible,.fold-head:focus-visible,.pf-nav-btn:
   <div class="pfr-maker" id="r-eyebrow"></div>
   <h1 class="pfr-name" id="r-name">--</h1>
   <div class="pfr-tags" id="r-tags"></div>
+  <div class="pf-refine" id="pfRefine" hidden><div class="pf-refine-t"><b>Para afinar la tasaci&oacute;n</b><span id="pfRefineTxt"></span></div><button onclick="pfRefineAddPhoto()">A&ntilde;adir foto</button></div>
 
   <!-- Veredicto: el disco de marcar -->
   <section class="pf-verdict" id="pfVerdict" aria-label="Veredicto de compra">
@@ -2131,6 +2413,14 @@ button:focus-visible,.pf-tab:focus-visible,.fold-head:focus-visible,.pf-nav-btn:
       <button class="pf-linkbtn pfp-edit" onclick="pfEditName()">Cambiar nombre</button>
     </div>
   </section>
+  <div class="pfp-acct" id="pfpAcct" hidden>
+    <div class="pfp-acct-mail" id="pfpAcctMail"></div>
+    <div class="pfp-verify" id="pfpVerify" hidden><span>Confirma tu correo con el enlace que te hemos enviado.</span><span class="pfp-verify-b"><button class="pf-linkbtn" onclick="pfResendVerify()">Reenviar</button><button class="pf-linkbtn" onclick="pfAuthRefresh()">Ya lo he confirmado</button></span></div>
+  </div>
+  <div id="pfpAdminBox" hidden>
+    <h2 class="pfp-h">Administraci&oacute;n</h2>
+    <div class="pfp-list"><button class="pfp-row" onclick="pfOpenAdmin()"><span class="pfp-row-t">Usuarios registrados <b class="pfp-badge" id="pfpAdmBadge" hidden></b></span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button></div>
+  </div>
   <section class="pfp-stats" id="pfpStats" aria-label="Tus cifras"></section>
 
   <h2 class="pfp-h">Logros <span class="pfp-h-count" id="pfpAchCount"></span></h2>
@@ -2152,10 +2442,17 @@ button:focus-visible,.pf-tab:focus-visible,.fold-head:focus-visible,.pf-nav-btn:
     <button class="pfp-row pfp-danger" onclick="pfClearLocal()"><span class="pfp-row-t">Borrar datos de este dispositivo</span></button>
   </div>
 
+  <h2 class="pfp-h">Cuenta</h2>
+  <div class="pfp-list">
+    <button class="pfp-row" onclick="pfLogout()"><span class="pfp-row-t">Cerrar sesi&oacute;n</span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <button class="pfp-row pfp-danger" onclick="pfOpenSheet('pfDelAcc')"><span class="pfp-row-t">Borrar mi cuenta</span></button>
+  </div>
+
   <h2 class="pfp-h">Ayuda</h2>
   <div class="pfp-list">
     <button class="pfp-row" onclick="pfOpenSheet('pfInstall')"><span class="pfp-row-t">Instalar en el iPhone</span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     <button class="pfp-row" onclick="pfOpenSheet('pfHelp')"><span class="pfp-row-t">Preguntas frecuentes</span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    <button class="pfp-row" onclick="pfOpenSheet('pfLegal')"><span class="pfp-row-t">Condiciones y privacidad</span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     <button class="pfp-row" onclick="pfOpenSheet('pfNews')"><span class="pfp-row-t">Novedades</span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     <button class="pfp-row" onclick="pfShowOnboarding()"><span class="pfp-row-t">Ver la bienvenida otra vez</span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
   </div>
@@ -2270,6 +2567,9 @@ button:focus-visible,.pf-tab:focus-visible,.fold-head:focus-visible,.pf-nav-btn:
     <div class="modal-header"><div class="modal-title">Novedades</div><button class="modal-close" onclick="pfCloseSheet('pfNews')" aria-label="Cerrar">x</button></div>
     <div class="modal-body">
       <ul class="pf-news">
+        <li><b>An&aacute;lisis m&aacute;s r&aacute;pido.</b> Primero ves qu&eacute; es y cu&aacute;nto pagar; la historia y la limpieza llegan solas unos segundos despu&eacute;s. Si tarda, se reintenta solo.</li>
+        <li><b>Para afinar.</b> Si la confianza no es alta, te dice qu&eacute; foto concreta har&iacute;a falta.</li>
+        <li><b>Cuentas.</b> Reg&iacute;strate con tu correo y tu colecci&oacute;n queda guardada en tu cuenta, solo para ti.</li>
         <li><b>El disco del veredicto.</b> La primera pantalla de cada tasaci&oacute;n te dice cu&aacute;nto pagar como m&aacute;ximo, y la rareza se marca en los agujeros.</li>
         <li><b>&iquest;Cu&aacute;nto pide?</b> Escribe el precio del vendedor y te sale un sello: compra, regatea o pasa.</li>
         <li><b>Todo ordenado en cuatro pesta&ntilde;as:</b> Comprar, Conocer, Cuidar y Vender.</li>
@@ -2284,6 +2584,85 @@ button:focus-visible,.pf-tab:focus-visible,.fold-head:focus-visible,.pf-nav-btn:
   </div>
 </div>
 
+<!-- ACCESO -->
+<div class="pf-auth" id="pfAuth" role="dialog" aria-label="Acceso a PHONEFINDER">
+  <div class="pf-auth-wrap">
+    <div class="pf-auth-logo" id="pfAuthLogo" aria-hidden="true"></div>
+    <div class="pf-auth-boot" id="pfAuthBoot"><i></i></div>
+    <form class="pf-auth-form" id="pfAuthForm" hidden onsubmit="return pfAuthSubmit(event)" novalidate>
+      <h1 class="pf-auth-h" id="pfAuthTitle">Entra en tu colecci&oacute;n</h1>
+      <p class="pf-auth-sub" id="pfAuthSub">Identifica, tasa y guarda tus tel&eacute;fonos antiguos.</p>
+      <label class="pf-auth-field" id="pfAuthNameRow" hidden><span>Tu nombre</span><input id="pfAuthName" type="text" autocomplete="given-name" maxlength="30"></label>
+      <label class="pf-auth-field"><span>Correo electr&oacute;nico</span><input id="pfAuthEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+      <label class="pf-auth-field" id="pfAuthPassRow"><span>Contrase&ntilde;a</span><input id="pfAuthPass" type="password" autocomplete="current-password" minlength="6"></label>
+      <label class="pf-auth-terms" id="pfAuthTermsRow" hidden><input type="checkbox" id="pfAuthTerms"><span>He le&iacute;do y acepto las <button type="button" class="pf-auth-link" onclick="pfOpenSheet('pfLegal')">condiciones y la privacidad</button>.</span></label>
+      <div class="pf-auth-msg" id="pfAuthMsg" role="alert" aria-live="polite"></div>
+      <button class="pf-auth-go" id="pfAuthGo" type="submit">Entrar</button>
+      <div class="pf-auth-alt">
+        <button type="button" class="pf-auth-link" id="pfAuthAlt" onclick="pfAuthMode(pfAuthCur==='login'?'register':'login')">Crear una cuenta</button>
+        <button type="button" class="pf-auth-link" id="pfAuthForgot" onclick="pfAuthMode('reset')">He olvidado la contrase&ntilde;a</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CONDICIONES Y PRIVACIDAD -->
+<div class="modal-overlay" id="pfLegal" style="z-index:990" onclick="pfSheetOutside(event,'pfLegal')">
+  <div class="modal-sheet pf-sheet pf-sheet-tall">
+    <div class="modal-handle"></div>
+    <div class="modal-header"><div class="modal-title">Condiciones y privacidad</div><button class="modal-close" onclick="pfCloseSheet('pfLegal')" aria-label="Cerrar">x</button></div>
+    <div class="modal-body pf-legal">
+      <h3>Qu&eacute; guardamos</h3>
+      <p>Tu nombre, tu correo y lo que a&ntilde;ades a tu colecci&oacute;n: fotos, tasaciones y los precios que apuntas. Tu colecci&oacute;n es privada: solo la ves t&uacute;.</p>
+      <h3>Para qu&eacute; lo usamos</h3>
+      <p>Solo para que la app funcione y para avisarte de cosas de tu cuenta. No vendemos tus datos ni los cedemos a anunciantes.</p>
+      <h3>Las fotos y la inteligencia artificial</h3>
+      <p>Cuando pides una tasaci&oacute;n, la foto y la descripci&oacute;n se env&iacute;an al servicio de IA de Anthropic para analizarlas. Evita fotografiar documentos, personas o datos personales.</p>
+      <h3>Las tasaciones son orientativas</h3>
+      <p>Los precios son estimaciones basadas en la informaci&oacute;n disponible. No son una tasaci&oacute;n oficial ni una garant&iacute;a de que una pieza sea aut&eacute;ntica o valga lo indicado. La decisi&oacute;n de comprar o vender es tuya.</p>
+      <h3>Tus derechos</h3>
+      <p>Puedes borrar tu cuenta y todos tus datos cuando quieras desde Perfil, Cuenta. Para cualquier duda sobre tus datos escribe a <b>sobrinocompra@gmail.com</b>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL DE ADMINISTRACION -->
+<div class="modal-overlay" id="pfAdmin" onclick="pfSheetOutside(event,'pfAdmin')">
+  <div class="modal-sheet pf-sheet pf-sheet-tall">
+    <div class="modal-handle"></div>
+    <div class="modal-header"><div class="modal-title">Usuarios registrados</div><button class="modal-close" onclick="pfCloseSheet('pfAdmin')" aria-label="Cerrar">x</button></div>
+    <div class="modal-body">
+      <div class="pf-adm-sum" id="pfAdmSum"></div>
+      <div id="pfAdmLegacy"></div>
+      <div class="pf-adm-list" id="pfAdmList"><div class="pf-adm-empty">Cargando...</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pfAdminUser" onclick="pfSheetOutside(event,'pfAdminUser')">
+  <div class="modal-sheet pf-sheet pf-sheet-tall">
+    <div class="modal-handle"></div>
+    <div class="modal-header"><div class="modal-title" id="pfAdmUName">Usuario</div><button class="modal-close" onclick="pfCloseSheet('pfAdminUser')" aria-label="Cerrar">x</button></div>
+    <div class="modal-body">
+      <div class="pf-adm-umeta" id="pfAdmUMeta"></div>
+      <div class="pf-adm-list" id="pfAdmUCol"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BORRAR CUENTA -->
+<div class="modal-overlay" id="pfDelAcc" onclick="pfSheetOutside(event,'pfDelAcc')">
+  <div class="modal-sheet pf-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header"><div class="modal-title">Borrar mi cuenta</div><button class="modal-close" onclick="pfCloseSheet('pfDelAcc')" aria-label="Cerrar">x</button></div>
+    <div class="modal-body">
+      <p class="pf-del-p">Se borrar&aacute;n tu cuenta y toda tu colecci&oacute;n. No se puede deshacer. Para confirmarlo, escribe tu contrase&ntilde;a.</p>
+      <label class="pf-auth-field pf-auth-light"><span>Contrase&ntilde;a</span><input id="pfDelPass" type="password" autocomplete="current-password"></label>
+      <div class="pf-auth-msg" id="pfDelMsg" role="alert"></div>
+      <button class="pf-del-go" id="pfDelGo" onclick="pfDeleteAccount()">Borrar mi cuenta para siempre</button>
+    </div>
+  </div>
+</div>
 <!-- MODALS & OVERLAYS -->
 
 <!-- Purchase modal -->
@@ -2854,7 +3233,7 @@ function addImage(input){
   var file=input.files[0];if(!file)return;
   if(currentImages.length>=MAX_PHOTOS){showToast('Maximo '+MAX_PHOTOS+' fotos');input.value='';return;}
   var reader=new FileReader();
-  reader.onload=function(e){compressImage(e.target.result,function(c){currentImages.push({dataUrl:c,b64:c.split(',')[1]});renderPhotoStrip();});};
+  reader.onload=function(e){compressImage(e.target.result,function(c){currentImages.push({dataUrl:c,b64:pfHiRes(c)});renderPhotoStrip();});};
   reader.readAsDataURL(file);input.value='';
 }
 function addImages(input){
@@ -2868,7 +3247,7 @@ function addImages(input){
   Promise.all(toLoad.map(function(file){
     return new Promise(function(resolve){
       var reader=new FileReader();
-      reader.onload=function(e){compressImage(e.target.result,function(c){resolve({dataUrl:c,b64:c.split(',')[1]});});};
+      reader.onload=function(e){compressImage(e.target.result,function(c){resolve({dataUrl:c,b64:pfHiRes(c)});});};
       reader.onerror=function(){resolve(null);};
       reader.readAsDataURL(file);
     });
@@ -2892,7 +3271,9 @@ function compressImage(dataUrl,cb){
       var avg=count?sum/count:128;
       if(avg<55)_lastPhotoDark=true;
     }catch(e){}
-    cb(c.toDataURL('image/jpeg',QUALITY));
+    var small=c.toDataURL('image/jpeg',QUALITY);
+    try{var s2=Math.min(1,PF_HI_DIM/Math.max(img.width,img.height));var c2=document.createElement('canvas');c2.width=Math.round(img.width*s2);c2.height=Math.round(img.height*s2);c2.getContext('2d').drawImage(img,0,0,c2.width,c2.height);pfHiStore(small,c2.toDataURL('image/jpeg',0.72).split(',')[1]);}catch(e){}
+    cb(small);
   };
   img.src=dataUrl;
 }
@@ -2922,7 +3303,7 @@ async function importFromUrl(){
     var data=await resp.json();
     if(data.base64){
       var dataUrl='data:'+data.mimeType+';base64,'+data.base64;
-      compressImage(dataUrl,function(c){currentImages.push({dataUrl:c,b64:c.split(',')[1]});renderPhotoStrip();document.getElementById('urlImportInput').value='';showToast('Imagen importada');});
+      compressImage(dataUrl,function(c){currentImages.push({dataUrl:c,b64:pfHiRes(c)});renderPhotoStrip();document.getElementById('urlImportInput').value='';showToast('Imagen importada');});
     }
   }catch(e){showToast('Error: descarga la imagen manualmente e importala desde galeria');}
 }
@@ -3003,6 +3384,7 @@ async function analyzePhone(quickMode){
   var _rn=document.getElementById('loadingRetryNow');if(_rn)_rn.style.display='none';
   document.getElementById('loadingRing').style.display='block';
   document.getElementById('loadingTitle').textContent='Analizando...';
+  pfLoadStart(_qm);
   if(!_inHuntMode)window.scrollTo(0,0);
 
   // Live timer so the user always sees something happening
@@ -3011,18 +3393,12 @@ async function analyzePhone(quickMode){
   var _timerInt=setInterval(function(){
     _elapsed++;
     if(_timerEl)_timerEl.textContent=_elapsed+'s';
-    var sub=document.getElementById('loadingSub');
-    if(sub){
-      if(_elapsed<3)sub.textContent='Enviando imagen al servidor...';
-      else if(_elapsed<8)sub.textContent='La IA esta identificando el modelo...';
-      else if(_elapsed<15)sub.textContent='Calculando valor de mercado...';
-      else if(_elapsed<25)sub.textContent='Casi listo, generando informe...';
-      else sub.textContent='Tardando mas de lo normal...';
-    }
+    pfLoadTick(_elapsed);
   },1000);
 
   function showError(message){
     clearInterval(_timerInt);
+    pfLoadError();
     document.getElementById('loadingRing').style.display='none';
     document.getElementById('loadingTitle').textContent='No se pudo analizar';
     var sub=document.getElementById('loadingSub');if(sub)sub.textContent='';
@@ -3055,20 +3431,29 @@ async function analyzePhone(quickMode){
     '=== INSTRUCCIONES DE USO DE LA BASE ===',
     'Si el telefono coincide con una entrada del catalogo, usa sus rasgos, epoca y rango de precio como ancla y ajustalos por estado, completitud, color y originalidad que veas en la foto. Si no aparece, razona con las pautas de identificacion y datado, y reflejalo en una confianza menor. No inventes modelos, fechas ni referencias que no puedas sostener.',
     'confianza: aplica los criterios de la seccion A. En que_revisar pon primero la marca o detalle que confirma el modelo y donde buscarlo. En alertas incluye cualquier riesgo de confusion con otro modelo (con la marca que los distingue) y los riesgos de replica o montaje de las secciones D y E.',
-    'fuentes_usadas: cita solo fuentes reales de la seccion G que hayas usado de verdad; nunca inventes libros, paginas ni enlaces.',
     'REGLA: responde SOLO el objeto JSON, sin texto ni markdown ni backticks.',
     'precio_compra es el rango justo para comprar y revender con margen (normalmente entre el 40 y el 60 por ciento del valor de venta, mas alto solo en piezas raras). precio_venta es el rango real de venta en Espana hoy.',
     'Devuelve EXACTAMENTE esta estructura:',
-    'Incluye tambien: dato_curioso (una frase sorprendente de este modelo) y contexto_epoca (una frase de contexto historico).',
-    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos","material":"Material","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia en 3 frases","detalles_tecnicos":"Specs en 2 frases","dato_curioso":"Frase sorprendente","contexto_epoca":"Frase de contexto","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["p1","p2","p3"],"alertas":["a1","a2"],"estado_minimo":"Estado minimo","como_limpiar":["p1","p2","p3"],"como_negociar":"Estrategia en 2 frases","confianza":"ALTA|MEDIA|BAJA","fuentes_usadas":"3-4 fuentes","zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"mat","product":"producto","avoid":"evitar","steps":["p1","p2"]}]}'
+    'Se concreto: frases cortas, sin relleno. foto_sugerida: si la confianza no es ALTA, di en una frase que foto concreta confirmaria el modelo (por ejemplo la placa o etiqueta de la base, el centro del disco o el interior del auricular); si es ALTA, deja la cadena vacia.',
+    '{"nombre":"Modelo exacto","fabricante":"Fabricante","pais":"Pais","periodo":"Anos","material":"Material","rareza":"COMUN|POCO COMUN|RARO|MUY RARO","dificultad":2,"descripcion":"Historia en 2-3 frases","precio_compra_min":40,"precio_compra_max":80,"precio_venta_min":90,"precio_venta_max":160,"ultimo_precio":"Precio reciente","proyeccion":[85,95,110,112,125,140,160],"que_revisar":["p1","p2","p3"],"alertas":["a1","a2"],"estado_minimo":"Estado minimo","como_negociar":"Estrategia en 2 frases","confianza":"ALTA|MEDIA|BAJA","foto_sugerida":""}'
     ].join('\n');
 
-  var _ctrl=new AbortController();
-  var _timeout=setTimeout(function(){_ctrl.abort();},55000);
+  var _timeout=null;_pfCancelled=false;
+  async function _pfSend(lean){
+    var ctrl=new AbortController();_pfAbortCtrl=ctrl;
+    var to=setTimeout(function(){ctrl.abort();},lean?42000:50000);
+    var uc=lean?userContent.filter(function(c,i){return c.type!=='image'||i===0;}):userContent;
+    try{return await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:_qm?500:(lean?1300:2000),messages:[{role:'user',content:uc}]},pfKbText(_qm||lean),systemPrompt+(lean?'\nResponde lo mas breve posible.':'')+pfUserRefsText(),ctrl.signal);}
+    finally{clearTimeout(to);}
+  }
 
   try{
-    var resp=await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:_qm?500:4096,messages:[{role:'user',content:userContent}]},pfKbText(_qm),systemPrompt+pfUserRefsText(),_ctrl.signal);
-    clearTimeout(_timeout);
+    var resp=null;
+    try{resp=await _pfSend(false);}catch(e1){if(e1.name!=='AbortError'||_pfCancelled)throw e1;}
+    if(!_pfCancelled&&(!resp||resp.status===502||resp.status===503||resp.status===504)){
+      pfLoadRetrying();
+      resp=await _pfSend(true);
+    }
 
     // Read response as text first so we can show what came back even if not JSON
     var rawResp=await resp.text();
@@ -3077,7 +3462,7 @@ async function analyzePhone(quickMode){
       var serverMsg=rawResp;
       try{var ej=JSON.parse(rawResp);serverMsg=(ej.error&&ej.error.message)||rawResp;}catch(e){}
       if(resp.status===504||resp.status===503){
-        showError('<b>El servidor tardo demasiado (error '+resp.status+').</b><br>Tu funcion api/analyze.js en Vercel se esta cortando. Necesita la linea <code>export const config={maxDuration:60}</code> al principio del archivo.');
+        showError('<b>El servidor tard\u00f3 demasiado (error '+resp.status+').</b><br>Lo he intentado dos veces. Prueba con una o dos fotos bien iluminadas, o usa &laquo;Solo el precio&raquo;.');
       }else if(resp.status===500){
         showError('<b>Error 500 del servidor.</b><br>Lo mas probable: falta la variable <code>ANTHROPIC_API_KEY</code> en la configuracion de Vercel (Settings > Environment Variables).<br><br>Detalle: '+serverMsg);
       }else if(resp.status===404){
@@ -3111,6 +3496,7 @@ async function analyzePhone(quickMode){
 
     // SUCCESS
     clearInterval(_timerInt);
+    await pfLoadDone();
     currentResult=result;
     pfTrackAnalysis(result);
     saveDraft(result,currentImages);
@@ -3131,6 +3517,7 @@ async function analyzePhone(quickMode){
       // hmEnterResultSlot before this call), it simply appears inside
       // hunt mode's own DOM tree - home is never touched or shown.
       renderResult(result);
+      pfEnrichStart(result);
     }
     document.getElementById('loadingWrap').style.display='none';
     document.getElementById('analyzeBtn').style.display='flex';
@@ -3139,8 +3526,9 @@ async function analyzePhone(quickMode){
   }catch(err){
     clearTimeout(_timeout);
     console.error('[PHONEFINDER]',err);
+    if(_pfCancelled){pfLoadHide();document.getElementById('analyzeBtn').style.display='flex';document.getElementById('quickBtn').style.display='flex';return;}
     if(err.name==='AbortError'){
-      showError('<b>Tardo mas de 40 segundos y se cancelo.</b><br>Casi seguro: tu funcion api/analyze.js en Vercel se corta a los 10s. Anade <code>export const config={maxDuration:60}</code> al principio del archivo y vuelve a desplegar.');
+      showError('<b>El an\u00e1lisis ha tardado demasiado.</b><br>Lo he intentado dos veces. Prueba con una o dos fotos bien iluminadas, o usa &laquo;Solo el precio&raquo;.');
     }else{
       showError('<b>Error de conexion.</b><br>'+(err.message||'Revisa tu conexion a internet')+'<br><br>Si tienes internet, el problema es el endpoint /api/analyze en Vercel.');
     }
@@ -3929,7 +4317,7 @@ function hmShowStage(stage){
 function hmAddPhoto(input){
   var file=input.files[0];if(!file)return;
   var reader=new FileReader();
-  reader.onload=function(e){compressImage(e.target.result,function(c){_hmImages.push({dataUrl:c,b64:c.split(',')[1]});hmRenderStrip();});};
+  reader.onload=function(e){compressImage(e.target.result,function(c){_hmImages.push({dataUrl:c,b64:pfHiRes(c)});hmRenderStrip();});};
   reader.readAsDataURL(file);input.value='';
 }
 function hmAddPhotos(input){
@@ -3937,7 +4325,7 @@ function hmAddPhotos(input){
   Promise.all(files.slice(0,5).map(function(file){
     return new Promise(function(resolve){
       var reader=new FileReader();
-      reader.onload=function(e){compressImage(e.target.result,function(c){resolve({dataUrl:c,b64:c.split(',')[1]});});};
+      reader.onload=function(e){compressImage(e.target.result,function(c){resolve({dataUrl:c,b64:pfHiRes(c)});});};
       reader.onerror=function(){resolve(null);};
       reader.readAsDataURL(file);
     });
@@ -5036,7 +5424,7 @@ function pfUserRefsText(){
 // perfil con cifras, logros y ajustes, compartir como imagen, vista
 // vitrina y ayuda. Todo lo local vive en localStorage.
 // =====================================================================
-var PF_APP_VERSION='4.0',PF_NEWS_VER='v4';
+var PF_APP_VERSION='5.1',PF_NEWS_VER='v5.1';
 function pfLS(k,def){try{var v=localStorage.getItem(k);return v==null?def:JSON.parse(v);}catch(e){return def;}}
 function pfLSset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
@@ -5344,6 +5732,113 @@ function pfBoot(){
   pfApplySettings();pfApplyName();pfApplyColView();pfNavLive();
   var lg=document.querySelector('.logo-mark');if(lg)lg.innerHTML=pfLogoSvg();
   setInterval(pfNavLive,4000);
+}
+setTimeout(pfBoot,0);
+
+// ===================== v5: CUENTAS, REGISTRO Y ADMINISTRACION =====================
+var pfAuthCur='login',_pfBooted=false,_pfAuthTimer=null,_pfAdmUsers=[],_pfAdmPrevSeen=0;
+function pfEsc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pfWipeLocal(){
+  var ks=['pf_drafts','pf_lot_tally','pf_stats','pf_ach','pf_settings','pf_user_name','pf_onboarded','pf_news_seen','pf_col_view','pf_admin_seen','pf_legacy_done','pf_uid','pf_hunt_session','pf_hunt_log'];
+  try{if(typeof HUNT_KEY!=='undefined')ks.push(HUNT_KEY);if(typeof HUNT_LOG_KEY!=='undefined')ks.push(HUNT_LOG_KEY);if(typeof DRAFT_KEY!=='undefined')ks.push(DRAFT_KEY);if(typeof PF_LOT_KEY!=='undefined')ks.push(PF_LOT_KEY);}catch(e){}
+  ks.forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  try{_huntSession=null;}catch(e){}
+  _colCache=null;_colIndex=[];
+  try{if(typeof renderDrafts==='function')renderDrafts();if(typeof renderHuntWidget==='function')renderHuntWidget();}catch(e){}
+}
+
+// ---- Pantalla de acceso ----
+function pfAuthShow(form){
+  var a=document.getElementById('pfAuth');if(!a)return;
+  a.hidden=false;
+  var lg=document.getElementById('pfAuthLogo');if(lg&&!lg.innerHTML)lg.innerHTML=pfLogoSvg().replace(/pfLogoMask/g,'pfAuthMask');
+  document.getElementById('pfAuthBoot').hidden=!!form;
+  document.getElementById('pfAuthForm').hidden=!form;
+}
+function pfAuthMode(m){
+  pfAuthCur=m;
+  var T=document.getElementById('pfAuthTitle'),S=document.getElementById('pfAuthSub'),go=document.getElementById('pfAuthGo'),alt=document.getElementById('pfAuthAlt'),fg=document.getElementById('pfAuthForgot');
+  document.getElementById('pfAuthNameRow').hidden=m!=='register';
+  document.getElementById('pfAuthTermsRow').hidden=m!=='register';
+  document.getElementById('pfAuthPassRow').hidden=m==='reset';
+  document.getElementById('pfAuthPass').setAttribute('autocomplete',m==='register'?'new-password':'current-password');
+  var msg=document.getElementById('pfAuthMsg');msg.textContent='';msg.className='pf-auth-msg';
+  if(m==='login'){T.textContent='Entra en tu colecci\u00f3n';S.textContent='Identifica, tasa y guarda tus tel\u00e9fonos antiguos.';go.textContent='Entrar';alt.textContent='Crear una cuenta';fg.hidden=false;}
+  else if(m==='register'){T.textContent='Crea tu cuenta';S.textContent='Guarda tu colecci\u00f3n y t\u00f3mala contigo en el m\u00f3vil.';go.textContent='Crear cuenta';alt.textContent='Ya tengo cuenta';fg.hidden=false;}
+  else{T.textContent='Recupera tu acceso';S.textContent='Te enviamos un enlace al correo para elegir una contrase\u00f1a nueva.';go.textContent='Enviar enlace';alt.textContent='Volver a entrar';fg.hidden=true;}
+}
+function pfAuthError(e){
+  var c=(e&&e.code)||'';
+  var M={'auth/invalid-credential':'El correo o la contrase\u00f1a no son correctos.','auth/wrong-password':'La contrase\u00f1a no es correcta.','auth/user-not-found':'No hay ninguna cuenta con ese correo.','auth/invalid-email':'Ese correo no parece v\u00e1lido.','auth/email-already-in-use':'Ya existe una cuenta con ese correo. Prueba a entrar.','auth/weak-password':'La contrase\u00f1a necesita al menos 6 caracteres.','auth/too-many-requests':'Demasiados intentos. Espera unos minutos y vuelve a probar.','auth/network-request-failed':'Sin conexi\u00f3n. Comprueba internet y vuelve a probar.','auth/operation-not-allowed':'El registro con correo no est\u00e1 activado en Firebase todav\u00eda.','auth/requires-recent-login':'Vuelve a entrar y repite la operaci\u00f3n.'};
+  return M[c]||('No se ha podido completar ('+(c||'error')+').');
+}
+async function pfAuthSubmit(ev){
+  if(ev)ev.preventDefault();
+  var A=window._pfAuth;if(!A){pfAuthSay('Todav\u00eda est\u00e1 cargando. Prueba otra vez en unos segundos.');return false;}
+  var email=document.getElementById('pfAuthEmail').value.trim(),pass=document.getElementById('pfAuthPass').value,name=document.getElementById('pfAuthName').value.trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){pfAuthSay('Escribe un correo v\u00e1lido.');return false;}
+  if(pfAuthCur!=='reset'&&pass.length<6){pfAuthSay('La contrase\u00f1a necesita al menos 6 caracteres.');return false;}
+  if(pfAuthCur==='register'){
+    if(!name){pfAuthSay('Dinos c\u00f3mo te llamas.');return false;}
+    if(!document.getElementById('pfAuthTerms').checked){pfAuthSay('Acepta las condiciones para continuar.');return false;}
+  }
+  var go=document.getElementById('pfAuthGo');go.disabled=true;pfAuthSay('');
+  try{
+    if(pfAuthCur==='login'){await A.login(email,pass);}
+    else if(pfAuthCur==='register'){pfLSset('pf_user_name',name.slice(0,30));await A.register(name.slice(0,30),email,pass);}
+    else{await A.reset(email);pfAuthSay('Listo. Si hay una cuenta con ese correo, te llegar\u00e1 el enlace.',true);}
+  }catch(e){pfAuthSay(pfAuthError(e));}
+  go.disabled=false;
+  return false;
+}
+function pfAuthSay(t,ok){var m=document.getElementById('pfAuthMsg');if(!m)return;m.textContent=t||'';m.className='pf-auth-msg'+(ok?' ok':'');}
+
+// ---- Estado de la sesion ----
+function pfOnAuth(){
+  clearTimeout(_pfAuthTimer);
+  var A=window._pfAuth,u=A&&A.user();
+  if(!u){
+    _pfBooted=false;_pfAdmUsers=[];
+    var cur=document.getElementById('pfAuthPass');if(cur)cur.value='';
+    pfAuthShow(true);pfAuthMode('login');pfSetNavBadge(false);
+    return;
+  }
+  var last=pfLS('pf_uid','');
+  if(last&&last!==u.uid)pfWipeLocal();
+  pfLSset('pf_uid',u.uid);
+  if(!pfName()&&u.name)pfLSset('pf_user_name',u.name);
+  _colCache=null;_colIndex=[];
+  var a=document.getElementById('pfAuth');if(a)a.hidden=true;
+  pfApplyName();pfRenderAccount();
+  if(!_pfBooted){_pfBooted=true;pfBootFlow();}
+  pfAdminCheck();
+}
+function pfRenderAccount(){
+  var A=window._pfAuth,u=A&&A.user();
+  var box=document.getElementById('pfpAcct');if(!box)return;
+  box.hidden=!u;if(!u)return;
+  document.getElementById('pfpAcctMail').textContent=u.email;
+  document.getElementById('pfpVerify').hidden=!!u.verified;
+  document.getElementById('pfpAdminBox').hidden=!A.isAdminEmail();
+}
+async function pfResendVerify(){try{await window._pfAuth.resend();showToast('Correo enviado');}catch(e){showToast(pfAuthError(e));}}
+async function pfAuthRefresh(){try{await window._pfAuth.refresh();showToast(window._pfAuth.user()&&window._pfAuth.user().verified?'Correo confirmado':'Todav\u00eda no consta confirmado');}catch(e){showToast(pfAuthError(e));}}
+function pfLogout(){
+  if(!confirm('\u00bfCerrar sesi\u00f3n? Tu colecci\u00f3n queda guardada en tu cuenta. Se borrar\u00e1n de este dispositivo las \u00faltimas tasaciones, el historial de caza y los ajustes.'))return;
+  window._pfAuth.logout().then(function(){pfWipeLocal();pfApplyName();showPage('home');}).catch(function(e){showToast(pfAuthError(e));});
+}
+async function pfDeleteAccount(){
+  var p=document.getElementById('pfDelPass'),msg=document.getElementById('pfDelMsg'),go=document.getElementById('pfDelGo');
+  if(!p.value){msg.textContent='Escribe tu contrase\u00f1a.';return;}
+  if(!confirm('\u00bfSeguro? Se borra tu cuenta y toda tu colecci\u00f3n.'))return;
+  go.disabled=true;msg.textContent='';
+  try{await window._pfAuth.deleteAccount(p.value);p.value='';pfCloseSheet('pfDelAcc');pfWipeLocal();showPage('home');showToast('Cuenta borrada');}
+  catch(e){msg.textContent=pfAuthError(e);}
+  go.disabled=false;
+}
+
+// ---- Arranque despues de entrar ----
+function pfBootFlow(){
   var onb=pfLS('pf_onboarded',0);
   if(!onb){
     var existing=false;try{existing=getDrafts().length>0||(JSON.parse(localStorage.getItem(HUNT_LOG_KEY)||'[]')||[]).length>0||pfLotLoad().length>0;}catch(e){}
@@ -5352,7 +5847,379 @@ function pfBoot(){
   }else if(pfLS('pf_news_seen','')!==PF_NEWS_VER){setTimeout(function(){pfOpenSheet('pfNews');},700);}
   setTimeout(function(){pfCheckAchievements(true);},2500);
 }
-setTimeout(pfBoot,0);
+
+// ---- Administracion ----
+function pfSetNavBadge(on){
+  var b=document.querySelector('.pf-nav-btn[data-nav="profile"]');if(!b)return;
+  var d=document.getElementById('pfNavBadge');
+  if(!d){d=document.createElement('i');d.id='pfNavBadge';d.className='pf-nav-badge';d.hidden=true;b.appendChild(d);}
+  d.hidden=!on;
+}
+function pfDate(ms){if(!ms)return '-';try{return new Date(ms).toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '-';}}
+function pfAgo(ms){
+  if(!ms)return 'sin datos';
+  var m=Math.floor((Date.now()-ms)/60000);
+  if(m<2)return 'ahora mismo';if(m<60)return 'hace '+m+' min';
+  var h=Math.floor(m/60);if(h<24)return 'hace '+h+' h';
+  var d=Math.floor(h/24);if(d<30)return 'hace '+d+(d===1?' d\u00eda':' d\u00edas');
+  return pfDate(ms);
+}
+async function pfAdminCheck(){
+  var A=window._pfAuth;if(!A||!A.isAdmin())return;
+  try{
+    var us=await A.listUsers();_pfAdmUsers=us;
+    var seen=pfLS('pf_admin_seen',0);
+    if(!seen){pfLSset('pf_admin_seen',Date.now());seen=Date.now();}
+    var fresh=us.filter(function(x){return x.createdAt>seen&&x.uid!==A.user().uid;}).length;
+    var bd=document.getElementById('pfpAdmBadge');if(bd){bd.hidden=!fresh;bd.textContent=fresh;}
+    pfSetNavBadge(fresh>0);
+    if(fresh>0)showToast(fresh===1?'Tienes 1 registro nuevo':'Tienes '+fresh+' registros nuevos');
+  }catch(e){console.warn('admin',e&&e.code);}
+}
+async function pfOpenAdmin(){
+  var A=window._pfAuth;
+  if(!A.isAdmin()){showToast('Confirma tu correo para ver los usuarios');return;}
+  pfOpenSheet('pfAdmin');
+  var list=document.getElementById('pfAdmList');
+  list.innerHTML='<div class="pf-adm-empty">Cargando...</div>';
+  try{
+    var us=await A.listUsers();_pfAdmUsers=us;
+    _pfAdmPrevSeen=pfLS('pf_admin_seen',0);
+    var wk=Date.now()-7*864e5;
+    var nw=us.filter(function(x){return x.createdAt>wk;}).length,ac=us.filter(function(x){return x.lastSeen>wk;}).length;
+    document.getElementById('pfAdmSum').innerHTML='<div><b>'+us.length+'</b><span>Registrados</span></div><div><b>'+nw+'</b><span>Nuevos, 7 d\u00edas</span></div><div><b>'+ac+'</b><span>Activos, 7 d\u00edas</span></div>';
+    list.innerHTML=us.length?us.map(function(x){
+      var isNew=x.createdAt>_pfAdmPrevSeen&&x.uid!==A.user().uid;
+      return '<button class="pf-adm-row" onclick="pfAdminOpenUser(\''+pfEsc(x.uid)+'\')"><div class="pf-adm-av">'+pfEsc((x.name||x.email||'?').charAt(0).toUpperCase())+'</div><div class="pf-adm-info"><div class="pf-adm-n">'+pfEsc(x.name||'Sin nombre')+(isNew?'<span class="pf-adm-new">Nuevo</span>':'')+'</div><div class="pf-adm-m">'+pfEsc(x.email)+'</div></div><div class="pf-adm-c"><b>'+x.colCount+'</b>'+(x.colCount===1?'pieza':'piezas')+'<br>'+pfAgo(x.lastSeen)+'</div></button>';
+    }).join(''):'<div class="pf-adm-empty">A\u00fan no se ha registrado nadie.</div>';
+    pfLSset('pf_admin_seen',Date.now());
+    var bd=document.getElementById('pfpAdmBadge');if(bd)bd.hidden=true;pfSetNavBadge(false);
+  }catch(e){list.innerHTML='<div class="pf-adm-empty">No se han podido cargar los usuarios ('+pfEsc((e&&e.code)||'error')+'). Revisa las reglas de Firestore.</div>';}
+  pfAdminLegacy();
+}
+async function pfAdminLegacy(){
+  var box=document.getElementById('pfAdmLegacy');if(!box)return;
+  if(pfLS('pf_legacy_done',0)){box.innerHTML='';return;}
+  try{
+    var n=await window._pfAuth.legacyCount();
+    if(!n){box.innerHTML='';return;}
+    box.innerHTML='<div class="pf-adm-legacy">Hay <b>'+n+'</b> '+(n===1?'tel\u00e9fono':'tel\u00e9fonos')+' de la versi\u00f3n anterior sin due\u00f1o. Tr\u00e1etelos a tu colecci\u00f3n para no perderlos.<br><button id="pfLegacyGo" onclick="pfMigrateLegacy()">Traer a mi colecci\u00f3n</button></div>';
+  }catch(e){box.innerHTML='';}
+}
+async function pfMigrateLegacy(){
+  var b=document.getElementById('pfLegacyGo');if(b)b.disabled=true;
+  try{
+    var n=await window._pfAuth.migrateLegacy(function(d,t){if(b)b.textContent='Pasando '+d+' de '+t+'...';});
+    pfLSset('pf_legacy_done',1);_colCache=null;_colIndex=[];
+    document.getElementById('pfAdmLegacy').innerHTML='<div class="pf-adm-legacy">Hecho: '+n+' '+(n===1?'tel\u00e9fono pasado':'tel\u00e9fonos pasados')+' a tu colecci\u00f3n.</div>';
+    if(typeof renderHomeSnapshot==='function')renderHomeSnapshot();
+    showToast('Colecci\u00f3n recuperada');
+  }catch(e){if(b){b.disabled=false;b.textContent='Reintentar';}showToast('No se pudo: '+((e&&e.code)||'error'));}
+}
+async function pfAdminOpenUser(uid){
+  var x=_pfAdmUsers.filter(function(u){return u.uid===uid;})[0];if(!x)return;
+  document.getElementById('pfAdmUName').textContent=x.name||'Sin nombre';
+  document.getElementById('pfAdmUMeta').innerHTML='<b>'+pfEsc(x.email)+'</b><br>Alta: '+pfDate(x.createdAt)+'<br>\u00daltima vez: '+pfAgo(x.lastSeen)+'<br>Dispositivo: '+pfEsc(x.platform||'-')+'. Plan: '+pfEsc(x.plan);
+  var col=document.getElementById('pfAdmUCol');col.innerHTML='<div class="pf-adm-empty">Cargando...</div>';
+  pfOpenSheet('pfAdminUser');
+  try{
+    var items=await window._pfAuth.userCollection(uid);
+    col.innerHTML=items.length?items.map(function(e){
+      var d=e.data||{};
+      return '<div class="pf-adm-item"><div class="pf-adm-th">'+(e.thumb?'<img alt="" src="'+pfEsc(e.thumb)+'">':pfPhIcon())+'</div><div class="pf-adm-info"><div class="pf-adm-n">'+pfEsc(d.nombre||'Tel\u00e9fono')+'</div><div class="pf-adm-m">'+pfEsc([d.fabricante,d.periodo].filter(Boolean).join(', '))+'</div></div><div class="pf-adm-c">'+pfRange(d.precio_venta_min,d.precio_venta_max)+'</div></div>';
+    }).join(''):'<div class="pf-adm-empty">Su colecci\u00f3n est\u00e1 vac\u00eda por ahora.</div>';
+  }catch(e){col.innerHTML='<div class="pf-adm-empty">No se ha podido leer ('+pfEsc((e&&e.code)||'error')+').</div>';}
+}
+
+// ---- Conexion de eventos ----
+window.addEventListener('pf-auth',pfOnAuth);
+window.addEventListener('pf-auth-refresh',function(){pfRenderAccount();pfAdminCheck();});
+(function(){
+  pfAuthShow(false);
+  if(window._pfAuthResolved)pfOnAuth();
+  _pfAuthTimer=setTimeout(function(){if(!window._pfAuthResolved){pfAuthShow(true);pfAuthMode('login');pfAuthSay('Estamos tardando en conectar. Comprueba tu conexi\u00f3n.');}},9000);
+})();
+
+// ===================== v5.1: ANALISIS EN DOS FASES, ESCANER Y ANIMACIONES =====================
+var PF_HI_DIM=1024,_pfHi={},_pfHiKeys=[];
+var _pfCancelled=false,_pfAbortCtrl=null,_pfScanCycle=null,_pfLoadQm=false;
+
+// ---- Fotos: miniatura ligera para guardar, version nitida para la IA ----
+function pfHiStore(small,big){_pfHi[small]=big;_pfHiKeys.push(small);while(_pfHiKeys.length>24){delete _pfHi[_pfHiKeys.shift()];}}
+function pfHiRes(c){return _pfHi[c]||String(c).split(',')[1];}
+
+// ---- Escaner de carga ----
+function pfScanDialSvg(){
+  var holes='',digits='',cx=60,cy=60;
+  for(var k=1;k<=10;k++){
+    var a=(-60-(k-1)*30)*Math.PI/180,x=(cx+39*Math.cos(a)).toFixed(1),y=(cy+39*Math.sin(a)).toFixed(1);
+    holes+='<circle cx="'+x+'" cy="'+y+'" r="7.6" fill="#000"/>';
+    digits+='<text x="'+x+'" y="'+(Number(y)+3.2).toFixed(1)+'">'+(k%10)+'</text>';
+  }
+  var sa=-18*Math.PI/180;
+  return '<svg viewBox="0 0 120 120" aria-hidden="true"><defs><mask id="pfScMask"><rect width="120" height="120" fill="#fff"/>'+holes+'<circle cx="60" cy="60" r="25" fill="#000"/></mask>'
+    +'<radialGradient id="pfScGrad" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="#3F3227"/><stop offset="1" stop-color="#130E0A"/></radialGradient></defs>'
+    +'<circle cx="60" cy="60" r="59" fill="#0B0806"/><circle cx="60" cy="60" r="52" fill="#EDE3D0"/><g class="pf-scd-dg">'+digits+'</g>'
+    +'<g class="pf-scd-wheel"><circle cx="60" cy="60" r="52" fill="url(#pfScGrad)" mask="url(#pfScMask)"/></g>'
+    +'<line x1="'+(cx+45*Math.cos(sa)).toFixed(1)+'" y1="'+(cy+45*Math.sin(sa)).toFixed(1)+'" x2="'+(cx+57*Math.cos(sa)).toFixed(1)+'" y2="'+(cy+57*Math.sin(sa)).toFixed(1)+'" stroke="#C9A060" stroke-width="3.6" stroke-linecap="round"/>'
+    +'<circle cx="60" cy="60" r="24" fill="#F6F0E2"/><circle cx="60" cy="60" r="7" fill="#D4862A"/></svg>';
+}
+function pfLoadSteps(qm){
+  var n=(typeof PF_KB_MODELS!=='undefined'&&PF_KB_MODELS.length)||70;
+  return qm?['Mirando el tel\u00e9fono','Compar\u00e1ndolo con '+n+' modelos','Calculando el precio']
+           :['Mirando la forma y el material','Buscando marcas y placas','Compar\u00e1ndolo con '+n+' modelos del cat\u00e1logo','Calculando el precio justo'];
+}
+var PF_STEP_AT=[0,3,7,12];
+function pfLoadStart(qm){
+  _pfLoadQm=!!qm;_pfCancelled=false;
+  var w=document.getElementById('loadingWrap');if(w)w.classList.add('pf-scanning');
+  document.body.classList.add('pf-scan-open');
+  var t=document.getElementById('loadingTitle');if(t)t.textContent=qm?'Calculando el precio':'Mirando tu tel\u00e9fono';
+  var ph=document.getElementById('pfScanPhotos'),stage=document.getElementById('pfScanStage');
+  if(ph){
+    var imgs=(currentImages||[]).slice(0,3);
+    ph.innerHTML=imgs.map(function(im,i){return '<img alt="" class="'+(i===0?'on':'')+'" src="'+im.dataUrl+'">';}).join('');
+    if(stage)stage.classList.toggle('pf-nophoto',!imgs.length);
+    clearInterval(_pfScanCycle);
+    if(imgs.length>1){var k=0;_pfScanCycle=setInterval(function(){var els=ph.querySelectorAll('img');if(!els.length)return;els[k%els.length].classList.remove('on');k++;els[k%els.length].classList.add('on');},2300);}
+  }
+  var d=document.getElementById('pfScanDial');if(d&&!d.innerHTML)d.innerHTML=pfScanDialSvg();
+  if(d)d.classList.remove('pf-done');
+  var st=document.getElementById('pfSteps');
+  if(st)st.innerHTML=pfLoadSteps(qm).map(function(s,i){return '<li class="'+(i===0?'on':'')+'"><i></i><span>'+s+'</span></li>';}).join('');
+  var sub=document.getElementById('loadingSub');if(sub)sub.textContent='';
+  var c=document.getElementById('pfScanCancel');if(c)c.hidden=false;
+  pfLoadBar(0,0);setTimeout(function(){pfLoadBar(88,qm?9:22);},30);
+}
+function pfLoadBar(pct,secs){
+  var b=document.getElementById('pfScanBar');if(!b)return;
+  b.style.transition=secs?('width '+secs+'s cubic-bezier(.12,.62,.28,1)'):'none';
+  b.style.width=pct+'%';
+}
+function pfLoadTick(sec){
+  var lis=document.querySelectorAll('#pfSteps li');
+  lis.forEach(function(li,i){
+    var at=_pfLoadQm?[0,2,5][i]:PF_STEP_AT[i];
+    var nextAt=_pfLoadQm?[0,2,5][i+1]:PF_STEP_AT[i+1];
+    var done=nextAt!=null&&sec>=nextAt,on=sec>=at&&!done;
+    li.classList.toggle('done',done);li.classList.toggle('on',on);
+  });
+  var sub=document.getElementById('loadingSub');
+  if(sub&&!sub.getAttribute('data-hold')){
+    if(sec>=34)sub.textContent='Ya casi est\u00e1.';
+    else if(sec>=20)sub.textContent='Las piezas con muchos detalles tardan un poco m\u00e1s.';
+    else sub.textContent='';
+  }
+}
+function pfLoadRetrying(){
+  var sub=document.getElementById('loadingSub');
+  if(sub){sub.textContent='Est\u00e1 tardando: lo intento con una versi\u00f3n m\u00e1s ligera.';sub.setAttribute('data-hold','1');}
+  pfLoadBar(40,0);setTimeout(function(){pfLoadBar(90,18);},30);
+}
+function pfLoadDone(){
+  document.querySelectorAll('#pfSteps li').forEach(function(li){li.classList.remove('on');li.classList.add('done');});
+  pfLoadBar(100,.35);
+  var d=document.getElementById('pfScanDial');if(d)d.classList.add('pf-done');
+  var c=document.getElementById('pfScanCancel');if(c)c.hidden=true;
+  clearInterval(_pfScanCycle);
+  return new Promise(function(res){setTimeout(function(){pfLoadClose();res();},pfReducedMotion()?0:520);});
+}
+function pfLoadClose(){
+  var w=document.getElementById('loadingWrap');if(w)w.classList.remove('pf-scanning');
+  document.body.classList.remove('pf-scan-open');
+  var sub=document.getElementById('loadingSub');if(sub)sub.removeAttribute('data-hold');
+}
+function pfLoadError(){
+  clearInterval(_pfScanCycle);
+  var c=document.getElementById('pfScanCancel');if(c)c.hidden=true;
+  var sub=document.getElementById('loadingSub');if(sub)sub.removeAttribute('data-hold');
+  var st=document.getElementById('pfSteps');if(st)st.innerHTML='';
+}
+function pfLoadHide(){
+  clearInterval(_pfScanCycle);
+  var w=document.getElementById('loadingWrap');if(w)w.style.display='none';
+  pfLoadClose();
+}
+function pfCancelAnalysis(){
+  _pfCancelled=true;
+  if(_pfAbortCtrl)try{_pfAbortCtrl.abort();}catch(e){}
+}
+
+// ---- Segunda fase: ficha, historia y limpieza, sin bloquear ----
+var _pfEnrichFor=null;
+function pfEnrichPending(on){
+  var td=document.getElementById('r-tech-details');
+  if(td){if(on){td.innerHTML='<span class="pf-skel"></span><span class="pf-skel pf-skel-s"></span>';}}
+  var src=document.getElementById('r-sources');if(src&&on)src.textContent='';
+  var box=document.getElementById('pfEnrichNote');
+  if(!box){var desc=document.getElementById('r-desc');if(desc&&desc.parentNode){box=document.createElement('p');box.id='pfEnrichNote';box.className='pf-enrich-note';desc.parentNode.insertBefore(box,desc.nextSibling);}}
+  if(box){box.textContent=on?'Preparando la historia, la ficha t\u00e9cnica y la gu\u00eda de limpieza...':'';box.hidden=!on;}
+}
+async function pfEnrichStart(r){
+  if(!r)return;
+  _pfEnrichFor=r;pfEnrichPending(true);
+  var img=currentImages&&currentImages[0];
+  var content=[];
+  if(img)content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.b64}});
+  content.push({type:'text',text:'Tel\u00e9fono ya identificado: '+[r.nombre,r.fabricante,r.pais,r.periodo,r.material].filter(Boolean).join(', ')+'. Completa su ficha.'});
+  var instr=['Eres PHONEFINDER, anticuario experto en telefonia vintage. El telefono ya esta identificado; no lo vuelvas a tasar.',
+    'Usa la base de conocimiento del bloque anterior. fuentes_usadas: cita solo fuentes reales de la seccion G que hayas usado; nunca inventes libros, paginas ni enlaces.',
+    'Responde SOLO este objeto JSON, sin texto ni markdown, con frases cortas:',
+    '{"detalles_tecnicos":"Specs en 2 frases","dato_curioso":"Una frase sorprendente de este modelo","contexto_epoca":"Una frase de contexto historico","como_limpiar":["p1","p2","p3"],"zonas_limpieza":[{"id":"z1","label":"Zona","emoji":"*","material":"material","product":"producto","avoid":"evitar","steps":["p1","p2"]}],"fuentes_usadas":"2-4 fuentes"}',
+    'zonas_limpieza: 3 o 4 zonas que se vean en la foto (carcasa, disco, auricular, cable...).'].join('\n');
+  for(var attempt=0;attempt<2;attempt++){
+    var ctrl=new AbortController(),to=setTimeout(function(){ctrl.abort();},45000);
+    try{
+      var resp=await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:1600,messages:[{role:'user',content:content}]},pfKbText(attempt>0),instr,ctrl.signal);
+      clearTimeout(to);
+      if(_pfEnrichFor!==r)return;
+      if(!resp.ok)throw new Error('http '+resp.status);
+      var data=await resp.json();
+      var x=extractJSON((data.content||[]).map(function(c){return c.text||'';}).join(''));
+      if(!x)throw new Error('json');
+      pfEnrichApply(r,x);return;
+    }catch(e){clearTimeout(to);if(_pfEnrichFor!==r)return;}
+  }
+  pfEnrichApply(r,{});
+}
+function pfEnrichApply(r,x){
+  ['detalles_tecnicos','dato_curioso','contexto_epoca','como_limpiar','zonas_limpieza','fuentes_usadas'].forEach(function(k){if(x[k]!=null&&x[k]!=='')r[k]=x[k];});
+  if(currentResult!==r)return;
+  pfEnrichPending(false);
+  var td=document.getElementById('r-tech-details');if(td){td.textContent=r.detalles_tecnicos||'--';td.classList.add('pf-arrive');}
+  var cc=document.getElementById('curioCard'),ct=document.getElementById('r-curio');
+  if(r.dato_curioso&&ct){ct.textContent=r.dato_curioso;if(cc){cc.style.display='flex';cc.classList.add('pf-arrive');}}
+  var es=document.getElementById('epocaSec'),et=document.getElementById('r-epoca');
+  if(r.contexto_epoca&&et){et.textContent=r.contexto_epoca;if(es){es.style.display='block';es.classList.add('pf-arrive');}}
+  var src=document.getElementById('r-sources');if(src)src.textContent=r.fuentes_usadas?'Fuentes: '+r.fuentes_usadas:'';
+  if(r.zonas_limpieza&&r.zonas_limpieza.length){
+    CLN_ZONES=r.zonas_limpieza.map(function(z){return{id:z.id||'z',label:z.label||'Zona',emoji:(z.emoji&&z.emoji.length<=4)?z.emoji:'*',material:z.material||z.material_zona||'',product:z.product||z.producto||'Pa\u00f1o de microfibra',avoid:z.avoid||z.evitar||'Agua directa',steps:z.steps||z.pasos||[]};});
+    CLN_ACTIVE=0;
+    var cp=document.getElementById('tab-cuidar');if(cp&&cp.classList.contains('active')&&typeof clnRenderAll==='function')clnRenderAll();
+  }
+  try{var ds=getDrafts();for(var i=0;i<ds.length;i++){if(ds[i].result&&ds[i].result.nombre===r.nombre){ds[i].result=r;localStorage.setItem(DRAFT_KEY,JSON.stringify(ds));break;}}}catch(e){}
+}
+
+// ---- Afinar la tasacion con una foto mas ----
+function pfRenderRefine(r){
+  var box=document.getElementById('pfRefine');if(!box)return;
+  var c=String(r&&r.confianza||'').toUpperCase(),tip=String(r&&r.foto_sugerida||'').trim();
+  var show=!_inHuntMode&&c&&c!=='ALTA'&&tip.length>4&&currentImages.length<MAX_PHOTOS;
+  box.hidden=!show;
+  if(show)document.getElementById('pfRefineTxt').textContent=tip;
+}
+function pfRefineAddPhoto(){
+  if(currentImages.length>=MAX_PHOTOS){showToast('Ya tienes '+MAX_PHOTOS+' fotos');return;}
+  var ci=document.getElementById('cameraInput');if(ci)ci.click();
+  showPage('home');
+  var row=document.getElementById('uploadRow');if(row)row.style.display='grid';
+  var ab=document.getElementById('analyzeBtn');if(ab)ab.style.display='flex';
+  var qb=document.getElementById('quickBtn');if(qb)qb.style.display='flex';
+  renderPhotoStrip();window.scrollTo(0,0);
+  showToast('A\u00f1ade la foto y pulsa Identificar otra vez');
+}
+
+// ---- Numeros que cuentan ----
+function pfCount(el,to,fmt,dur){
+  if(!el)return;
+  if(pfReducedMotion()||!(to>0)){el.textContent=fmt(to);return;}
+  var t0=null;dur=dur||900;
+  function step(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/dur);var e=1-Math.pow(1-p,3);el.textContent=fmt(Math.round(to*e));if(p<1)requestAnimationFrame(step);}
+  el.textContent=fmt(0);requestAnimationFrame(step);
+}
+function pfCountRangeEl(el,a,b,dur){
+  if(!el||!(Number(b)>0))return;
+  a=Number(a)||0;b=Number(b)||0;
+  if(pfReducedMotion()){el.textContent=pfRange(a,b);return;}
+  var t0=null;dur=dur||900;
+  function step(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=pfRange(Math.round(a*e),Math.round(b*e));if(p<1)requestAnimationFrame(step);else el.textContent=pfRange(a,b);}
+  requestAnimationFrame(step);
+}
+function pfCountText(el,dur){
+  if(!el||pfReducedMotion())return;
+  var txt=el.textContent,m=txt.match(/-?\d[\d.]*/);if(!m)return;
+  var n=parseInt(m[0].replace(/\./g,''),10);if(!(Math.abs(n)>1))return;
+  var pre=txt.slice(0,m.index),post=txt.slice(m.index+m[0].length);
+  pfCount(el,Math.abs(n),function(v){return pre+(n<0?'-':'')+pfNum(v)+post;},dur||800);
+}
+
+// ---- Revelado del resultado ----
+function pfRevealResult(r){
+  var page=document.getElementById('page-result');if(!page)return;
+  page.classList.remove('pf-reveal');void page.offsetWidth;page.classList.add('pf-reveal');
+  setTimeout(function(){page.classList.remove('pf-reveal');},1600);
+  pfCountRangeEl(document.getElementById('r-buy'),r.precio_compra_min,r.precio_compra_max,1000);
+  pfCountRangeEl(document.getElementById('r-sell'),r.precio_venta_min,r.precio_venta_max,1100);
+  var p=Number(r.precio_compra_max)||0,cp=document.querySelector('#pfDialWrap .pf-dc-p');
+  if(cp&&p>0&&!pfReducedMotion()){cp.textContent=pfNum(0)+' '+PF_EUR;setTimeout(function(){pfCount(cp,p,function(v){return pfNum(v)+' '+PF_EUR;},950);},380);}
+  pfRenderRefine(r);
+}
+
+// ---- Guardado con efecto ----
+function pfSavedFx(){
+  var btn=document.getElementById('btnSaveNormal'),img=document.querySelector('#resultPhotos .photo-viewer-img');
+  if(btn){btn.classList.remove('pf-saved');void btn.offsetWidth;btn.classList.add('pf-saved');setTimeout(function(){btn.classList.remove('pf-saved');},2400);}
+  if(!img||!btn||pfReducedMotion()||!img.animate)return;
+  var a=img.getBoundingClientRect(),b=btn.getBoundingClientRect();if(!a.width)return;
+  var f=img.cloneNode();f.className='pf-fly';f.removeAttribute('onclick');
+  f.style.cssText='position:fixed;left:'+a.left+'px;top:'+a.top+'px;width:'+a.width+'px;height:'+a.height+'px;z-index:9990;border-radius:16px;object-fit:cover;pointer-events:none;box-shadow:0 12px 30px rgba(0,0,0,.35);';
+  document.body.appendChild(f);
+  var dx=(b.left+b.width/2)-(a.left+a.width/2),dy=(b.top+b.height/2)-(a.top+a.height/2);
+  var an=f.animate([{transform:'translate(0,0) scale(1) rotate(0)',opacity:1},{transform:'translate('+dx*0.55+'px,'+(dy*0.35-60)+'px) scale(.55) rotate(-6deg)',opacity:1,offset:.45},{transform:'translate('+dx+'px,'+dy+'px) scale(.12) rotate(4deg)',opacity:.2}],{duration:720,easing:'cubic-bezier(.45,0,.2,1)'});
+  an.onfinish=function(){f.remove();};
+}
+
+// ---- Disco decorativo del inicio ----
+function pfHeroDialSvg(){
+  var g='',cx=130,cy=130;
+  for(var k=1;k<=10;k++){var a=(-60-(k-1)*30)*Math.PI/180;g+='<circle cx="'+(cx+86*Math.cos(a)).toFixed(1)+'" cy="'+(cy+86*Math.sin(a)).toFixed(1)+'" r="16"/>';}
+  var sa=-18*Math.PI/180;
+  return '<svg viewBox="0 0 260 260" fill="none" stroke-width="2"><circle cx="130" cy="130" r="127" stroke="rgba(242,234,219,.10)"/><circle cx="130" cy="130" r="112" stroke="rgba(242,234,219,.07)"/>'
+    +'<g class="pf-hd-wheel" stroke="rgba(242,234,219,.13)">'+g+'</g><circle cx="130" cy="130" r="54" stroke="rgba(242,234,219,.09)"/><circle cx="130" cy="130" r="12" fill="rgba(212,134,42,.28)" stroke="none"/>'
+    +'<line x1="'+(cx+98*Math.cos(sa)).toFixed(1)+'" y1="'+(cy+98*Math.sin(sa)).toFixed(1)+'" x2="'+(cx+124*Math.cos(sa)).toFixed(1)+'" y2="'+(cy+124*Math.sin(sa)).toFixed(1)+'" stroke="rgba(201,160,96,.45)" stroke-width="6" stroke-linecap="round"/></svg>';
+}
+var _pfHeroDigit=0;
+function pfHeroDial(){
+  var h=document.getElementById('pfHeroDial');if(!h)return;
+  if(!h.innerHTML)h.innerHTML=pfHeroDialSvg();
+  if(pfReducedMotion())return;
+  var w=h.querySelector('.pf-hd-wheel');if(!w)return;
+  var deg=[72,132,102,162,42,192][_pfHeroDigit++%6];
+  w.style.transition='transform .55s cubic-bezier(.3,.1,.3,1)';w.style.transform='rotate('+deg+'deg)';
+  setTimeout(function(){w.style.transition='transform '+(deg/150).toFixed(2)+'s linear';w.style.transform='rotate(0deg)';},620);
+}
+
+// ---- Entrada escalonada de listas ----
+function pfStagger(box,max){
+  if(!box||pfReducedMotion())return;
+  Array.prototype.slice.call(box.children,0,max||14).forEach(function(el,i){el.classList.remove('pf-stag');void el.offsetWidth;el.style.animationDelay=(i*38)+'ms';el.classList.add('pf-stag');});
+}
+
+// ---- Enganches sobre funciones existentes ----
+(function(){
+  var _rr=renderResult;renderResult=function(r){_rr.apply(this,arguments);pfRevealResult(r);};
+  var _na=newAnalysis;newAnalysis=function(){pfLoadHide();_pfEnrichFor=null;var rf=document.getElementById('pfRefine');if(rf)rf.hidden=true;return _na.apply(this,arguments);};
+  var _ra=retryAnalysis;retryAnalysis=function(){
+    var ov=document.getElementById('huntModeOverlay');
+    if(ov&&ov.classList.contains('open')&&typeof _hmImages!=='undefined'&&_hmImages.length){pfLoadHide();hmAnalyze();return;}
+    return _ra.apply(this,arguments);
+  };
+  var _ps=renderPhotoStrip,_psN=0;renderPhotoStrip=function(){
+    _ps.apply(this,arguments);
+    var n=currentImages.length;
+    if(n>_psN){pfHeroDial();var th=document.querySelectorAll('#photoStrip .p-thumb, #photoStrip > *:not(.p-add)');var last=th[n-1];if(last&&!pfReducedMotion()){last.classList.remove('pf-pop');void last.offsetWidth;last.classList.add('pf-pop');}}
+    _psN=n;
+    var ab=document.getElementById('analyzeBtn');if(ab)ab.classList.toggle('pf-ready',n>0);
+  };
+  var _rc=renderCollection;renderCollection=async function(){var x=await _rc.apply(this,arguments);var cc=document.getElementById('colContent');pfStagger(cc&&(cc.querySelector('.phone-list')||cc),16);return x;};
+  var _pr=pfRenderProfile;pfRenderProfile=async function(){var x=await _pr.apply(this,arguments);document.querySelectorAll('#pfpStats .pfp-stat-v').forEach(function(el){pfCountText(el);});return x;};
+  var _sc=saveToCollection;saveToCollection=async function(){
+    if(window._fbSave&&!window._fbSave._pf){var o=window._fbSave;window._fbSave=async function(e){var id=await o(e);if(!e||e.type!=='feedback')pfSavedFx();return id;};window._fbSave._pf=1;}
+    return _sc.apply(this,arguments);
+  };
+})();
+document.body.classList.add('pf-boot');setTimeout(function(){document.body.classList.remove('pf-boot');},2600);
+setTimeout(pfHeroDial,700);
 </script>
 </body>
 </html>
