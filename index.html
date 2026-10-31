@@ -2038,7 +2038,7 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
 
   <!-- COMPRAR -->
   <div class="tab-panel active" id="tab-comprar">
-    <section class="fold open">
+    <section class="fold">
       <button class="fold-head" onclick="pfFold(this)"><span><span class="fold-title">Rev&iacute;salo antes de pagar</span><span class="fold-sum" id="sumRevisar"></span></span><svg class="fold-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="fold-body"><div class="fold-inner"><div class="fold-pad">
         <div class="chk-score-banner" id="chkScoreBanner" style="display:none">
@@ -2108,10 +2108,15 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
 
   <!-- CONOCER -->
   <div class="tab-panel" id="tab-conocer">
-    <section class="fold open">
+    <section class="fold">
       <button class="fold-head" onclick="pfFold(this)"><span><span class="fold-title">Su historia</span><span class="fold-sum" id="sumHistoria"></span></span><svg class="fold-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="fold-body"><div class="fold-inner"><div class="fold-pad">
         <p class="pf-prose" id="r-desc">--</p>
+      </div></div></div>
+    </section>
+    <section class="fold" id="foldCurio" hidden>
+      <button class="fold-head" onclick="pfFold(this)"><span><span class="fold-title">Curiosidades y &eacute;poca</span><span class="fold-sum" id="sumCurio"></span></span><svg class="fold-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+      <div class="fold-body"><div class="fold-inner"><div class="fold-pad">
         <div class="curio-card" id="curioCard" style="display:none">
           <div>
             <div class="curio-label">&iquest;Sab&iacute;as que...?</div>
@@ -2190,7 +2195,7 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
 
   <!-- VENDER -->
   <div class="tab-panel" id="tab-vender">
-    <section class="fold open">
+    <section class="fold">
       <button class="fold-head" onclick="pfFold(this)"><span><span class="fold-title">Precio de venta</span><span class="fold-sum" id="sumVenta"></span></span><svg class="fold-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="fold-body"><div class="fold-inner"><div class="fold-pad">
         <div class="pf-rows">
@@ -5280,8 +5285,16 @@ function pfFold(btn){
 function pfResetFolds(root){
   (root||document).querySelectorAll('.tab-panel').forEach(function(panel){
     var folds=panel.querySelectorAll('.fold');
-    folds.forEach(function(f,i){f.classList.toggle('open',i===0);var h=f.querySelector('.fold-head');if(h)h.setAttribute('aria-expanded',i===0?'true':'false');});
+    folds.forEach(function(f){f.classList.remove('open');var h=f.querySelector('.fold-head');if(h)h.setAttribute('aria-expanded','false');});
   });
+}
+// Apartado "Curiosidades": solo se muestra cuando hay contenido (o se esta preparando)
+function pfSyncCurio(pending){
+  var f=document.getElementById('foldCurio'),s=document.getElementById('sumCurio');if(!f)return;
+  var cc=document.getElementById('curioCard'),es=document.getElementById('epocaSec');
+  var has=!!((cc&&cc.style.display!=='none')||(es&&es.style.display!=='none'));
+  f.hidden=!has&&!pending;
+  if(s)s.textContent=pending?'Preparando el dato curioso...':'Un dato curioso y el contexto de la \u00e9poca';
 }
 
 // ---- Inicio: descripcion y enlace, escondidos hasta que se piden ----
@@ -5507,6 +5520,7 @@ function renderResult(r){
   if(r.dato_curioso&&curioText){curioText.textContent=r.dato_curioso;if(curioCard)curioCard.style.display='flex';}else if(curioCard){curioCard.style.display='none';}
   var epocaSec=document.getElementById('epocaSec'),epocaText=document.getElementById('r-epoca');
   if(r.contexto_epoca&&epocaText){epocaText.textContent=r.contexto_epoca;if(epocaSec)epocaSec.style.display='block';}else if(epocaSec){epocaSec.style.display='none';}
+  pfSyncCurio(false);
   var dots=document.getElementById('r-diff-dots');var diff=Math.min(5,Math.max(1,r.dificultad||2));
   if(dots){var dh='';for(var i=1;i<=5;i++)dh+='<div class="diff-dot'+(i<=diff?' on':'')+'"></div>';dots.innerHTML=dh;}
   var td=document.getElementById('r-tech-details');if(td)td.textContent=r.detalles_tecnicos||'--';
@@ -5605,7 +5619,7 @@ function pfUserRefsText(){
 // perfil con cifras, logros y ajustes, compartir como imagen, vista
 // vitrina y ayuda. Todo lo local vive en localStorage.
 // =====================================================================
-var PF_APP_VERSION='5.3',PF_NEWS_VER='v5.3';
+var PF_APP_VERSION='5.4',PF_NEWS_VER='v5.3';
 function pfLS(k,def){try{var v=localStorage.getItem(k);return v==null?def:JSON.parse(v);}catch(e){return def;}}
 function pfLSset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
@@ -6147,16 +6161,15 @@ function pfScanDialSvg(){
     +'<circle cx="60" cy="60" r="24" fill="#F6F0E2"/><circle cx="60" cy="60" r="7" fill="#D4862A"/></svg>';
 }
 function pfLoadSteps(qm){
-  var n=(typeof PF_KB_MODELS!=='undefined'&&PF_KB_MODELS.length)||70;
-  return qm?['Mirando el tel\u00e9fono','Compar\u00e1ndolo con '+n+' modelos','Calculando el precio']
-           :['Mirando la forma y el material','Buscando marcas y placas','Compar\u00e1ndolo con '+n+' modelos del cat\u00e1logo','Calculando el precio justo'];
+  return qm?['Examinando el tel\u00e9fono','Contrastando con la enciclopedia','Calculando el valor de mercado']
+           :['Analizando forma, material y acabado','Localizando marcas y placas de identificaci\u00f3n','Contrastando con la enciclopedia','Calculando el valor de mercado'];
 }
 var PF_STEP_AT=[0,3,7,12];
 function pfLoadStart(qm){
   _pfLoadQm=!!qm;_pfCancelled=false;
   var w=document.getElementById('loadingWrap');if(w)w.classList.add('pf-scanning');
   document.body.classList.add('pf-scan-open');
-  var t=document.getElementById('loadingTitle');if(t)t.textContent=qm?'Calculando el precio':'Mirando tu tel\u00e9fono';
+  var t=document.getElementById('loadingTitle');if(t)t.textContent=qm?'Calculando el valor':'Examinando tu tel\u00e9fono';
   var ph=document.getElementById('pfScanPhotos'),stage=document.getElementById('pfScanStage');
   if(ph){
     var imgs=(currentImages||[]).slice(0,3);
@@ -6188,14 +6201,14 @@ function pfLoadTick(sec){
   });
   var sub=document.getElementById('loadingSub');
   if(sub&&!sub.getAttribute('data-hold')){
-    if(sec>=34)sub.textContent='Ya casi est\u00e1.';
-    else if(sec>=20)sub.textContent='Las piezas con muchos detalles tardan un poco m\u00e1s.';
+    if(sec>=34)sub.textContent='Redactando el informe final.';
+    else if(sec>=20)sub.textContent='Las piezas con muchos detalles requieren un an\u00e1lisis m\u00e1s minucioso.';
     else sub.textContent='';
   }
 }
 function pfLoadRetrying(){
   var sub=document.getElementById('loadingSub');
-  if(sub){sub.textContent='Est\u00e1 tardando: lo intento con una versi\u00f3n m\u00e1s ligera.';sub.setAttribute('data-hold','1');}
+  if(sub){sub.textContent='El an\u00e1lisis est\u00e1 tardando; reintento con una versi\u00f3n m\u00e1s ligera.';sub.setAttribute('data-hold','1');}
   pfLoadBar(40,0);setTimeout(function(){pfLoadBar(90,18);},30);
 }
 function pfLoadDone(){
@@ -6233,9 +6246,13 @@ function pfEnrichPending(on){
   var td=document.getElementById('r-tech-details');
   if(td){if(on){td.innerHTML='<span class="pf-skel"></span><span class="pf-skel pf-skel-s"></span>';}}
   var src=document.getElementById('r-sources');if(src&&on)src.textContent='';
-  var box=document.getElementById('pfEnrichNote');
-  if(!box){var desc=document.getElementById('r-desc');if(desc&&desc.parentNode){box=document.createElement('p');box.id='pfEnrichNote';box.className='pf-enrich-note';desc.parentNode.insertBefore(box,desc.nextSibling);}}
-  if(box){box.textContent=on?'Preparando la historia, la ficha t\u00e9cnica y la gu\u00eda de limpieza...':'';box.hidden=!on;}
+  // Los apartados van plegados: el aviso de "preparando" va en su resumen
+  var st=document.getElementById('sumTecnico');
+  if(st){
+    if(on){st.setAttribute('data-keep',st.textContent);st.textContent='Preparando la ficha t\u00e9cnica...';}
+    else if(st.hasAttribute('data-keep')){st.textContent=st.getAttribute('data-keep');st.removeAttribute('data-keep');}
+  }
+  pfSyncCurio(on);
 }
 async function pfEnrichStart(r){
   if(!r)return;
@@ -6273,6 +6290,7 @@ function pfEnrichApply(r,x){
   if(r.dato_curioso&&ct){ct.textContent=r.dato_curioso;if(cc){cc.style.display='flex';cc.classList.add('pf-arrive');}}
   var es=document.getElementById('epocaSec'),et=document.getElementById('r-epoca');
   if(r.contexto_epoca&&et){et.textContent=r.contexto_epoca;if(es){es.style.display='block';es.classList.add('pf-arrive');}}
+  pfSyncCurio(false);
   var src=document.getElementById('r-sources');if(src)src.textContent=r.fuentes_usadas?'Fuentes: '+r.fuentes_usadas:'';
   if(r.zonas_limpieza&&r.zonas_limpieza.length){
     CLN_ZONES=r.zonas_limpieza.map(function(z){return{id:z.id||'z',label:z.label||'Zona',emoji:(z.emoji&&z.emoji.length<=4)?z.emoji:'*',material:z.material||z.material_zona||'',product:z.product||z.producto||'Pa\u00f1o de microfibra',avoid:z.avoid||z.evitar||'Agua directa',steps:z.steps||z.pasos||[]};});
