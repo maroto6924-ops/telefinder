@@ -1811,6 +1811,55 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
 
 /* Listas */
 .pf-stag{animation:pfRise .45s var(--e-out) both;}
+
+/* ---------- v5.2: ENCICLOPEDIA ---------- */
+.pfe{padding:14px 16px 40px;}
+.pfe-back{margin:0 0 4px -4px;}
+.pfe-h{font-family:'Instrument Serif',serif;font-weight:400;font-size:38px;line-height:1.02;letter-spacing:-.4px;margin:6px 0 8px;color:var(--ink);max-width:12ch;}
+.pfe-sub{font-size:14px;line-height:1.5;color:var(--fog3);margin:0 0 16px;max-width:42ch;}
+.pfe-search{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--mist3);border-radius:16px;padding:0 14px;height:50px;transition:border-color .2s;}
+.pfe-search:focus-within{border-color:var(--amber);}
+.pfe-search svg{width:20px;height:20px;color:var(--fog3);flex-shrink:0;}
+.pfe-search input{flex:1;min-width:0;border:none;background:none;outline:none;font-family:'Inter',sans-serif;font-size:16px;color:var(--ink);-webkit-appearance:none;}
+.pfe-chips{display:flex;gap:8px;overflow-x:auto;margin:12px -16px 0;padding:0 16px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.pfe-chips::-webkit-scrollbar{display:none;}
+.pfe-chip{flex-shrink:0;border:1px solid var(--mist3);background:var(--surface);color:#3D3A36;border-radius:999px;padding:8px 14px;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .2s,color .2s,border-color .2s,transform .15s;}
+.pfe-chip:active{transform:scale(.95);}
+.pfe-chip.on{background:var(--bak);border-color:var(--bak);color:#fff;}
+.pfe-chips-s{margin-top:8px;}
+.pfe-chips-s .pfe-chip{padding:6px 12px;font-size:13px;}
+.pfe-count{font-size:12.5px;color:var(--fog3);margin:16px 2px 8px;}
+.pfe-list{display:flex;flex-direction:column;gap:8px;}
+.pfe-item{background:var(--surface);border:1px solid var(--mist3);border-radius:16px;overflow:hidden;}
+.pfe-row{display:flex;align-items:center;gap:12px;width:100%;background:none;border:none;padding:13px 14px;text-align:left;cursor:pointer;font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;}
+.pfe-row:active{background:var(--mist);}
+.pfe-holes{display:grid;grid-template-columns:repeat(2,9px);gap:3px;flex-shrink:0;}
+.pfe-holes i{width:9px;height:9px;border-radius:50%;background:var(--mist2);box-shadow:inset 0 0 0 1.5px #D9D1C2;}
+.pfe-holes.l1 i:nth-child(-n+1),.pfe-holes.l2 i:nth-child(-n+2),.pfe-holes.l3 i:nth-child(-n+3),.pfe-holes.l4 i{background:var(--amber);box-shadow:none;}
+.pfe-tx{flex:1;min-width:0;}
+.pfe-n{display:block;font-size:15px;font-weight:600;color:var(--ink);line-height:1.3;}
+.pfe-m{display:block;font-size:12.5px;color:var(--fog3);margin-top:2px;line-height:1.35;}
+.pfe-p{flex-shrink:0;font-family:'Instrument Serif',serif;font-size:19px;color:var(--ink);white-space:nowrap;}
+.pfe-row[aria-expanded="true"] .pfe-n{color:var(--amber2);}
+.pfe-detail{padding:0 14px 14px 47px;font-size:14px;line-height:1.5;color:#3D3A36;}
+.pfe-detail[hidden]{display:none;}
+.pfe-detail p{margin:0 0 6px;}
+.pfe-meta{font-size:12.5px;color:var(--fog3);}
+.pfe-warn{display:inline-block;background:#FDECEA;color:var(--ruby);border-radius:8px;padding:3px 8px;font-size:12px;font-weight:600;}
+.pfe-more{width:100%;margin:14px 0 0;background:var(--surface);border:1px solid var(--mist3);border-radius:14px;padding:13px;font-family:'Inter',sans-serif;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;}
+.pfe-more[hidden]{display:none;}
+.pfe-foot{font-size:12.5px;line-height:1.45;color:var(--fog3);margin:18px 2px 0;}
+.pfe-empty{padding:28px 6px;text-align:center;color:var(--fog3);font-size:14px;line-height:1.5;}
+.pf-tool-enc{grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;background:var(--bak);border-color:var(--bak);}
+.pf-tool-enc .pf-tool-t{color:#fff;}
+.pf-tool-enc .pf-tool-s{color:rgba(255,255,255,.62);}
+.pf-tool-ico{width:46px;height:46px;flex-shrink:0;}
+.pf-tool-ico svg{width:100%;height:100%;display:block;}
+.pf-tool-tx{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.pfe-fromresult{display:block;margin-top:10px;}
+#hmResultSlot .pfe-fromresult{display:none;}
+.pfe-chip[data-k="eri"]{border-color:var(--amber);color:var(--amber2);font-weight:600;}
+.pfe-chip[data-k="eri"].on{background:var(--amber);border-color:var(--amber);color:#fff;}
 </style>
 </head>
 <body class="pf-noauth">
@@ -1922,6 +1971,7 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
   </div>
 
   <div class="pf-tools">
+    <button class="pf-tool pf-tool-enc" onclick="pfEncOpen()"><span class="pf-tool-ico" id="pfToolEncIco" aria-hidden="true"></span><span class="pf-tool-tx"><span class="pf-tool-t">Enciclopedia de tel&eacute;fonos</span><span class="pf-tool-s" id="pfToolEncSub">Modelos de todo el mundo, con &eacute;poca, rareza y precio</span></span></button>
     <button class="pf-tool" onclick="openLotMode()"><span class="pf-tool-t">Tasar un lote</span><span class="pf-tool-s">Varias fotos a la vez, con total y oferta recomendada</span></button>
     <div id="homeSnapshot" style="display:none"><button class="pf-tool" onclick="showPage('collection')"><span class="pf-tool-t">Mi colecci&oacute;n</span><span class="pf-tool-s"><b id="snapNum">0</b> tel&eacute;fonos, valor <b id="snapValue">0 &euro;</b></span></button></div>
   </div>
@@ -2115,6 +2165,7 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
       <div class="fold-body"><div class="fold-inner"><div class="fold-pad">
         <div class="conf-row"><span class="conf-label">Confianza de la identificaci&oacute;n</span><span class="conf-badge" id="r-conf">--</span></div>
         <div class="sources-text" id="r-sources"></div>
+      <button class="pf-linkbtn pfe-fromresult" onclick="pfEncFromResult()">Ver modelos parecidos en la enciclopedia</button>
         <button class="pf-linkbtn" onclick="openFeedback()">Este an&aacute;lisis no es correcto</button>
       </div></div></div>
     </section>
@@ -2310,6 +2361,24 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
   <div id="colContent"></div>
 </div>
 
+<!-- ENCICLOPEDIA -->
+<div class="page" id="page-enc">
+ <div class="pfe">
+  <button class="pfr-back pfe-back" onclick="pfEncBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver</button>
+  <header class="pfe-head">
+    <h1 class="pfe-h">Enciclopedia de tel&eacute;fonos</h1>
+    <p class="pfe-sub" id="pfeSub"></p>
+  </header>
+  <label class="pfe-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg><input id="pfeQ" type="search" placeholder="Modelo, fabricante, pa&iacute;s o &eacute;poca" autocomplete="off" oninput="pfEncRender(true)"></label>
+  <div class="pfe-chips" id="pfeRegions" role="group" aria-label="Pa&iacute;s o tipo"></div>
+  <div class="pfe-chips pfe-chips-s" id="pfeRarity" role="group" aria-label="Rareza"></div>
+  <p class="pfe-count" id="pfeCount" aria-live="polite"></p>
+  <div class="pfe-list" id="pfeList"></div>
+  <button class="pfe-more" id="pfeMore" onclick="pfEncMore()" hidden>Ver m&aacute;s</button>
+  <p class="pfe-foot">Precios orientativos de venta en Espa&ntilde;a en buen estado. La rareza se marca en los agujeros del disco, como en las tasaciones.</p>
+ </div>
+</div>
+
 <!-- PERFIL -->
 <div class="page" id="page-profile">
  <div class="pfp">
@@ -2357,6 +2426,7 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
 
   <h2 class="pfp-h">Ayuda</h2>
   <div class="pfp-list">
+    <button class="pfp-row" onclick="pfEncOpen()"><span class="pfp-row-t">Enciclopedia de tel&eacute;fonos</span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     <button class="pfp-row" onclick="pfOpenSheet('pfInstall')"><span class="pfp-row-t">Instalar en el iPhone</span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     <button class="pfp-row" onclick="pfOpenSheet('pfHelp')"><span class="pfp-row-t">Preguntas frecuentes</span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
     <button class="pfp-row" onclick="pfOpenSheet('pfLegal')"><span class="pfp-row-t">Condiciones y privacidad</span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -2474,6 +2544,9 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
     <div class="modal-header"><div class="modal-title">Novedades</div><button class="modal-close" onclick="pfCloseSheet('pfNews')" aria-label="Cerrar">x</button></div>
     <div class="modal-body">
       <ul class="pf-news">
+        <li><b>Especialistas en Ericsson.</b> C&oacute;digos de cat&aacute;logo, c&oacute;mo fechar cada modelo, colores raros y c&oacute;mo distinguir originales, reacondicionados y r&eacute;plicas. En la enciclopedia tienes un filtro solo para Ericsson.</li>
+        <li><b>Enciclopedia de tel&eacute;fonos.</b> M&aacute;s de 230 fichas de todo el mundo, con buscador y filtros por pa&iacute;s y rareza. La IA tambi&eacute;n la usa al tasar.</li>
+        <li><b>Avisos de r&eacute;plica.</b> La app reconoce las reproducciones modernas m&aacute;s frecuentes del rastro.</li>
         <li><b>An&aacute;lisis m&aacute;s r&aacute;pido.</b> Primero ves qu&eacute; es y cu&aacute;nto pagar; la historia y la limpieza llegan solas unos segundos despu&eacute;s. Si tarda, se reintenta solo.</li>
         <li><b>Para afinar.</b> Si la confianza no es alta, te dice qu&eacute; foto concreta har&iacute;a falta.</li>
         <li class="pf-needs-auth"><b>Cuentas.</b> Reg&iacute;strate con tu correo y tu colecci&oacute;n queda guardada en tu cuenta, solo para ti.</li>
@@ -2868,7 +2941,7 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
    1001, Model 302) y anuncios reales en Wallapop y Todocoleccion.
    ============================================================ */
 var PF_EUR='\u20ac',PF_DASH='\u2013';
-var PF_KB_VERSION='2026-10b';
+var PF_KB_VERSION='2026-10d';
 
 var PF_KB_GUIDE=[
 '## A. METODO DE IDENTIFICACION Y CONFIANZA',
@@ -2909,7 +2982,21 @@ var PF_KB_GUIDE=[
 'En una coleccion grande el valor suele concentrarse en pocas piezas: magnetos y madera, candeleros, publicos de fichas o monedas, Ericofon, DBH 1001 de epoca, modelos de diseno (Grillo, Trimline, Ericofon), colores raros y piezas completas sin restaurar mal. El resto (Heraldo, Gondola, Teide, S63, teclados de los 80) es volumen de poco valor unitario: no inflar su valor. Un lote sube de valor cuando la proporcion de piezas buenas es alta y baja si hay muchos duplicados.',
 '## G. FUENTES REALES (cita en fuentes_usadas solo las que uses; nunca inventes titulos, paginas o ISBN)',
 'Museo de Telecomunicaciones de la UPM (blogs.upm.es/museotelecomunicaciones); museo ASELEC; Espacio Fundacion Telefonica; historiatelefonia.com; catalogos comerciales CTNE de 1967, 1968 y 1971; britishtelephones.com; antiquegpophones.co.uk; stevemorse.org (identificacion de Western Electric); Ericsson History (ericsson.com); Orange Histoire (telefono S63); Wikipedia (W48, DBH 1001, Model 302, Fernsprechtischapparat); dutchtelephones.com (telefonos PTT de Paises Bajos); Lombardia Beni Culturali (S62 Bigrigio); telephonearchive.com; anuncios de Wallapop y Todocoleccion.',
-'Libros de referencia reales: Kate E. Dooner, Telephones: Antique to Modern, A Collectors Guide (Schiffer); Kate E. Dooner, Telephone Collecting: Seven Decades of Design with Price Guide (Schiffer); Ralph O. Meyer, Old-Time Telephones! Design, History, and Restoration (Schiffer). Asociaciones: Antique Telephone Collectors Association (ATCA), Telephone Collectors International (TCI), Telecommunications Heritage Group (Reino Unido).'
+'Libros de referencia reales: Kate E. Dooner, Telephones: Antique to Modern, A Collectors Guide (Schiffer); Kate E. Dooner, Telephone Collecting: Seven Decades of Design with Price Guide (Schiffer); Ralph O. Meyer, Old-Time Telephones! Design, History, and Restoration (Schiffer). Asociaciones: Antique Telephone Collectors Association (ATCA), Telephone Collectors International (TCI), Telecommunications Heritage Group (Reino Unido).',
+"ENCICLOPEDIA 2026-10c: el catalogo se ha ampliado con fabricantes de toda Europa, America, Asia y Oceania, telefonos publicos, militares e industriales, telefonos novedad, primeros moviles, accesorios y replicas modernas. Las fichas marcadas como replica describen reproducciones: si la foto encaja con ellas, dilo claramente y tasa como replica.",
+"REPLICAS MODERNAS: senales tipicas son peso ligero, laton brillante sin patina, tornilleria de estrella moderna, conector RJ11 o cable de PVC de fabrica, disco que no vuelve con muelle o teclado escondido bajo la tapa, logotipos pegados (Western Electric, Ericsson, GPO) y ausencia de sellos de operadora o fechas. El esqueleto de Ericsson, el candelero americano y el magneto de pared de madera son los mas copiados. El W48 se sigue fabricando con los moldes originales: baquelita sin desgaste y tornilleria nueva delatan la reproduccion. El GPO 746 tiene reedicion moderna con electronica actual.",
+"DINAMARCA: KTAS (Copenhague) uso aparatos de Bell, Ericsson y Telefon Fabrik Automatic. El Ericsson AC300 (1904) lleva un boton rojo de corte del timbre que solo se uso en Dinamarca. El D08 (1908) tiene un pequeno contador de llamadas en la tapa. El M49 (1949) fue el primer baquelita de KTAS, de diseno Ericsson; le siguen M51 (Kristian Kirk) y M52 (Telefon Fabrik Automatic). El F68 (1968) es de plastico, con version de teclas desde 1972. El DK80 de teclas lo diseno Jacob Jensen.",
+"ESTE DE EUROPA: RWT de Radom (Polonia) fabrico millones de aparatos; el Aster-70 y Aster-72 (desde 1973) usan disco frances TN-74 bajo licencia y salen en gris, marfil, naranja y rojo. VEF de Riga fabrico gran parte de los telefonos sovieticos. Tesla en Checoslovaquia, Telefongyar en Hungria e Iskra en Yugoslavia. En la RDA el W38 se siguio fabricando tras la guerra y despues llegaron los RFT. Son comunes y baratos salvo colores o versiones oficiales; los aparatos sovieticos con escudo tienen muchas imitaciones.",
+"AUSTRALIA Y JAPON: la serie 800 australiana (801 desde 1963, 802 desde c.1970, fabricada por AWA y STC) salio en marfil claro, gris niebla, verde helecho, amarillo topacio y rojo laca, con negro desde 1964; el gris se repinto a menudo. En Japon el tipo 4 negro (kuro-denwa) de 1950 dio paso al tipo 600 en 1963; los telefonos publicos rojos y rosas de comercios son buscados.",
+"MOVILES ANTIGUOS: el valor sube mucho si funciona, conserva bateria original, tapa y cargador, y si esta en caja; precintado puede multiplicar el precio. El Motorola DynaTAC 8000X (1983) y el primer iPhone (2007) son los mas cotizados.",
+"ACCESORIOS DEL RASTRO: fichas CTNE, guias telefonicas antiguas, placas esmaltadas, cajas de timbre, discos y microtelefonos sueltos, aisladores y carteles se venden por separado. Un microtelefono o disco de otro modelo resta valor al aparato completo.",
+"ERICSSON A FONDO (especialidad de PHONEFINDER). Si el telefono parece Ericsson, identificalo con el codigo de catalogo en el nombre (por ejemplo AC110, AC300, DBH 1001, DBH 15, DBJ 500) y usa esta seccion para fechar y comprobar originalidad; pon en que_revisar los rasgos concretos que lo confirman.",
+"ERICSSON HISTORIA: L.M. Ericsson (Estocolmo, 1876). Lars Magnus Ericsson diseno el esqueleto de 1892, cuyo dibujo fue el logotipo de la empresa durante anos. Ericsson compro Elektrisk Bureau (Oslo) en 1928; alli Johan Christian Bjerknes y el artista Jean Heiberg disenaron el DBH 1001 de baquelita (1931), fabricado en Suecia por AB Alpha (Sundbyberg). Fue estandar sueco en 1933 (m33), estandar del GPO britanico en 1936 y referencia para el Bell 300 de 1937. En 1947 se rediseno (DBH 15, M50 sueco). Le sustituye el Dialog en 1962. El Ericofon (Cobra) se fabrica desde 1954 (solo instituciones) y en mercado abierto desde 1956, sobre todo en Karlskrona; el Ericofon 700 de teclas es de 1976, centenario de la empresa.",
+"ERICSSON CODIGOS: en los catalogos suecos AC indica telefono de sobremesa y AB de pared; los numeros antiguos (370, 375, 380, 381, 383, 384, 385) son anteriores a esa nomenclatura. DBH es la familia de baquelita de sobremesa (DBH 1001 negro, DBH 1002 caoba, DBH 1003 blanco de melamina, DBH 1051 con clavija) y CG 502 / CG 504 son los de chapa de acero a los que sustituyen. DBJ 500-503 es el Ericofon. Los aparatos de Ericsson Telephones Ltd (Beeston, Reino Unido) llevan prefijo N: N1020 es el DBH 1001 britanico, N2000 equivale al AC130/AC140 y N2115 al Tele 90 del GPO. En Suecia el DBH 1001 se llamo M33 y tambien ED 702. El numero del esquema electrico de dentro no coincide con el codigo del modelo.",
+"ERICSSON COMO FECHAR: los esqueletos suecos llevan numero de serie estampado en el lateral de la cubierta de ebonita; los britanicos no tienen numero de serie. El esqueleto se fabrico desde 1892, con la mayor produccion entre 1908 y 1914. El DBH 1001 de 1931-1932 es algo mayor; desde 1933 el formato es mas pequeno. Disco con rotor metalico y cordon textil recto indican antes de 1947; disco de plastico, aristas mas redondeadas y cordon en espiral indican el DBH 15 de 1947 en adelante. Medidas del DBH 1001: 139 x 233 x 178 mm y unos 2,3 kg. El Dialog salio en blanco, gris y negro (el gris fue el mas vendido).",
+"ERICSSON COLORES: la baquelita no permitia colores vivos. El DBH 1001 es negro; existen caoba (DBH 1002), marron, rojo y verde apagados, y blanco de melamina (DBH 1003), todos escasos. Un DBH transparente solo se mostro en la Feria de Nueva York de 1939. El esqueleto es negro con niquel y patas con calcomanias doradas; acabados marfil, dorados o cordones de color fueron pedidos especiales y son raros. El Ericofon salio en 18 colores, nunca en negro; rojo y blanco son los mas comunes, y los transparentes o metalizados promocionales son rarisimos.",
+"ERICSSON ORIGINAL O NO: muchas empresas copiaron disenos de Ericsson o usaron piezas Ericsson sin marca, y muchos se atribuyen mal a Ericsson; los modelos del PMG australiano y del GPO britanico con piezas Ericsson no son Ericsson. Una horquilla distinta suele indicar piezas de otra marca aunque base y magneto sean Ericsson. Los esqueletos se reacondicionaron a finales de los 50 en azul oscuro y blanco, a menudo con disco anadido, y los AC300 se repintaron en los 60 con calcomanias de angelotes y discos que no son originales. Hay reproducciones del esqueleto: la reedicion oficial del centenario y muchas copias asiaticas con patas de aluminio y boton en lugar de disco. Tambien se reproducen el brazo del AC100 y el AC210. El Scandiphone de Wild and Wolf imita al Ericofon con teclado circular.",
+"ERICSSON EN ESPANA: la Compania Madrilena de Telefonos instalo aparatos Ericsson a sus abonados desde 1898. La Compania Espanola de Telefonos Ericsson se fundo en Madrid el 5 de diciembre de 1922 y compro la red de Valencia, que vendio a la CTNE en diciembre de 1924. Ericsson automatizo la red de San Sebastian (central AGF, 1926). Desde 1924 la CTNE se suministro sobre todo de Standard Electrica (ITT), asi que un aparato de abonado Ericsson hallado en Espana suele ser anterior a 1925, de San Sebastian, de una instalacion privada o importado despues. En 1970 la filial paso a llamarse Intelsa, con fabrica en Leganes desde 1972."
 ];
 
 /* Catalogo de modelos.
@@ -2995,7 +3082,194 @@ var PF_KB_MODELS=[
 ['EE-8 y telefonos de campana militares','EEUU, Alemania, URSS, otros','1930s-1960s','Portatiles de baquelita y metal con manivela y pilas; visto desde 40 hasta 160 EUR','PC','40-160'],
 ['Centralitas e intercomunicadores','varios','1900-1970','Centralitas de 6 lineas o intercomunicadores de madera; seleccionar por marca','PC','50-200'],
 ['Telefonos novedad (formas de objetos o personajes)','varios','1980s-1990s','Plasticos con forma de objeto; mercado propio, salvo licencias raras','C','10-40'],
-['Telefonos de teclado y plastico','varios','1970s-1990s','Aparatos de uso general sin rasgos especiales','C','5-25']
+['Telefonos de teclado y plastico','varios','1970s-1990s','Aparatos de uso general sin rasgos especiales','C','5-25'],
+["Telefono de la Compania Peninsular de Telefonos", "Compania Peninsular, Espana", "1900s-1924", "Aparatos de magneto de pared y sobremesa anteriores a la CTNE; placa o chapa de la compania; madera y metal", "R", "150-400"],
+["Candelero CTNE", "Standard Electrica, Espana", "1925-1930s", "Telefono de columna con auricular colgado en horquilla y caja de timbre aparte; con o sin disco", "R", "200-450"],
+["Telefono de pared CTNE metalico con disco", "Standard Electrica, Espana", "1930s", "Caja metalica negra con disco en el frente y microtelefono en horquilla lateral", "PC", "80-200"],
+["Supletorio CTNE sin disco", "Standard Electrica, Espana", "1940s-1960s", "Igual que el 5523 pero con tapa ciega en lugar de disco; para extensiones o centralita", "C", "25-60"],
+["Telefono de secretaria o con botonera (Standard Electrica)", "Standard Electrica, Espana", "1950s-60s", "Sobremesa de baquelita con teclas de linea o de llamada a centralita en la base", "PC", "60-150"],
+["Telefono de pared de baquelita con caja de timbre separada", "Standard Electrica, Espana", "1940s-50s", "Aparato de pared y campanas en caja aparte; suele faltar la caja de timbre", "C", "40-100"],
+["Gondola de teclado", "CITESA, Espana", "1980s", "Version de teclas del Gondola; colores beige, gris, rojo, verde", "C", "15-40"],
+["Heraldo de colores poco vistos", "CITESA, Espana", "1960s-80s", "Heraldo en azul, verde o amarillo; el rojo y el beige son los mas comunes de color", "PC", "40-120"],
+["Modelos de alquiler de Telefonica de los 90", "Alcatel, Telyco y otros, Espana", "1990s", "Teclado, memoria y manos libres; los vendia o alquilaba Telefonica junto a Teide y Benjamin", "C", "5-20"],
+["Telefono militar espanol de campana", "Ejercito espanol, Espana", "1940s-1980s", "Caja de madera, chapa o baquelita con manivela de magneto y bolsa de lona; a veces copia de modelos aliados", "PC", "60-150"],
+["Telefono industrial o antideflagrante espanol", "varios, Espana", "1950s-80s", "Carcasa de fundicion pesada y estanca para minas, barcos o fabricas; microtelefono grueso", "PC", "60-180"],
+["Telefono de despacho con intercomunicador (anos 60-70)", "varios, Espana", "1960s-70s", "Sobremesa con altavoz o teclas de interfono para oficinas", "C", "20-60"],
+["Mix und Genest de sobremesa de principios de siglo", "Mix und Genest, Alemania", "1900-1925", "Sobremesa metalico de magneto (OB) o bateria central (ZB), horquilla alta y microtelefono de metal", "R", "150-400"],
+["Fernsprechtischapparat ZB/SA 19 y SA 25 (Reichspost)", "Siemens, Mix und Genest y otros, Alemania", "1919-1928", "Sobremesa metalico de la Reichspost con disco, anterior al W28", "PC", "120-300"],
+["Siemens W28 de pared", "Siemens und Halske, Alemania", "1928-1940s", "Version mural del W28 de baquelita negra", "PC", "100-250"],
+["W38 de la RDA", "Fernmeldewerk Nordhausen y otros (RFT), RDA", "1949-1958", "El W38 siguio fabricandose en la Alemania oriental tras la guerra; baquelita negra con disco", "PC", "60-140"],
+["RFT W63", "RFT, RDA", "1960s-70s", "Telefono de la Deutsche Post de la RDA, plastico gris o de color; marca RFT en la base", "C", "25-60"],
+["RFT Variant", "RFT, RDA", "1970s-80s", "Telefono de plastico de la RDA en varios colores; ultima generacion de disco oriental", "C", "15-45"],
+["W48 rojo, marfil o verde", "Siemens y licenciatarios, Alemania", "1950s", "W48 de color para despachos; el negro es lo normal", "PC", "120-250"],
+["W48 de reproduccion moderna", "varios, Alemania", "desde los 90", "Se siguen fabricando en pequenas cantidades con los moldes originales; baquelita sin desgaste, tornilleria y cableado modernos, a veces conector moderno", "C", "40-90", "rep"],
+["FeTAp 615 / FeTAp 612", "Deutsche Bundespost, Alemania", "1960s-70s", "Variantes de la serie 61 para centralita o con teclas; el 612 transparente es muy raro", "PC", "30-90"],
+["Telefono 01LX y Dallas (Bundespost)", "Deutsche Bundespost, Alemania", "1980s", "Telefonos de teclas de alquiler del correo aleman", "C", "10-35"],
+["Siemens Euroset", "Siemens, Alemania", "1990s", "Telefonos de teclas de los 90", "C", "5-15"],
+["Hagenuk y DeTeWe de baquelita", "Hagenuk (Kiel), DeTeWe (Berlin), Alemania", "1930s-50s", "Fabricantes con licencia de modelos W28, W38 y W48; placa del fabricante en la base", "PC", "60-150"],
+["Telefono de mesa con caja de madera (Alemania)", "varios, Alemania", "1890s-1910s", "Base de madera con magneto y horquilla metalica; muy decorativo", "R", "200-500"],
+["GPO 332 Chinese Red", "GPO, Reino Unido", "1937-1950s", "La baquelita roja (Chinese Red) del 332 es la mas buscada; tambien marfil y verde Jade", "R", "200-450"],
+["GPO 711 de pared", "GPO, Reino Unido", "1960s-80s", "Version de pared de la serie 700", "C", "20-60"],
+["GPO 741", "GPO, Reino Unido", "1960s", "Sobremesa de la serie 700 anterior al 746", "C", "25-60"],
+["GPO 8746 (746 de teclas)", "BT, Reino Unido", "1970s-80s", "746 con teclado de pulsadores", "C", "20-50"],
+["GPO 746 reedicion moderna", "Wild and Wolf (GPO Retro) y otros, Reino Unido", "desde 2000s", "Reproduccion del 746 con electronica moderna, teclado o disco de pulsos falso; marca GPO en la base", "C", "15-45", "rep"],
+["BT Statesman y Viscount", "BT, Reino Unido", "1980s", "Telefonos de teclas de alquiler de British Telecom", "C", "10-35"],
+["Aparato de cabina britanica Button A y B", "GPO, Reino Unido", "1925-1959", "Hucha de monedas con botones A (conectar) y B (devolver) de las cabinas rojas", "R", "300-800"],
+["Ericsson Telephones Ltd (Beeston)", "Ericsson Telephones Ltd, Reino Unido", "1920s-60s", "Filial britanica de Ericsson; candeleros, sobremesas y versiones para GPO", "PC", "80-220"],
+["GPO candelero No 150 y No 2 de laton", "GPO, Reino Unido", "1920s", "Candelero con partes de laton; muchos se pulieron despues (no son originales asi)", "PC", "150-350"],
+["Telefono de pared GPO de magneto (No 121 y similares)", "GPO, Reino Unido", "1910s-1930s", "Caja de madera con manivela y campanas", "PC", "100-280"],
+["Western Electric Designline", "Western Electric / AT&T, EEUU", "1970s", "Telefonos de diseno con carcasa intercambiable sobre la mecanica del 500 o 2500", "PC", "30-90"],
+["Western Electric 500 de color (rosa, turquesa, amarillo)", "Western Electric, EEUU", "1954-1970s", "El 500 en colores pastel; el rosa y el turquesa son los mas buscados", "PC", "60-160"],
+["Telefono publico de 3 ranuras Western Electric (233G y similares)", "Western Electric, EEUU", "1940s-60s", "Telefono publico con ranuras de 5, 10 y 25 centavos", "R", "300-900"],
+["Gray Telephone Pay Station", "Gray, EEUU", "1900s-1930s", "Primeros telefonos publicos americanos de monedas", "R", "400-1200"],
+["Automatic Electric Monophone 34 y 40", "Automatic Electric, EEUU", "1934-1950s", "Baquelita con microtelefono integrado; formas redondeadas Art Deco", "PC", "80-220"],
+["Automatic Electric 80 y 90", "Automatic Electric, EEUU", "1955-1970s", "Equivalentes de AE al Western Electric 500 y 2500", "C", "40-110"],
+["Kellogg Redbar (Masterphone)", "Kellogg, EEUU", "1940s-50s", "Baquelita con barra roja en la horquilla", "PC", "70-180"],
+["Leich Electric de baquelita", "Leich Electric, EEUU", "1930s-50s", "Fabricante independiente de Genoa (Illinois); formas parecidas a AE y Kellogg", "PC", "60-150"],
+["Ericofon North Electric", "North Electric (licencia Ericsson), EEUU", "1956-1970s", "Ericofon fabricado para EEUU; muchos colores", "PC", "80-250"],
+["Northern Electric Contempra", "Northern Electric, Canada", "1967-1980s", "Diseno canadiense con disco en el microtelefono", "PC", "40-120"],
+["Northern Electric 302 y 500 canadienses", "Northern Electric, Canada", "1940s-70s", "Versiones canadienses de los modelos de Western Electric", "C", "40-110"],
+["Candelero americano de reproduccion", "fabricacion asiatica", "desde los 70", "Candelero de laton brillante, con disco o teclado escondido; marcas falsas de Western Electric", "C", "20-60", "rep"],
+["Magneto de pared de madera de reproduccion", "fabricacion moderna", "desde los 70", "Caja de madera nueva con manivela decorativa; a veces sin electronica de magneto real", "C", "30-90", "rep"],
+["Telefono Marty", "PTT, Francia", "1910-1930s", "Sobremesa metalico negro frances muy extendido; diseno de Marty", "PC", "100-250"],
+["Telephone Ader", "Ader, Francia", "1880s", "Uno de los primeros telefonos franceses, con dos receptores y pupitre de madera", "MR", "800-2500"],
+["Milde", "Charles Milde, Francia", "1900s-1920s", "Telefonos franceses de sobremesa y pared de principios de siglo", "R", "200-600"],
+["Picart Lebas y Grammont", "Picart Lebas, Grammont, Francia", "1910s-1940s", "Fabricantes franceses de sobremesas metalicos y de baquelita", "PC", "100-250"],
+["Minitel", "France Telecom, Francia", "1980s-2012", "Terminal de pantalla y teclado de la red Teletel", "C", "20-60"],
+["PTT U43 de color", "PTT, Francia", "1943-1960s", "U43 en rojo, marfil o verde; el negro es lo normal", "PC", "100-220"],
+["FATME de baquelita", "FATME (Ericsson Italia), Italia", "1930s-50s", "Baquelita de diseno Ericsson fabricada en Roma", "PC", "80-200"],
+["Telefono de baquelita italiano de los 30-40", "varios para STIPEL, TELVE, TIMO, TETI, SET, Italia", "1930s-40s", "Telefonos de las operadoras regionales italianas anteriores a la SIP", "PC", "80-220"],
+["Telefono publico de gettoni SIP", "SIP, Italia", "1960s-80s", "Telefono publico de fichas (gettoni) y despues fichas y monedas", "PC", "150-400"],
+["Siemens S62 de color", "SIT Siemens, Italia", "1960s-80s", "Bigrigio en rojo, verde, marfil o naranja para centralitas", "PC", "40-110"],
+["Ericsson tipo 1951 (Paises Bajos)", "Ericsson, Paises Bajos", "1951-1960s", "Baquelita para la PTT neerlandesa, coetaneo del Heemaf 1955", "C", "40-110"],
+["Standard Electric tipo 1954 (Paises Bajos)", "Standard Electric, Paises Bajos", "1954-1960s", "Baquelita para la PTT neerlandesa", "C", "40-110"],
+["RTT 56 y RTT 72 (Belgica)", "BTMC, ATEA y otros, Belgica", "1956 y 1972", "Telefonos estandar de la RTT belga", "C", "20-60"],
+["Telefono suizo de sobremesa (Hasler, Autophon, Gfeller)", "Hasler, Autophon, Gfeller, Suiza", "1950s-70s", "Telefonos de las PTT suizas, de muy buena calidad", "C", "40-120"],
+["Telefono suizo de magneto de pared", "Hasler y otros, Suiza", "1900s-1930s", "Caja de madera con manivela", "PC", "100-300"],
+["Tritel (PTT Suiza)", "PTT, Suiza", "1980s", "Telefono de teclas suizo", "C", "10-30"],
+["Telefono austriaco de baquelita (Kapsch, Schrack, Czeija Nissl)", "Kapsch, Schrack, Czeija Nissl, Austria", "1930s-60s", "Modelos de la administracion austriaca, a menudo cercanos a los alemanes", "PC", "50-150"],
+["Ericsson esqueleto de reproduccion", "fabricacion asiatica o india", "desde los 70", "Copia del esqueleto con chapa dorada, logo pegado y piezas ligeras; muy frecuente en rastros", "C", "30-90", "rep"],
+["Ericsson AC400 (version danesa)", "L.M. Ericsson para KTAS, Dinamarca", "1914", "Placa de aluminio KTAS, horquilla simple y microtelefono corto; tambien de Fyns Kommunal, Lolland-Falsters y JYDSK", "R", "150-400"],
+["KTAS D08", "Telefon Fabrik Automatic, Dinamarca", "1908", "Sobremesa con pequeno contador de llamadas en la tapa; negro y despues marfil", "R", "150-400"],
+["KTAS D30 de cobre o laton", "Telefon Fabrik Automatic, Dinamarca", "1930s", "Sobremesa metalico danes de cobre o laton", "PC", "120-300"],
+["KTAS M49", "Ericsson para KTAS, Dinamarca", "1949", "Primer telefono de baquelita de KTAS, diseno Ericsson", "PC", "60-150"],
+["M51 y M52 daneses", "Kristian Kirk y Telefon Fabrik Automatic, Dinamarca", "1951-1952", "Baquelitas danesas; el M52 solo para automatico", "PC", "50-130"],
+["F68 (Dinamarca)", "Ericsson, Kristian Kirk y Telefon Fabrik Automatic, Dinamarca", "1968", "Plastico de sobremesa; version de teclas desde 1972", "C", "20-60"],
+["DK80 / Digitel (Jacob Jensen)", "Kirk, Dinamarca", "1980s", "Telefono de teclas plano disenado por Jacob Jensen; vendido en Australia como Digitel", "PC", "40-120"],
+["Jydsk Telefon de sobremesa alto", "Jydsk Telefon, Dinamarca", "1900s-1920s", "Sobremesas altos de la compania de Jutlandia, conocidos entre coleccionistas", "R", "200-500"],
+["Televerket Diavox", "Televerket, Suecia", "1970s-80s", "Telefono sueco de plastico de los 70", "C", "15-45"],
+["Elektrisk Bureau de baquelita", "Elektrisk Bureau, Noruega", "1930s-60s", "Baquelita noruega de diseno cercano a Ericsson", "PC", "60-150"],
+["VEF de baquelita y plastico", "VEF, Letonia (URSS)", "1950s-80s", "Telefonos de la fabrica de Riga, de los mas comunes en la URSS", "C", "20-60"],
+["TA-57 (campana sovietico)", "URSS", "1957-1990s", "Telefono de campana en caja de baquelita o plastico con manivela", "C", "30-80"],
+["Telefono gubernamental sovietico con escudo", "URSS", "1950s-80s", "Aparatos sin disco con el escudo de la URSS para lineas oficiales; hay muchas imitaciones", "R", "150-500"],
+["RWT Aster-70 y Aster-72", "RWT Radom (despues Telkom-Telcz), Polonia", "1973-principios 90", "Disco frances TN-74 bajo licencia; gris, marfil, naranja y rojo", "C", "15-45"],
+["RWT Tulipan y familia de flores", "RWT Radom, Polonia", "1970s-80s", "Serie de telefonos con nombres de flores", "C", "15-45"],
+["RWT CB 662 y baquelitas polacas anteriores", "RWT Radom, Polonia", "1950s-60s", "Baquelitas para administracion e industria", "PC", "30-80"],
+["Tesla (Checoslovaquia)", "Tesla, Checoslovaquia", "1950s-80s", "Telefonos de baquelita y plastico checos", "C", "20-60"],
+["Telefongyar de baquelita", "Telefongyar, Hungria", "1940s-70s", "Telefonos de la fabrica de Budapest", "PC", "40-100"],
+["Iskra ETA 80 / ETA 85", "Iskra, Yugoslavia (Eslovenia)", "1980s", "Telefono de plastico yugoslavo de disco o teclas", "C", "10-35"],
+["Tipo 4 japones (kuro-denwa)", "NTT (Denden Kosha), Japon", "1950-1960s", "El telefono negro japones de baquelita", "C", "40-120"],
+["Tipo 600 japones (600-A)", "NTT, Japon", "1963-1980s", "Sucesor del tipo 4, en varios colores", "C", "30-90"],
+["Telefono publico rosa o rojo japones", "NTT, Japon", "1950s-80s", "Telefonos publicos de tiendas y bares (aka-denwa, pinku denwa)", "PC", "80-250"],
+["PMG serie 300 (Australia)", "STC, AWA y talleres PMG, Australia", "1930s-1960s", "Baquelita australiana parecida al GPO 300", "C", "40-120"],
+["PMG serie 400 de magneto (Australia)", "Australia", "1930s-60s", "Magnetos para zonas rurales", "PC", "60-150"],
+["Serie 800 australiana (801 / 802)", "AWA y STC, Australia", "1963-1990s", "801 desde 1963 y 802 desde c.1970; marfil claro, gris niebla, verde helecho, amarillo topacio, rojo laca y negro desde 1964", "C", "25-70"],
+["Telecom T200 (Australia)", "Telecom Australia", "1990s", "Sucesor de la serie 800, de teclas", "C", "5-20"],
+["Ericsson Mexico de baquelita", "Ericsson / Telefonos de Mexico, Mexico", "1940s-60s", "Baquelitas fabricadas o montadas en Mexico", "PC", "50-130"],
+["Telefono de ENTel (Argentina)", "Siemens, Standard Electric y otros para ENTel, Argentina", "1950s-80s", "Telefonos de la empresa estatal argentina", "C", "30-90"],
+["Telefono portugues de baquelita (TLP, CTT)", "Standard Electrica Portugal y otros, Portugal", "1940s-70s", "Telefonos de las operadoras portuguesas, cercanos a los espanoles", "C", "40-110"],
+["Mickey Mouse de sobremesa", "American Telecommunications Corp, EEUU", "1976-1980s", "Figura de Mickey de pie sujetando el microtelefono", "PC", "60-180", "nov"],
+["Snoopy y Woodstock", "American Telecommunications Corp, EEUU", "1976-1980s", "Snoopy tumbado sobre su caseta", "PC", "40-120", "nov"],
+["Garfield con ojos que se abren", "Tyco, EEUU", "1980s", "Garfield abre los ojos al descolgar", "PC", "40-120", "nov"],
+["Telefono hamburguesa", "varios", "1980s-90s", "Hamburguesa que se abre en dos", "C", "20-60", "nov"],
+["Botella de Coca-Cola", "varios con licencia", "1980s-90s", "Telefono con forma de botella o lata", "C", "20-60", "nov"],
+["Telefono labios (boca roja)", "varios", "1980s-90s", "Inspirado en el sofa de Dali; muy decorativo", "C", "15-40", "nov"],
+["Telefono transparente con luces", "varios", "1980s-90s", "Carcasa transparente que se ilumina al sonar", "C", "10-35", "nov"],
+["Motorola DynaTAC 8000X", "Motorola, EEUU", "1983-1990s", "El ladrillo: primer movil portatil comercial; completo con bateria y cargador vale mas", "R", "150-600", "mov"],
+["Motorola MicroTAC", "Motorola, EEUU", "1989-1990s", "Primer movil con tapa abatible", "PC", "30-100", "mov"],
+["Motorola StarTAC", "Motorola, EEUU", "1996-2000s", "Movil de concha muy pequeno", "C", "20-70", "mov"],
+["Nokia 8110 (banana)", "Nokia, Finlandia", "1996", "Tapa deslizante curva", "PC", "30-90", "mov"],
+["Nokia 3210 y 3310", "Nokia, Finlandia", "1999-2000", "Los moviles mas vendidos de su epoca", "C", "5-30", "mov"],
+["Ericsson GH337 y GA628", "Ericsson, Suecia", "1990s", "Moviles GSM con antena de los primeros anos", "C", "10-35", "mov"],
+["Motorola Razr V3", "Motorola, EEUU", "2004", "Concha fina de aluminio", "C", "15-50", "mov"],
+["Telefono inalambrico de los 80 con antena", "varios", "1980s", "Inalambrico de primera generacion con antena telescopica", "C", "5-20", "mov"],
+["Ficha telefonica CTNE", "CTNE, Espana", "1950s-80s", "Ficha de laton con ranuras para cabinas", "C", "1-5", "acc"],
+["Tarjeta telefonica de Telefonica", "Telefonica, Espana", "1990s-2000s", "Las de tirada corta o con error valen mas", "C", "1-10", "acc"],
+["Guia telefonica antigua", "CTNE y operadoras, Espana", "1920s-70s", "Las de antes de los 50 y de ciudades pequenas son las mas buscadas", "C", "5-40", "acc"],
+["Placa esmaltada Telefono publico", "varios, Espana", "1940s-70s", "Placa de chapa esmaltada para senalizar telefonos publicos", "PC", "50-200", "acc"],
+["Caja de timbre de pared (campanas)", "Standard Electrica y otros", "1920s-60s", "Caja con dos campanas para extensiones", "C", "15-50", "acc"],
+["Disco de marcar suelto", "varios", "1930s-80s", "Repuesto; los de tarjeta CTNE y numeros originales valen mas", "C", "10-30", "acc"],
+["Microtelefono de baquelita suelto", "varios", "1930s-60s", "Repuesto; comprobar que es del mismo modelo y tono que el aparato", "C", "10-30", "acc"],
+["Cable textil trenzado", "varios", "1930s-60s", "Cordon de microtelefono o de linea forrado de tela", "C", "5-20", "acc"],
+["Contador de pasos o de llamadas", "varios", "1930s-70s", "Contador mecanico para cobrar llamadas en bares y comercios", "PC", "30-90", "acc"],
+["Cuadro conmutador de clavijas pequeno", "Standard Electrica, Ericsson y otros", "1910s-1950s", "Centralita de sobremesa o pared con clavijas y cordones para hoteles y empresas", "PC", "100-300"],
+["Telefonos Intelsa", "Intelsa (Ericsson y Telefonica), Espana", "1970s-80s", "Fabricante espanol participado por Ericsson y Telefonica", "C", "15-40"],
+["Amper de sobremesa", "Amper, Espana", "1970s-80s", "Fabricante madrileno de aparatos para Telefonica, entre ellos el Teide", "C", "10-35"],
+["Intercomunicador de baquelita", "Siemens, Ericsson, Standard y otros", "1930s-60s", "Aparato de interfono para casas y oficinas, a veces con varias teclas", "C", "20-60"],
+["Listin telefonico de sobremesa con palanca", "varios", "1930s-70s", "Indice metalico o de baquelita que se abre por la letra elegida", "C", "10-35", "acc"],
+["Aislador de poste telefonico", "varios", "1900s-1970s", "Aislador de vidrio o porcelana de las lineas aereas", "C", "5-30", "acc"],
+["Cartel publicitario de Telefonica o CTNE", "CTNE y Telefonica, Espana", "1930s-80s", "Carteles y chapas de publicidad del servicio telefonico", "PC", "40-200", "acc"],
+["Zwietusch de sobremesa", "Zwietusch und Co, Alemania", "1900s-1930s", "Fabricante berlines; disenos usados tambien en Dinamarca (D08)", "R", "150-350"],
+["Telefonbau und Normalzeit (T&N) de baquelita", "T&N, Alemania", "1930s-60s", "Fabricante de Frankfurt de telefonos y centralitas", "PC", "60-150"],
+["Siemens Brothers (Woolwich)", "Siemens Brothers, Reino Unido", "1910s-1950s", "Filial britanica de Siemens; candeleros y baquelitas", "PC", "80-220"],
+["Automatic Telephone Manufacturing (ATM)", "ATM, Liverpool, Reino Unido", "1910s-1960s", "Fabricante britanico de modelos para el GPO y exportacion", "PC", "80-220"],
+["STC de baquelita", "Standard Telephones and Cables, Reino Unido", "1930s-60s", "Filial britanica de ITT; fabrico versiones GPO", "PC", "60-160"],
+["Trimphone de colores", "STC y GPO, Reino Unido", "1965-1980s", "Trimphone bicolor (verde, azul, rosa) con tono electronico", "PC", "40-120"],
+["GPO 706 de color", "GPO, Reino Unido", "1959-1967", "706 en rojo, verde, azul o blanco", "PC", "30-90"],
+["Western Electric Call Director", "Western Electric, EEUU", "1960s-80s", "Telefono de oficina con 6, 12 o 18 botones iluminados de linea", "PC", "60-200"],
+["Candelero de otros fabricantes americanos", "Kellogg, Stromberg-Carlson, Automatic Electric, EEUU", "1900s-1930s", "Candeleros no Western Electric; placa del fabricante en la base", "R", "150-450"],
+["FACE Standard de baquelita", "FACE Standard (ITT), Italia", "1930s-60s", "Filial italiana de ITT", "PC", "80-200"],
+["Telefono de campana britanico de la II Guerra Mundial", "Ejercito britanico, Reino Unido", "1939-1950s", "Caja de baquelita o madera con manivela y bolsa", "PC", "60-160"],
+["Telefono de trinchera de la I Guerra Mundial", "varios ejercitos", "1914-1918", "Caja de madera o cuero con magneto; piezas completas escasas", "R", "150-450"],
+["Telefono de barco sin bateria (sound-powered)", "US Navy y otras armadas", "1940s-70s", "Telefono naval estanco que funciona con la propia voz", "PC", "80-200"],
+["Telefono de ascensor o de emergencia", "varios", "1960s-90s", "Aparatos sencillos sin disco para cabinas de ascensor o arcenes", "C", "10-40"],
+["Bang und Olufsen BeoCom", "Bang und Olufsen, Dinamarca", "1980s-90s", "Telefonos de diseno danes", "PC", "40-150"],
+["Swatch Twin Phone", "Swatch, Suiza", "1989", "Telefono de plastico de colores con dos auriculares", "PC", "30-90", "nov"],
+["Nokia 9000 Communicator", "Nokia, Finlandia", "1996", "Movil que se abre como un pequeno ordenador", "PC", "40-120", "mov"],
+["Movil analogico de Moviline", "varios para Telefonica Moviline, Espana", "1990s", "Primeros moviles de la red analogica espanola, grandes y con antena", "PC", "20-80", "mov"],
+["iPhone de primera generacion", "Apple, EEUU", "2007", "Primer iPhone; precintado en caja vale mucho mas", "PC", "100-400", "mov"],
+["Siemens S y C de los 90", "Siemens, Alemania", "1990s-2000s", "Moviles Siemens de pantalla monocroma", "C", "5-25", "mov"],
+["Heraldo de pared", "CITESA, Espana", "1960s-80s", "Version mural del Heraldo con el disco en el frente", "C", "25-70"],
+["Gondola de pared", "CITESA, Espana", "1970s-80s", "Gondola mural con el disco o teclado en el microtelefono", "C", "15-45"],
+["Telefono publico de monedas de los 70 (Telefonica)", "Telefonica, Espana", "1970s", "Aparato publico de pared para monedas de pesetas, anterior a los de los 80", "PC", "100-350"],
+["GPO 332 con cajon", "GPO, Reino Unido", "1937-1950s", "El 332 con cajon extraible en la base para la lista de numeros", "PC", "80-180"],
+["GPO 746 de color", "GPO, Reino Unido", "1967-1980s", "746 en rojo, naranja, verde, amarillo o azul", "C", "25-70"],
+["Gower-Bell", "British Post Office, Reino Unido", "1880s", "Telefono de pared victoriano con tubos acusticos", "MR", "800-2500"],
+["Telefono Bell de caja", "Bell, EEUU y Reino Unido", "1877-1880s", "Primeros telefonos de caja de madera; casi solo en museos", "MR", "1000-4000"],
+["Deckert und Homolka", "Deckert und Homolka, Austria", "1890s-1920s", "Fabricante vienes de magnetos de pared y sobremesa ornamentados", "R", "200-500"],
+["ITT y Cortelco 500 y 2500", "ITT / Cortelco, EEUU", "1970s-2000s", "Copias compatibles del 500 y 2500 de Western Electric", "C", "20-60"],
+["Ericofon 700", "Ericsson, Suecia", "1976", "Segunda version del Ericofon, con teclado", "PC", "60-200"],
+["Ericsson Dialog de pared", "Ericsson y Televerket, Suecia", "1960s-70s", "Version mural del Dialog", "C", "20-50"],
+["Telefono indio de baquelita (ITI)", "Indian Telephone Industries, India", "1950s-80s", "Telefonos de la fabrica estatal india, parecidos a los britanicos", "C", "20-60"],
+["Telefono publico aleman de monedas (Munzfernsprecher)", "Deutsche Bundespost, Alemania", "1950s-80s", "Aparato publico de monedas del correo aleman", "PC", "150-400"],
+["Telefono publico frances de fichas (jetons)", "PTT, Francia", "1930s-70s", "Aparato de cabina para fichas de la PTT", "PC", "150-400"],
+["Telefono de juguete de hojalata", "varios", "1920s-60s", "Juguete metalico litografiado; los alemanes y espanoles antiguos se buscan", "C", "10-40", "nov"],
+["Fisher-Price Chatter Telephone", "Fisher-Price, EEUU", "desde 1961", "Telefono de arrastre con ruedas y ojos", "C", "10-30", "nov"],
+["Ericsson DBH de reproduccion", "fabricacion moderna", "desde los 80", "Copia del baquelita Ericsson con plastico ligero y disco nuevo; el original pesa mucho mas", "C", "30-80", "rep"],
+["Telefono de baquelita de reproduccion con teclado escondido", "fabricacion moderna", "desde los 90", "Aspecto antiguo con electronica moderna; disco falso o teclado bajo la tapa", "C", "25-70", "rep"],
+["Ericsson Lily", "L.M. Ericsson, Suecia", "1881", "Sobremesa con microfono horizontal; tirada muy corta", "MR", "1000-3000"],
+["Ericsson AC100 esqueleto con microfono de brazo (antiguo No 370)", "L.M. Ericsson, Suecia", "1884-c.1911", "Microfono vertical en brazo giratorio y auricular aparte; muchos se convirtieron despues a microtelefono; se reproduce el brazo para reconvertirlos", "R", "600-1800"],
+["Ericsson AC110 esqueleto (antiguo No 375)", "L.M. Ericsson, Suecia", "1892-1930s, sobre todo 1908-1914", "Taxen en Suecia, Eiffel en Europa y EEUU, Coffee Mill en Reino Unido; patas imantadas negras con calcomanias doradas, niquel, microtelefono horizontal; numero de serie en la cubierta de ebonita", "R", "400-1500"],
+["Ericsson AC120 / AC130 / AC140 (N2000 britanico)", "L.M. Ericsson, Suecia", "1900s-1920s", "Esqueleto con pulsador para cortar el timbre (AC120, el mas comun en Australia) o generador con corte en el eje (AC130/140)", "R", "350-1200"],
+["Ericsson AC200 de doble manivela (antiguo No 385)", "L.M. Ericsson, Suecia", "1890s-1910s", "Esqueleto con manivela a cada lado para usarlo desde ambos lados de la mesa", "MR", "700-2000"],
+["Ericsson AC210 Biscuit Barrel (antiguo No 380)", "L.M. Ericsson, Suecia", "1893-1911", "Caja cilindrica de acero verde y dorado con tapa y base de madera; solo extension; se fabrico muy poco y existen reproducciones", "MR", "1000-3000"],
+["Ericsson AC300 / AC310 / AC320 Jubilee (antiguos 381, 383, 384)", "L.M. Ericsson, Suecia", "1901-1914", "Caja de acero entre columnas con tapa y base de madera, a veces con calado de laton; Highboy en EEUU; relativamente comun; muchos repintados en los 60 con disco no original", "PC", "300-900"],
+["Ericsson Tele 90 / N2115", "L.M. Ericsson y Ericsson Telephones Ltd para el GPO, Reino Unido", "1910s-1930s", "Sobremesa de bateria central del GPO, a menudo pintado imitando nogal; horquilla metalica y despues de baquelita", "PC", "150-400"],
+["Ericsson Type 37 / 137 Auto Wallset (Tele 21)", "Ericsson Telephones Ltd, Reino Unido", "1920s", "Telefono de pared estandar del GPO; primeras versiones con disco No 8 o No 10", "PC", "120-300"],
+["Ericsson N1400 / N1050 / N1450 de pared", "Ericsson Telephones Ltd, Reino Unido", "1906-1932", "Murales britanicos con soporte de microfono ornamentado (N1050 automatico, N1450 bateria central)", "PC", "150-350"],
+["Ericsson N2200 de magneto de pared", "Ericsson Telephones Ltd, Reino Unido", "desde 1906", "Magneto mural con microtelefono antiguo o de baquelita", "PC", "150-350"],
+["Ericsson de chapa de acero CG 502 / CG 504", "L.M. Ericsson, Suecia", "1920s-1931", "Sobremesas de acero estampado con disco a los que sustituye el DBH 1001", "PC", "120-300"],
+["Ericsson DBH 1002 caoba y otros colores de baquelita", "L.M. Ericsson, Suecia", "1930s-40s", "Baquelita en caoba, marron, rojo o verde apagados", "R", "250-600"],
+["Ericsson DBH 1003 blanco de melamina", "L.M. Ericsson, Suecia", "1935-1940s", "Version blanca de melamina del DBH; muy escasa", "R", "300-800"],
+["Ericsson DBH 15 (M50)", "L.M. Ericsson, Suecia", "1947-1962", "Rediseno del DBH 1001 con aristas suaves, disco de plastico y cordon en espiral", "PC", "80-200"],
+["Ericsson de pared de baquelita (1931-1932)", "L.M. Ericsson, Suecia", "1931-1960s", "DBH montado en repisa de pared DYY 1012 o version mural propia", "PC", "120-300"],
+["Ericofon transparente o metalizado", "L.M. Ericsson / North Electric", "1950s-60s", "Pocas unidades para promociones", "MR", "800-2500"],
+["Esqueleto Ericsson de la reedicion del centenario", "L.M. Ericsson, Suecia", "1976 en adelante", "Reproduccion oficial del esqueleto; mejor acabado que las copias asiaticas, pero no es de epoca", "PC", "150-400", "rep"],
+["Scandiphone (imitacion del Ericofon)", "Wild and Wolf, Reino Unido", "2000s", "Imitacion moderna del Ericofon con teclado circular", "C", "20-50", "rep"],
+["Societe des Telephones Ericsson de pared con microtelefono de cornete", "Societe des Telephones Ericsson, Francia", "1900s-1920s", "Mural frances de Ericsson usado sobre todo en Francia y Japon", "PC", "150-350"],
+["Deckert und Homolka esqueleto condensado", "Deckert und Homolka, Budapest", "c.1910-1915", "Version compacta del esqueleto que aparece en catalogos de Ericsson", "R", "400-1000"],
+["Tunnan (copia del esqueleto con tambor)", "Svenska AB Telefonfabriken / Rikstelefon, Suecia", "1890s-1910s", "Esqueleto rival con un tambor sobre el generador; desaparecio cuando Ericsson compro al competidor", "R", "300-900"],
+["Ericsson de la Compania Madrilena y de la red de Valencia", "L.M. Ericsson, Espana", "1898-1924", "Aparatos Ericsson de abonado instalados en Espana antes de la CTNE; buscar placas de la compania", "R", "300-800"]
 ];
 
 /* Construye el texto que se inyecta en el prompt.
@@ -5331,7 +5605,7 @@ function pfUserRefsText(){
 // perfil con cifras, logros y ajustes, compartir como imagen, vista
 // vitrina y ayuda. Todo lo local vive en localStorage.
 // =====================================================================
-var PF_APP_VERSION='5.1',PF_NEWS_VER='v5.1';
+var PF_APP_VERSION='5.3',PF_NEWS_VER='v5.3';
 function pfLS(k,def){try{var v=localStorage.getItem(k);return v==null?def:JSON.parse(v);}catch(e){return def;}}
 function pfLSset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
@@ -6128,6 +6402,96 @@ function pfStagger(box,max){
 })();
 document.body.classList.add('pf-boot');setTimeout(function(){document.body.classList.remove('pf-boot');},2600);
 setTimeout(pfHeroDial,700);
+
+// ===================== v5.2: ENCICLOPEDIA DE TELEFONOS =====================
+var PF_ENC_REG=[['all','Todos'],['eri','Ericsson'],['es','Espa\u00f1a'],['de','Alemania'],['uk','Reino Unido'],['us','EE. UU. y Canad\u00e1'],['fr','Francia'],['it','Italia'],['nor','N\u00f3rdicos'],['cen','Centroeuropa'],['est','Este de Europa'],['otr','Resto del mundo'],['nov','Novedad'],['mov','M\u00f3viles'],['acc','Accesorios'],['rep','R\u00e9plicas']];
+var PF_ENC_RAR=[['all','Cualquier rareza'],['C','Com\u00fan'],['PC','Poco com\u00fan'],['R','Raro'],['MR','Muy raro']];
+var _pfEnc={reg:'all',rar:'all',n:40,from:'home',built:false,res:[]};
+function pfNorm(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function pfEncRegion(m){
+  if(m[6])return m[6];
+  var t=pfNorm(m[1]);
+  if(t.indexOf('espana')>-1)return 'es';
+  if(t.indexOf('alemania')>-1||t.indexOf('rda')>-1)return 'de';
+  if(t.indexOf('reino unido')>-1)return 'uk';
+  if(t.indexOf('eeuu')>-1||t.indexOf('canada')>-1)return 'us';
+  if(t.indexOf('francia')>-1)return 'fr';
+  if(t.indexOf('italia')>-1)return 'it';
+  if(/suecia|dinamarca|noruega|finlandia/.test(t))return 'nor';
+  if(/paises bajos|belgica|suiza|austria/.test(t))return 'cen';
+  if(/urss|polonia|checoslovaquia|hungria|yugoslavia|letonia/.test(t))return 'est';
+  return 'otr';
+}
+function pfEncLevel(r){return {C:1,PC:2,R:3,MR:4}[r]||1;}
+function pfEncPrice(p){var main=String(p||'').split(';')[0].trim();return main?main.replace('-',PF_DASH)+' '+PF_EUR:'';}
+function pfEncBuild(){
+  if(_pfEnc.built)return;_pfEnc.built=true;
+  var mk=function(arr,key,box){box.innerHTML=arr.map(function(x){return '<button class="pfe-chip'+(x[0]===_pfEnc[key]?' on':'')+'" data-k="'+x[0]+'" onclick="pfEncSet(\''+key+'\',\''+x[0]+'\')">'+x[1]+'</button>';}).join('');};
+  mk(PF_ENC_REG,'reg',document.getElementById('pfeRegions'));
+  mk(PF_ENC_RAR,'rar',document.getElementById('pfeRarity'));
+  var n=PF_KB_MODELS.length,sub=document.getElementById('pfeSub');
+  if(sub)sub.textContent=n+' fichas de tel\u00e9fonos de todo el mundo, accesorios del rastro y r\u00e9plicas modernas. Es la misma base que usa la IA al tasar.';
+}
+function pfEncSet(key,val){
+  _pfEnc[key]=val;
+  document.querySelectorAll(key==='reg'?'#pfeRegions .pfe-chip':'#pfeRarity .pfe-chip').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-k')===val);});
+  pfEncRender(true);
+}
+function pfEncRender(reset){
+  if(reset)_pfEnc.n=40;
+  var q=pfNorm((document.getElementById('pfeQ')||{}).value||'').trim(),toks=q?q.split(/\s+/):[];
+  var regLbl={};PF_ENC_REG.forEach(function(x){regLbl[x[0]]=pfNorm(x[1]);});
+  var res=PF_KB_MODELS.filter(function(m){
+    var reg=pfEncRegion(m);
+    if(_pfEnc.reg==='eri'){if(!/ericsson|ericofon|elektrisk bureau|fatme|tunnan|deckert/.test(pfNorm(m[0]+' '+m[1])))return false;}
+    else if(_pfEnc.reg!=='all'&&reg!==_pfEnc.reg)return false;
+    if(_pfEnc.rar!=='all'&&m[4]!==_pfEnc.rar)return false;
+    if(!toks.length)return true;
+    var hay=pfNorm(m[0]+' '+m[1]+' '+m[2]+' '+m[3]+' '+(regLbl[reg]||''));
+    for(var i=0;i<toks.length;i++)if(hay.indexOf(toks[i])<0)return false;
+    return true;
+  });
+  _pfEnc.res=res;
+  var cnt=document.getElementById('pfeCount');if(cnt)cnt.textContent=res.length===1?'1 ficha':res.length+' fichas';
+  var list=document.getElementById('pfeList');if(!list)return;
+  if(!res.length){list.innerHTML='<div class="pfe-empty">No hay ninguna ficha con esos filtros. Prueba con el fabricante o el pa\u00eds.</div>';document.getElementById('pfeMore').hidden=true;return;}
+  list.innerHTML=res.slice(0,_pfEnc.n).map(pfEncRow).join('');
+  document.getElementById('pfeMore').hidden=res.length<=_pfEnc.n;
+  if(reset&&typeof pfStagger==='function')pfStagger(list,12);
+}
+var PF_ACC={acustico:'ac\u00fastico',acusticos:'ac\u00fasticos',administracion:'administraci\u00f3n',aereas:'a\u00e9reas',aleman:'alem\u00e1n',analogica:'anal\u00f3gica',analogico:'anal\u00f3gico',anos:'a\u00f1os',aqui:'aqu\u00ed',asi:'as\u00ed',automatico:'autom\u00e1tico',basica:'b\u00e1sica',belgica:'B\u00e9lgica',berlines:'berlin\u00e9s',boton:'bot\u00f3n',britanica:'brit\u00e1nica',britanico:'brit\u00e1nico',britanicos:'brit\u00e1nicos',cajon:'caj\u00f3n',camara:'c\u00e1mara',canada:'Canad\u00e1',caracteristica:'caracter\u00edstica',caracteristicas:'caracter\u00edsticas',catalogo:'cat\u00e1logo',ceramica:'cer\u00e1mica',coleccion:'colecci\u00f3n',compania:'compa\u00f1\u00eda',comun:'com\u00fan',conexion:'conexi\u00f3n',dali:'Dal\u00ed',danes:'dan\u00e9s',despues:'despu\u00e9s',disenado:'dise\u00f1ado',diseno:'dise\u00f1o',disenos:'dise\u00f1os',electrica:'el\u00e9ctrica',electronica:'electr\u00f3nica',electronico:'electr\u00f3nico',emision:'emisi\u00f3n',epoca:'\u00e9poca',espana:'Espa\u00f1a',espanol:'espa\u00f1ol',espanola:'espa\u00f1ola',espanoles:'espa\u00f1oles',estetica:'est\u00e9tica',extraible:'extra\u00edble',fabricacion:'fabricaci\u00f3n',frances:'franc\u00e9s',fundicion:'fundici\u00f3n',genova:'G\u00e9nova',hungria:'Hungr\u00eda',imitacion:'imitaci\u00f3n',ingles:'ingl\u00e9s',japon:'Jap\u00f3n',japones:'japon\u00e9s',linea:'l\u00ednea',lineas:'l\u00edneas',madrileno:'madrile\u00f1o',magnetico:'magn\u00e9tico',mas:'m\u00e1s',maximo:'m\u00e1ximo',mecanico:'mec\u00e1nico',metalica:'met\u00e1lica',metalico:'met\u00e1lico',metalicos:'met\u00e1licos',mexico:'M\u00e9xico',microtelefono:'microtel\u00e9fono',microtelefonos:'microtel\u00e9fonos',minimo:'m\u00ednimo',movil:'m\u00f3vil',moviles:'m\u00f3viles',numero:'n\u00famero',numeros:'n\u00fameros',operacion:'operaci\u00f3n',pais:'pa\u00eds',paises:'Pa\u00edses',pequena:'peque\u00f1a',pequenas:'peque\u00f1as',pequeno:'peque\u00f1o',pequenos:'peque\u00f1os',periodo:'per\u00edodo',plastico:'pl\u00e1stico',plasticos:'pl\u00e1sticos',portugues:'portugu\u00e9s',practico:'pr\u00e1ctico',publica:'p\u00fablica',publico:'p\u00fablico',publicos:'p\u00fablicos',raton:'rat\u00f3n',razon:'raz\u00f3n',region:'regi\u00f3n',replica:'r\u00e9plica',replicas:'r\u00e9plicas',reproduccion:'reproducci\u00f3n',republica:'Rep\u00fablica',segun:'seg\u00fan',senal:'se\u00f1al',senales:'se\u00f1ales',senalizar:'se\u00f1alizar',sovietico:'sovi\u00e9tico',sovieticos:'sovi\u00e9ticos',tambien:'tambi\u00e9n',tecnica:'t\u00e9cnica',tecnico:'t\u00e9cnico',tecnologia:'tecnolog\u00eda',telefonica:'telef\u00f3nica',telefonico:'telef\u00f3nico',telefonicos:'telef\u00f3nicos',telefonicas:'telef\u00f3nicas',guia:'gu\u00eda',guias:'gu\u00edas',fisica:'f\u00edsica',historico:'hist\u00f3rico',musica:'m\u00fasica',telefono:'tel\u00e9fono',telefonos:'tel\u00e9fonos',telegrafo:'tel\u00e9grafo',telescopica:'telesc\u00f3pica',tipico:'t\u00edpico',ultima:'\u00faltima',ultimo:'\u00faltimo',unico:'\u00fanico',version:'versi\u00f3n',vienes:'vien\u00e9s',vision:'visi\u00f3n'};
+var PF_ACC_RE=new RegExp('\\b('+Object.keys(PF_ACC).join('|')+')\\b','gi');
+function pfAcc(t){return String(t==null?'':t).replace(PF_ACC_RE,function(w){var r=PF_ACC[w.toLowerCase()];if(!r)return w;if(w.charAt(0)===w.charAt(0).toUpperCase()&&r.charAt(0)===r.charAt(0).toLowerCase())r=r.charAt(0).toUpperCase()+r.slice(1);return r;});}
+function pfEncRow(m){
+  var lvl=pfEncLevel(m[4]),extra=String(m[5]||'').split(';').slice(1).join(';').trim();
+  return '<div class="pfe-item"><button class="pfe-row" aria-expanded="false" onclick="pfEncToggle(this)">'
+    +'<span class="pfe-holes l'+lvl+'" title="'+pfRarityText(lvl)+'"><i></i><i></i><i></i><i></i></span>'
+    +'<span class="pfe-tx"><span class="pfe-n">'+escapeHtml(pfAcc(m[0]))+'</span><span class="pfe-m">'+escapeHtml(pfAcc([m[1],m[2]].filter(Boolean).join(', ')))+'</span></span>'
+    +'<span class="pfe-p">'+pfEncPrice(m[5])+'</span></button>'
+    +'<div class="pfe-detail" hidden><p>'+escapeHtml(pfAcc(m[3]))+'</p>'
+    +'<p class="pfe-meta">Rareza: '+pfRarityText(lvl).toLowerCase()+(extra?'. '+escapeHtml(pfAcc(extra.charAt(0).toUpperCase()+extra.slice(1))):'')+'.</p>'
+    +(m[6]==='rep'?'<p><span class="pfe-warn">Reproducci\u00f3n moderna</span></p>':'')+'</div></div>';
+}
+function pfEncToggle(b){var d=b.nextElementSibling,open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',open?'false':'true');if(d){d.hidden=open;if(!open)d.classList.add('pf-arrive');}}
+function pfEncMore(){_pfEnc.n+=40;pfEncRender(false);}
+function pfEncOpen(q){
+  var cur=document.querySelector('.page.active');var from=cur?cur.id.replace('page-',''):'home';
+  if(from!=='enc')_pfEnc.from=from;
+  pfEncBuild();
+  var inp=document.getElementById('pfeQ');if(inp)inp.value=q||'';
+  if(q){pfEncSet('reg','all');pfEncSet('rar','all');}
+  showPage('enc');pfEncRender(true);window.scrollTo(0,0);
+}
+function pfEncBack(){showPage(_pfEnc.from&&document.getElementById('page-'+_pfEnc.from)?_pfEnc.from:'home');window.scrollTo(0,0);}
+function pfEncFromResult(){
+  var r=currentResult||{},skip={telefono:1,compania:1,standard:0},w=String(r.fabricante||r.nombre||'').replace(/[^A-Za-z0-9\u00c0-\u017f ]/g,' ').split(/\s+/);
+  var q='';for(var i=0;i<w.length;i++){var t=pfNorm(w[i]);if(t.length>=4&&!skip[t]){q=w[i];break;}}
+  pfEncOpen(q);
+}
+setTimeout(function(){
+  var ic=document.getElementById('pfToolEncIco');if(ic&&!ic.innerHTML)ic.innerHTML=pfLogoSvg().replace(/pfLogoMask/g,'pfEncMask');
+  var sb=document.getElementById('pfToolEncSub');if(sb&&typeof PF_KB_MODELS!=='undefined')sb.textContent=PF_KB_MODELS.length+' modelos de todo el mundo, con \u00e9poca, rareza y precio';
+},0);
 </script>
 </body>
 </html>
