@@ -16,20 +16,115 @@
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, collection, addDoc, getDocs, orderBy, query, deleteDoc, doc, updateDoc }
+  import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, orderBy, query, deleteDoc, doc, updateDoc, writeBatch, limit, serverTimestamp }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, sendEmailVerification, updateProfile, deleteUser, reauthenticateWithCredential, EmailAuthProvider }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   const firebaseConfig = {
     apiKey:"AIzaSyB9mSF3RsWs1iYoShocPkI3nXl3UCUMh8E",authDomain:"telefinder-ea033.firebaseapp.com",
     projectId:"telefinder-ea033",storageBucket:"telefinder-ea033.firebasestorage.app",
     messagingSenderId:"395387321523",appId:"1:395387321523:web:62ed43629c0a11fd6d04c6"
   };
-  const app=initializeApp(firebaseConfig), db=getFirestore(app);
-  window._fbSave   = async(e) => { const r=await addDoc(collection(db,'coleccion'),e); return r.id; };
-  window._fbLoad   = async() => { const q=query(collection(db,'coleccion'),orderBy('savedAt','desc')); const s=await getDocs(q); return s.docs.map(d=>({firestoreId:d.id,...d.data()})).filter(e=>e.type!=='feedback'&&e.data); };
-  window._fbDelete = async(id) => deleteDoc(doc(db,'coleccion',id));
-  window._fbUpdate = async(id,fields) => updateDoc(doc(db,'coleccion',id),fields);
-  window._firebaseReady=true;
-  window.dispatchEvent(new Event('firebase-ready'));
+  const ADMIN_EMAIL = 'sobrinocompra@gmail.com';
+  const app=initializeApp(firebaseConfig), db=getFirestore(app), auth=getAuth(app);
+  try{ auth.languageCode='es'; }catch(e){}
+  let U=null, registering=false, lastCount=-1;
+  const mine=()=>collection(db,'users',U.uid,'coleccion');
+  const stamp=(v)=>{ try{ if(v&&v.toMillis) return v.toMillis(); if(v&&v.seconds) return v.seconds*1000; if(typeof v==='string') return Date.parse(v)||0; }catch(e){} return 0; };
+
+  // ---- Coleccion: cada usuario tiene la suya ----
+  window._fbSave = async(e) => {
+    if(!U) throw new Error('Inicia sesi\u00f3n para guardar');
+    if(e && e.type==='feedback'){ await addDoc(collection(db,'feedback'),Object.assign({},e,{uid:U.uid,email:U.email})); return 'feedback'; }
+    const r=await addDoc(mine(),e); return r.id;
+  };
+  window._fbLoad = async() => {
+    if(!U) return [];
+    const q=query(mine(),orderBy('savedAt','desc')); const s=await getDocs(q);
+    const out=s.docs.map(d=>({firestoreId:d.id,...d.data()}));
+    if(out.length!==lastCount){ lastCount=out.length; updateDoc(doc(db,'users',U.uid),{colCount:out.length}).catch(()=>{}); }
+    return out;
+  };
+  window._fbDelete = async(id) => deleteDoc(doc(db,'users',U.uid,'coleccion',id));
+  window._fbUpdate = async(id,fields) => updateDoc(doc(db,'users',U.uid,'coleccion',id),fields);
+
+  // ---- Cuentas ----
+  const isAdmin=()=>!!(U && U.email && U.email.toLowerCase()===ADMIN_EMAIL && U.emailVerified);
+  window._pfAuth = {
+    adminEmail: ADMIN_EMAIL,
+    user: ()=>U ? {uid:U.uid,email:U.email,name:U.displayName||'',verified:U.emailVerified} : null,
+    isAdmin: isAdmin,
+    isAdminEmail: ()=>!!(U && U.email && U.email.toLowerCase()===ADMIN_EMAIL),
+    async register(name,email,pass){
+      registering=true;
+      try{
+        const c=await createUserWithEmailAndPassword(auth,email,pass);
+        U=c.user;
+        try{ await updateProfile(c.user,{displayName:name}); }catch(e){}
+        await setDoc(doc(db,'users',c.user.uid),{email:c.user.email,name:name,plan:'free',createdAt:serverTimestamp(),lastSeen:serverTimestamp(),colCount:0,platform:(/iPhone|iPad/.test(navigator.userAgent)?'iOS':/Android/.test(navigator.userAgent)?'Android':'web')});
+        try{ sendEmailVerification(c.user).catch(()=>{}); }catch(e){}
+        try{ const t=await c.user.getIdToken(); fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken:t,name:name})}).catch(()=>{}); }catch(e){}
+        return c.user;
+      } finally { registering=false; }
+    },
+    login:(email,pass)=>signInWithEmailAndPassword(auth,email,pass).then(c=>c.user),
+    logout:()=>signOut(auth),
+    reset:(email)=>sendPasswordResetEmail(auth,email),
+    resend:()=>sendEmailVerification(U),
+    async refresh(){ if(!U) return; await U.reload(); await U.getIdToken(true); window.dispatchEvent(new CustomEvent('pf-auth-refresh')); },
+    async deleteAccount(pass){
+      const cred=EmailAuthProvider.credential(U.email,pass);
+      await reauthenticateWithCredential(U,cred);
+      const s=await getDocs(mine());
+      for(const d of s.docs){ await deleteDoc(d.ref); }
+      await deleteDoc(doc(db,'users',U.uid));
+      await deleteUser(U);
+    },
+    // ---- Administracion ----
+    async listUsers(){
+      const s=await getDocs(query(collection(db,'users'),orderBy('createdAt','desc')));
+      return s.docs.map(d=>{ const x=d.data(); return {uid:d.id,email:x.email||'',name:x.name||'',plan:x.plan||'free',colCount:x.colCount||0,platform:x.platform||'',createdAt:stamp(x.createdAt),lastSeen:stamp(x.lastSeen)}; });
+    },
+    async userCollection(uid){
+      const s=await getDocs(query(collection(db,'users',uid,'coleccion'),orderBy('savedAt','desc')));
+      return s.docs.map(d=>({firestoreId:d.id,...d.data()}));
+    },
+    async legacyCount(){
+      const s=await getDocs(collection(db,'coleccion'));
+      return s.docs.filter(d=>(d.data()||{}).type!=='feedback').length;
+    },
+    async migrateLegacy(onProgress){
+      const s=await getDocs(collection(db,'coleccion'));
+      const items=s.docs; let done=0, moved=0;
+      for(const d of items){
+        const x=d.data();
+        if(x && x.type==='feedback'){ await setDoc(doc(db,'feedback',d.id),Object.assign({},x,{uid:U.uid,email:U.email})); }
+        else { await setDoc(doc(db,'users',U.uid,'coleccion',d.id),x); moved++; }
+        done++; if(onProgress) onProgress(done,items.length);
+      }
+      lastCount=-1;
+      return moved;
+    }
+  };
+
+  window._firebaseReady=false;
+  onAuthStateChanged(auth, async(user)=>{
+    U=user||null;
+    window._pfAuthResolved=true;
+    window._firebaseReady=false;
+    if(U){
+      if(!registering){
+        try{
+          const ref=doc(db,'users',U.uid), snap=await getDoc(ref);
+          if(snap.exists()) await updateDoc(ref,{lastSeen:serverTimestamp()});
+          else await setDoc(ref,{email:U.email,name:U.displayName||'',plan:'free',createdAt:serverTimestamp(),lastSeen:serverTimestamp(),colCount:0,platform:'web'});
+        }catch(e){ console.warn('perfil',e && e.code); }
+      }
+      window._firebaseReady=true;
+    }
+    window.dispatchEvent(new CustomEvent('pf-auth'));
+    if(U) window.dispatchEvent(new Event('firebase-ready'));
+  });
 </script>
 
 <style>
@@ -1862,7 +1957,7 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
 .pfe-chip[data-k="eri"].on{background:var(--amber);border-color:var(--amber);color:#fff;}
 </style>
 </head>
-<body class="pf-noauth">
+<body>
 
 <!-- HEADER -->
 <header class="header">
