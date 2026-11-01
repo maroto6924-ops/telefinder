@@ -1680,13 +1680,13 @@ body:not(:has(.pfr-top)) .toast,body:has(#hmResultSlot #page-result) .toast,body
 .pf-onb-track{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .pf-onb-track::-webkit-scrollbar{display:none;}
 .pf-onb-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;flex-direction:column;justify-content:center;padding:40px 28px 10px;max-width:520px;margin:0 auto;box-sizing:border-box;}
-.pf-onb-art{height:min(38vh,280px);display:flex;align-items:center;justify-content:center;margin-bottom:28px;}
+.pf-onb-art{position:relative;height:min(40vh,300px);display:flex;align-items:center;justify-content:center;margin-bottom:44px;}
 .pf-onb-art svg{height:100%;width:auto;max-width:100%;}
-.pf-onb-slide h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:38px;line-height:1.02;letter-spacing:-.4px;margin:0 0 12px;max-width:13ch;}
+.pf-onb-slide h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:40px;line-height:1.02;letter-spacing:-.4px;margin:0 0 12px;max-width:13ch;text-wrap:balance;}
 .pf-onb-slide p{font-size:15.5px;line-height:1.55;color:rgba(255,255,255,.7);margin:0;max-width:34ch;}
 .pf-onb-dial{position:relative;height:100%;aspect-ratio:1;}
 .pf-onb-dial .pf-dial{width:100%;height:100%;}
-.pf-onb-stamp{position:absolute;right:-6%;bottom:6%;font-family:'Special Elite',monospace;font-size:24px;color:var(--ok);border:3px solid currentColor;border-radius:9px;padding:6px 12px 4px;transform:rotate(-8deg);background:rgba(20,15,11,.85);}
+.pf-onb-stamp{position:absolute;right:-12%;top:-7%;font-family:'Special Elite',monospace;font-size:20px;color:var(--ok);border:3px solid currentColor;border-radius:9px;padding:6px 12px 4px;transform:rotate(-8deg);background:rgba(20,15,11,.85);}
 .pf-onb-scan{animation:pfScan 2.4s ease-in-out infinite;}
 @keyframes pfScan{0%,100%{transform:translateY(-50px);}50%{transform:translateY(50px);}}
 .pf-onb-name{display:block;margin-top:22px;}
@@ -2129,6 +2129,16 @@ body.pf-boot .pfh-tool:nth-child(4){animation-delay:1.26s;}
 .pf-intro{overflow:hidden;}
 .pf-intro .photo-strip{justify-content:center;}
 .pf-intro .photo-meta{text-align:center;}
+
+.pf-onb-res{position:absolute;left:50%;bottom:-26px;transform:translate(-50%,14px);opacity:0;width:min(78%,250px);background:#F6F0E2;color:#2B221B;border-radius:14px;padding:10px 14px 9px;box-shadow:0 14px 30px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:1px;animation:pfOnbRes 4.8s ease-in-out infinite;}
+.pf-onb-res b{font-family:'Instrument Serif',serif;font-weight:400;font-size:23px;line-height:1.1;}
+.pf-onb-res span{font-size:12.5px;color:#6B5E50;}
+.pf-onb-res i{font-style:normal;font-size:11.5px;font-weight:600;color:#1E7F6B;margin-top:3px;}
+@keyframes pfOnbRes{0%,38%{opacity:0;transform:translate(-50%,14px);}52%,88%{opacity:1;transform:translate(-50%,0);}100%{opacity:0;transform:translate(-50%,14px);}}
+.pf-onb-tot{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);display:flex;align-items:baseline;gap:10px;background:rgba(246,240,226,.1);border:1px solid rgba(246,240,226,.2);border-radius:999px;padding:7px 16px;white-space:nowrap;}
+.pf-onb-tot span{font-size:12.5px;color:rgba(246,240,226,.7);}
+.pf-onb-tot b{font-family:'Instrument Serif',serif;font-weight:400;font-size:21px;color:#F6F0E2;}
+@media (prefers-reduced-motion:reduce){.pf-onb-res{animation:none;opacity:1;transform:translate(-50%,0);}}
 /* ---------- v5.7 laminas ---------- */
 .pfk-svg{display:block;width:100%;height:100%;overflow:visible;}
 .pfk-svg .k-b{fill:var(--kb,#2B221B);stroke:var(--kbs,none);stroke-width:1.2;}
@@ -6116,7 +6126,7 @@ function pfUserRefsText(){
 // perfil con cifras, logros y ajustes, compartir como imagen, vista
 // vitrina y ayuda. Todo lo local vive en localStorage.
 // =====================================================================
-var PF_APP_VERSION='5.9',PF_NEWS_VER='v5.3';
+var PF_APP_VERSION='5.10',PF_NEWS_VER='v5.3';
 function pfLS(k,def){try{var v=localStorage.getItem(k);return v==null?def:JSON.parse(v);}catch(e){return def;}}
 function pfLSset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
@@ -6283,11 +6293,11 @@ function pfSheetOutside(e,id){if(e.target===document.getElementById(id))pfCloseS
 function pfOnbArt(){
   var a1=document.getElementById('pfOnbArt1'),a2=document.getElementById('pfOnbArt2'),a3=document.getElementById('pfOnbArt3');
   var phone='<path d="M70 92c0-22 26-36 60-36s60 14 60 36" stroke="#D4862A" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M58 90h34l6 14H64zM168 90h34l-6 14h-34z" fill="#D4862A"/><path d="M84 116h92l18 70H66z" fill="#2B221B" stroke="#D4862A" stroke-width="4" stroke-linejoin="round"/><circle cx="130" cy="150" r="22" fill="#EDE3D0"/><circle cx="130" cy="150" r="8" fill="#D4862A"/>';
-  if(a1&&!a1.innerHTML)a1.innerHTML='<svg viewBox="0 0 260 240" aria-hidden="true"><g stroke="#F2EADB" stroke-width="5" stroke-linecap="round" fill="none"><path d="M30 60V30h30M200 30h30v30M230 180v30h-30M60 210H30v-30"/></g>'+phone+'<line class="pf-onb-scan" x1="40" y1="120" x2="220" y2="120" stroke="#D4862A" stroke-width="2" opacity=".7"/></svg>';
+  if(a1&&!a1.innerHTML)a1.innerHTML='<svg viewBox="0 0 260 240" aria-hidden="true"><g stroke="#F2EADB" stroke-width="5" stroke-linecap="round" fill="none"><path d="M30 60V30h30M200 30h30v30M230 180v30h-30M60 210H30v-30"/></g>'+phone+'<line class="pf-onb-scan" x1="40" y1="120" x2="220" y2="120" stroke="#D4862A" stroke-width="2" opacity=".7"/></svg><div class="pf-onb-res"><b>Heraldo</b><span>Ericsson &middot; 1931 &middot; Suecia</span><i>Modelo identificado</i></div>';
   if(a2&&!a2.innerHTML)a2.innerHTML='<div class="pf-onb-dial">'+pfDialSvg(2,'80 '+PF_EUR).replace(' id="pfWheel"','').replace(/pfWheelMask/g,'pfOnbMask').replace(/pfBakGrad/g,'pfOnbGrad')+'<div class="pf-onb-stamp">COMPRA</div></div>';
   if(a3&&!a3.innerHTML){
     var card=function(rot,x,lbl,k){return '<g transform="translate('+x+' 46) rotate('+rot+' 50 70)"><rect width="100" height="128" rx="6" fill="#F6F0E2"/><clipPath id="pfOnbClip'+k+'"><rect x="8" y="8" width="84" height="84" rx="3"/></clipPath><rect x="8" y="8" width="84" height="84" rx="3" fill="#2B221B"/><g clip-path="url(#pfOnbClip'+k+')"><g transform="translate(-15 -10.5) scale(.5)">'+phone+'</g></g><text x="50" y="116" text-anchor="middle" font-family="Caveat,cursive" font-size="18" fill="#4A3F35">'+lbl+'</text></g>';};
-    a3.innerHTML='<svg viewBox="0 0 300 230" aria-hidden="true">'+card(-10,8,'Heraldo',1)+card(9,192,'Ericsson',2)+card(-1,100,'5523 A',3)+'</svg>';
+    a3.innerHTML='<svg viewBox="0 0 300 230" aria-hidden="true">'+card(-10,8,'Heraldo',1)+card(9,192,'Ericsson',2)+card(-1,100,'5523 A',3)+'</svg><div class="pf-onb-tot"><span>12 piezas</span><b>1.240 '+PF_EUR+'</b></div>';
   }
 }
 function pfShowOnboarding(){var o=document.getElementById('pfOnb');if(!o)return;pfOnbArt();o.hidden=false;var tr=document.getElementById('pfOnbTrack');if(tr)tr.scrollLeft=0;pfOnbScroll();var inp=document.getElementById('pfOnbName');if(inp)inp.value=pfName();}
