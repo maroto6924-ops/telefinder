@@ -19,8 +19,24 @@ export default async function handler(req, res) {
     const j = await r.json();
     const u = j.users && j.users[0];
     if (!u) return res.status(401).json({ error: 'token no valido' });
-    if (Date.now() - Number(u.createdAt) > 10 * 60 * 1000) return res.status(200).json({ skipped: 'cuenta antigua' });
     if (!token || !chat) return res.status(200).json({ skipped: 'telegram sin configurar' });
+
+    // Alguien pulsa "Avisarme cuando este Pro": una sola vez por persona y arranque del servidor
+    if (body.type === 'pro') {
+      if (!u.emailVerified) return res.status(200).json({ skipped: 'sin verificar' });
+      globalThis.__proAsked = globalThis.__proAsked || new Set();
+      if (globalThis.__proAsked.has(u.localId)) return res.status(200).json({ skipped: 'repetido' });
+      globalThis.__proAsked.add(u.localId);
+      const who = String(u.displayName || 'Sin nombre').slice(0, 40);
+      await fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chat, text: 'Quiere PHONEFINDER Pro\n' + who + '\n' + u.email })
+      });
+      return res.status(200).json({ ok: true });
+    }
+
+    if (Date.now() - Number(u.createdAt) > 10 * 60 * 1000) return res.status(200).json({ skipped: 'cuenta antigua' });
 
     const name = String(body.name || u.displayName || 'Sin nombre').slice(0, 40);
     const text = 'Nuevo registro en PHONEFINDER\n' + name + '\n' + u.email;
