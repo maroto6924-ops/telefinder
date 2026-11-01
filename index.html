@@ -2281,6 +2281,12 @@ body.pfk-lock{overflow:hidden;}
 .pf-ver p{font-size:15px;line-height:1.55;color:#3D3A36;margin:0 0 14px;}
 .pf-ver .pf-pro-go{margin-bottom:10px;}
 .pf-ver-alt{display:block;width:100%;border:1px solid var(--mist3);background:var(--surface);color:var(--ink);border-radius:16px;padding:14px;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;}
+.pf-pro-chip{display:none;margin-left:7px;padding:2px 7px;border-radius:999px;background:var(--amber);color:#fff;font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:.5px;vertical-align:2px;line-height:1.4;}
+body.pf-free .pf-pro-chip{display:inline-block;}
+.pf-pro-no{color:var(--fog);}
+.pf-pro-row span:nth-child(2){color:var(--fog3);}
+.pf-pro-stay{display:block;width:100%;margin-top:6px;background:none;border:none;padding:12px;font-family:'Inter',sans-serif;font-size:14.5px;font-weight:600;color:var(--fog3);cursor:pointer;}
+.pf-pro-stay[hidden]{display:none;}
 </style>
 </head>
 <body>
@@ -2833,11 +2839,17 @@ body.pfk-lock{overflow:hidden;}
       <div class="pf-pro-cmp">
         <div class="pf-pro-row"><span></span><span>Gratis</span><span>Pro</span></div>
         <div class="pf-pro-row"><span>Tasaciones al d&iacute;a</span><span>3</span><span>Sin l&iacute;mite</span></div>
-        <div class="pf-pro-row"><span>Tasar un lote</span><span>1 por foto</span><span>Incluido</span></div>
-        <div class="pf-pro-row"><span>Colecci&oacute;n y enciclopedia</span><span>Completas</span><span>Completas</span></div>
+        <div class="pf-pro-row"><span>Tel&eacute;fonos en tu colecci&oacute;n</span><span>Hasta 10</span><span>Sin l&iacute;mite</span></div>
+        <div class="pf-pro-row"><span>Tasar un lote</span><span class="pf-pro-no">&mdash;</span><span>&#10003;</span></div>
+        <div class="pf-pro-row"><span>Modo caza en el rastro</span><span class="pf-pro-no">&mdash;</span><span>&#10003;</span></div>
+        <div class="pf-pro-row"><span>Anuncio, mensaje y certificado para vender</span><span class="pf-pro-no">&mdash;</span><span>&#10003;</span></div>
+        <div class="pf-pro-row"><span>Preguntar a la IA y comparar piezas</span><span class="pf-pro-no">&mdash;</span><span>&#10003;</span></div>
+        <div class="pf-pro-row"><span>Ficha para la vitrina</span><span class="pf-pro-no">&mdash;</span><span>&#10003;</span></div>
+        <div class="pf-pro-row"><span>Enciclopedia completa</span><span>&#10003;</span><span>&#10003;</span></div>
       </div>
       <button class="pf-pro-go" id="pfProGo" onclick="pfProWant()">Avisarme cuando est&eacute; listo</button>
       <p class="pf-pro-note" id="pfProNote"></p>
+      <button class="pf-pro-stay" id="pfProStay" onclick="pfCloseSheet('pfPro')">Seguir con el plan gratis</button>
     </div>
   </div>
 </div>
@@ -6104,7 +6116,7 @@ function pfUserRefsText(){
 // perfil con cifras, logros y ajustes, compartir como imagen, vista
 // vitrina y ayuda. Todo lo local vive en localStorage.
 // =====================================================================
-var PF_APP_VERSION='5.8',PF_NEWS_VER='v5.3';
+var PF_APP_VERSION='5.9',PF_NEWS_VER='v5.3';
 function pfLS(k,def){try{var v=localStorage.getItem(k);return v==null?def:JSON.parse(v);}catch(e){return def;}}
 function pfLSset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
@@ -7624,8 +7636,9 @@ function pfqFromHeaders(r){
 function pfqDots(n,total,cls){var s='';for(var i=0;i<total;i++)s+='<i class="'+(i<n?'on':'')+'"></i>';return '<span class="'+cls+'" aria-hidden="true">'+s+'</span>';}
 function pfqRender(){
   var i=_pfq.info,q=document.getElementById('pfQuota'),pl=document.getElementById('pfpPlan');
-  if(!i||!window._pfAuth||!window._pfAuth.user()){if(q)q.hidden=true;if(pl)pl.hidden=true;return;}
+  if(!i||!window._pfAuth||!window._pfAuth.user()){if(q)q.hidden=true;if(pl)pl.hidden=true;document.body.classList.remove('pf-free','pf-pro');return;}
   var left=pfqLeft(),pro=i.plan==='pro',free=!pro;
+  document.body.classList.toggle('pf-free',free);document.body.classList.toggle('pf-pro',pro);
   if(q){
     q.hidden=false;q.className='pf-quota'+(pro?' is-pro':(left===0?' is-zero':''));
     q.innerHTML=pro?'<span class="pf-quota-pro">PRO</span><span>Tasaciones sin l\u00edmite</span>'
@@ -7647,6 +7660,7 @@ async function pfqLoad(){
     if(!r.ok)return;
     var j=await r.json();
     pfqSet({plan:j.plan,used:j.used,limit:j.limit,verified:j.verified,day:j.day},true);
+    setTimeout(pfProWelcome,1800);
   }catch(e){}
 }
 // ---- toda llamada a /api/analyze lleva la sesion y se enteran los avisos ----
@@ -7667,10 +7681,10 @@ async function pfApiFetch(u,o){
   if(kind==='main'||kind==='lot')_pfq.lastMainAt=Date.now();
   var r=await _pfFetch0(u,o);
   pfqFromHeaders(r);
-  if(r.status===401||r.status===403||r.status===429){
+  if(r.status===401||r.status===402||r.status===403||r.status===429){
     var j=null;try{j=await r.clone().json();}catch(e){}
     var t=j&&j.error&&j.error.type;
-    if(t==='pf_auth'||t==='pf_verify'||t==='pf_limit'||t==='pf_extras'){
+    if(t==='pf_auth'||t==='pf_verify'||t==='pf_limit'||t==='pf_extras'||t==='pf_pro'){
       pfqHandle(t,j);
       if(kind==='main'){window._pfCancelled=true;throw new DOMException('pf','AbortError');}
     }
@@ -7681,6 +7695,7 @@ function pfqHandle(t,j){
   if(t==='pf_auth'){showToast('Tu sesi\u00f3n ha caducado. Vuelve a entrar');setTimeout(function(){try{window._pfAuth.logout();}catch(e){}},1300);}
   else if(t==='pf_verify')pfOpenSheet('pfVerify');
   else if(t==='pf_limit'){if(j&&j.pf)pfqSet({plan:j.pf.plan,used:j.pf.limit,limit:j.pf.limit},true);pfProOpen('limit');}
+  else if(t==='pf_pro')pfProOpen('feat',j&&j.error&&j.error.feature||'Esta herramienta');
   else if(t==='pf_extras')showToast('Has llegado al l\u00edmite de consultas de hoy. Vuelve ma\u00f1ana');
 }
 // ---- puerta antes de empezar un analisis (evita ense\u00f1ar el escaner para nada) ----
@@ -7693,11 +7708,15 @@ function pfGate(){
 }
 var _pfAnalyzePhone0=analyzePhone;
 analyzePhone=function(q){if(!pfGate())return Promise.resolve();return _pfAnalyzePhone0.apply(this,arguments);};
-var _pfLotStart0=typeof openLotMode==='function'?openLotMode:null;
 // ---- hoja Pro ----
-function pfProOpen(why){
+function pfProOpen(why,feat){
   var i=_pfq.info,lead=document.getElementById('pfProLead');
-  if(lead)lead.textContent=why==='limit'?('Has usado tus '+((i&&i.limit)||3)+' tasaciones gratis de hoy. Se renuevan ma\u00f1ana a las 00:00.'):'Con Pro tasas todo lo que quieras, sin contar.';
+  var t={limit:'Has usado tus '+((i&&i.limit)||3)+' tasaciones gratis de hoy. Se renuevan ma\u00f1ana a las 00:00.',
+    feat:(feat||'Esta herramienta')+' es de PHONEFINDER Pro. Con Pro tienes todas las herramientas y tasaciones sin l\u00edmite.',
+    col:'Con el plan gratis puedes guardar hasta '+PF_FREE_COL+' tel\u00e9fonos. Con Pro, tu colecci\u00f3n no tiene l\u00edmite.',
+    welcome:'Tasa sin l\u00edmite y desbloquea las herramientas del coleccionista: lotes, modo caza y todo lo necesario para vender.'};
+  if(lead)lead.textContent=t[why]||'Con Pro tasas todo lo que quieras y tienes todas las herramientas del coleccionista.';
+  var st=document.getElementById('pfProStay');if(st)st.hidden=pfqIsPro();
   var done=_pfq.asked||pfLS('pf_pro_asked',0);
   var b=document.getElementById('pfProGo'),n=document.getElementById('pfProNote');
   if(b){b.disabled=!!done;b.textContent=done?'Anotado. Te avisaremos':'Avisarme cuando est\u00e9 listo';}
@@ -7719,6 +7738,48 @@ async function pfVerifyCheck(){
 window.addEventListener('pf-auth',function(){_pfq.info=null;pfqRender();pfqLoad();});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&_pfq.info&&_pfq.info.day!==pfqToday())pfqLoad();});
 setTimeout(pfqLoad,1500);
+// ---- diferencias entre el plan gratis y Pro ----
+var PF_FREE_COL=10;
+var PF_PRO_FEATS={openLotMode:'Tasar un lote',startHuntSession:'El modo caza',openHuntMode:'El modo caza',generateNegoMsg:'El mensaje para el vendedor',generateSellAd:'El anuncio para vender',generateCertificate:'El certificado de historia',generateVitrinaCard:'La ficha para la vitrina',askAboutPhone:'Preguntar a la IA',toggleCompareMode:'Comparar tel\u00e9fonos'};
+function pfqIsFree(){var i=_pfq.info;return !!(i&&i.plan==='free'&&window._pfAuth&&window._pfAuth.user());}
+Object.keys(PF_PRO_FEATS).forEach(function(fn){
+  var f0=window[fn];if(typeof f0!=='function')return;
+  window[fn]=function(){
+    if(pfqIsFree()&&!(fn==='toggleCompareMode'&&typeof _compareMode!=='undefined'&&_compareMode)){pfProOpen('feat',PF_PRO_FEATS[fn]);return;}
+    return f0.apply(this,arguments);
+  };
+});
+var _pfSave0=saveToCollection;
+saveToCollection=async function(){
+  if(pfqIsFree()){
+    var n=Array.isArray(_colCache)?_colCache.length:null;
+    if(n==null){try{n=(await window._fbLoad()).length;}catch(e){n=0;}}
+    if(n>=PF_FREE_COL){pfProOpen('col');return;}
+  }
+  return _pfSave0.apply(this,arguments);
+};
+// Etiqueta PRO junto a cada herramienta de pago (solo la ve quien tiene el plan gratis)
+function pfProChips(){
+  var sel=Object.keys(PF_PRO_FEATS).map(function(f){return '[onclick^="'+f+'("]';}).join(',');
+  document.querySelectorAll(sel).forEach(function(el){
+    if(el.closest('.compare-bar')||el.classList.contains('sell-regen-btn')||el.classList.contains('ask-input'))return;
+    var fold=el.closest('.fold'),host=fold?fold.querySelector('.fold-title'):(el.querySelector('.pf-tool-t')||el);
+    if(!host||host.querySelector('.pf-pro-chip'))return;
+    var c=document.createElement('span');c.className='pf-pro-chip';c.textContent='PRO';host.appendChild(c);
+  });
+}
+// Aviso de Pro al entrar, una vez al dia, sin tapar la entrada ni la bienvenida
+var _pfProPopTry=0;
+function pfProWelcome(){
+  if(!pfqIsFree())return;
+  var d=pfqToday();if(pfLS('pf_pro_pop','')===d)return;
+  var a=document.getElementById('pfAuth'),onb=document.getElementById('pfOnb');
+  var busy=(a&&getComputedStyle(a).display!=='none'&&typeof pfiGetSt==='function'&&pfiGetSt()!=='gone')||(onb&&!onb.hidden)||document.querySelector('.modal-overlay.open')||(typeof _pfk!=='undefined'&&_pfk.cur>=0);
+  if(busy){if(++_pfProPopTry<6)setTimeout(pfProWelcome,4000);return;}
+  pfLSset('pf_pro_pop',d);pfProOpen('welcome');
+}
+window.addEventListener('pf-auth',function(){_pfProPopTry=0;});
+setTimeout(pfProChips,0);
 </script>
 </body>
 </html>
