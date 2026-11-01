@@ -54,6 +54,9 @@
     adminEmail: ADMIN_EMAIL,
     user: ()=>U ? {uid:U.uid,email:U.email,name:U.displayName||'',verified:U.emailVerified} : null,
     isAdmin: isAdmin,
+    token: async()=>U?U.getIdToken():'',
+    async wantsPro(){ await updateDoc(doc(db,'users',U.uid),{proInterest:serverTimestamp()}); try{ const t=await U.getIdToken(); fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken:t,type:'pro'})}).catch(()=>{}); }catch(e){} },
+    async setPlan(uid,plan){ if(!isAdmin()) throw Object.assign(new Error('admin'),{code:'permission-denied'}); await updateDoc(doc(db,'users',uid),{plan:plan}); },
     isAdminEmail: ()=>!!(U && U.email && U.email.toLowerCase()===ADMIN_EMAIL),
     async register(name,email,pass){
       registering=true;
@@ -83,7 +86,7 @@
     // ---- Administracion ----
     async listUsers(){
       const s=await getDocs(query(collection(db,'users'),orderBy('createdAt','desc')));
-      return s.docs.map(d=>{ const x=d.data(); return {uid:d.id,email:x.email||'',name:x.name||'',plan:x.plan||'free',colCount:x.colCount||0,platform:x.platform||'',createdAt:stamp(x.createdAt),lastSeen:stamp(x.lastSeen)}; });
+      return s.docs.map(d=>{ const x=d.data(); return {uid:d.id,email:x.email||'',name:x.name||'',plan:x.plan||'free',colCount:x.colCount||0,proInterest:stamp(x.proInterest),platform:x.platform||'',createdAt:stamp(x.createdAt),lastSeen:stamp(x.lastSeen)}; });
     },
     async userCollection(uid){
       const s=await getDocs(query(collection(db,'users',uid,'coleccion'),orderBy('savedAt','desc')));
@@ -2239,6 +2242,45 @@ body.pfk-lock{overflow:hidden;}
 @media (prefers-reduced-motion:reduce){.pfk-sheet{transition:none;}.pfk-big,.pfk-plate{animation:none;}}
 .pfk-row .pfe-holes{grid-template-columns:repeat(4,8px);gap:3px;}.pfk-row .pfe-holes i{width:8px;height:8px;}
 .pf-ach-toast{transform:translate(-50%,-200%);visibility:hidden;transition:transform .45s var(--e-spring),visibility 0s .45s;}.pf-ach-toast.show{visibility:visible;transition:transform .45s var(--e-spring),visibility 0s;}
+/* ---------- v5.8 plan gratis y Pro ---------- */
+.pf-quota{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px auto 0;padding:9px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:rgba(255,255,255,.82);font-family:'Inter',sans-serif;font-size:13.5px;cursor:pointer;-webkit-tap-highlight-color:transparent;max-width:100%;}
+.pf-quota[hidden]{display:none;}
+.pf-quota-dots{display:inline-flex;gap:5px;}
+.pf-quota-dots i{width:10px;height:10px;border-radius:50%;background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35);}
+.pf-quota-dots i.on{background:var(--amber);box-shadow:none;}
+.pf-quota.is-zero{border-color:rgba(212,134,42,.6);background:rgba(212,134,42,.14);color:#fff;}
+.pf-quota-go{font-weight:600;color:#F2B661;}
+.pf-quota-pro,.pf-adm-pro{font-size:10.5px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:999px;background:var(--amber);color:#fff;}
+.pf-quota.is-pro{border-color:rgba(201,160,96,.4);}
+.pf-adm-pro{margin-left:6px;vertical-align:1px;}
+.pf-adm-want{background:#FFF1DA;color:var(--amber3);}
+.pf-adm-plan{margin-top:8px;border:1px solid var(--amber);background:#fff;color:var(--amber3);border-radius:999px;padding:8px 14px;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;}
+.pf-adm-sum{grid-template-columns:repeat(2,1fr)!important;}
+/* perfil */
+.pfp-plan{margin:0 0 18px;padding:16px;border-radius:18px;background:var(--bak);color:#fff;}
+.pfp-plan[hidden]{display:none;}
+.pfp-plan-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+.pfp-plan-k{font-family:'Instrument Serif',serif;font-size:24px;line-height:1.1;}
+.pfp-plan-t{font-size:13.5px;line-height:1.45;color:rgba(255,255,255,.68);margin-top:4px;max-width:30ch;}
+.pfp-plan-top .pf-quota-dots{padding-top:8px;}
+.pfp-plan-btn{display:block;width:100%;margin-top:14px;border:none;border-radius:14px;padding:13px;background:var(--amber);color:#fff;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;}
+.pfp-plan-btn[hidden]{display:none;}
+/* hoja Pro */
+.pf-pro{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px);}
+.pf-pro-lead{font-size:15.5px;line-height:1.5;color:#3D3A36;margin:0 0 14px;}
+.pf-pro-price{display:flex;align-items:baseline;gap:8px;margin:0 0 16px;}
+.pf-pro-price b{font-family:'Instrument Serif',serif;font-weight:400;font-size:44px;line-height:1;color:var(--ink);}
+.pf-pro-price span{font-size:15px;color:var(--fog3);}
+.pf-pro-cmp{border:1px solid var(--mist3);border-radius:16px;overflow:hidden;margin:0 0 16px;background:var(--surface);}
+.pf-pro-row{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px;padding:11px 14px;font-size:13.5px;line-height:1.35;border-top:1px solid var(--mist3);align-items:center;}
+.pf-pro-row:first-child{border-top:none;background:var(--mist);font-weight:600;font-size:12.5px;color:var(--fog3);}
+.pf-pro-row span:nth-child(3){font-weight:600;color:var(--amber2);}
+.pf-pro-go{display:block;width:100%;border:none;border-radius:16px;padding:16px;background:var(--amber);color:#fff;font-family:'Inter',sans-serif;font-size:15.5px;font-weight:600;cursor:pointer;}
+.pf-pro-go:disabled{background:var(--mist3);color:var(--fog3);}
+.pf-pro-note{font-size:13px;line-height:1.5;color:var(--fog3);margin:10px 2px 0;text-align:center;}
+.pf-ver p{font-size:15px;line-height:1.55;color:#3D3A36;margin:0 0 14px;}
+.pf-ver .pf-pro-go{margin-bottom:10px;}
+.pf-ver-alt{display:block;width:100%;border:1px solid var(--mist3);background:var(--surface);color:var(--ink);border-radius:16px;padding:14px;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -2285,6 +2327,7 @@ body.pfk-lock{overflow:hidden;}
         <span>Galer&iacute;a</span>
       </label>
     </div>
+    <button class="pf-quota" id="pfQuota" onclick="pfProOpen()" hidden></button>
     <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="addImage(this)">
     <input type="file" id="galleryInput" accept="image/*" multiple onchange="addImages(this)">
     <input type="file" id="extraInput" accept="image/*" multiple onchange="addImages(this)">
@@ -2779,6 +2822,37 @@ body.pfk-lock{overflow:hidden;}
 </div>
 <div class="pfk-sheet" id="pfkSheet" hidden role="dialog" aria-modal="true" aria-label="Ficha de la enciclopedia"><div class="pfk-body" id="pfkBody"></div></div>
 
+<!-- PLAN PRO Y CORREO SIN CONFIRMAR -->
+<div class="modal-overlay" id="pfPro" style="z-index:985" onclick="pfSheetOutside(event,'pfPro')">
+  <div class="modal-sheet pf-sheet pf-sheet-tall">
+    <div class="modal-handle"></div>
+    <div class="modal-header"><div class="modal-title">PHONEFINDER Pro</div><button class="modal-close" onclick="pfCloseSheet('pfPro')" aria-label="Cerrar">x</button></div>
+    <div class="modal-body pf-pro">
+      <p class="pf-pro-lead" id="pfProLead"></p>
+      <div class="pf-pro-price"><b>3,99 &euro;</b><span>al mes</span></div>
+      <div class="pf-pro-cmp">
+        <div class="pf-pro-row"><span></span><span>Gratis</span><span>Pro</span></div>
+        <div class="pf-pro-row"><span>Tasaciones al d&iacute;a</span><span>3</span><span>Sin l&iacute;mite</span></div>
+        <div class="pf-pro-row"><span>Tasar un lote</span><span>1 por foto</span><span>Incluido</span></div>
+        <div class="pf-pro-row"><span>Colecci&oacute;n y enciclopedia</span><span>Completas</span><span>Completas</span></div>
+      </div>
+      <button class="pf-pro-go" id="pfProGo" onclick="pfProWant()">Avisarme cuando est&eacute; listo</button>
+      <p class="pf-pro-note" id="pfProNote"></p>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="pfVerify" style="z-index:985" onclick="pfSheetOutside(event,'pfVerify')">
+  <div class="modal-sheet pf-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header"><div class="modal-title">Confirma tu correo</div><button class="modal-close" onclick="pfCloseSheet('pfVerify')" aria-label="Cerrar">x</button></div>
+    <div class="modal-body pf-ver">
+      <p>Para tasar tienes que confirmar tu correo. Te enviamos un enlace al registrarte: &aacute;brelo y vuelve aqu&iacute;. Si no lo encuentras, mira en spam.</p>
+      <button class="pf-pro-go" id="pfVerifyGo" onclick="pfVerifyCheck()">Ya lo he confirmado</button>
+      <button class="pf-ver-alt" onclick="pfResendVerify()">Reenviar el correo</button>
+    </div>
+  </div>
+</div>
+
 <!-- PERFIL -->
 <div class="page" id="page-profile">
  <div class="pfp">
@@ -2793,6 +2867,10 @@ body.pfk-lock{overflow:hidden;}
     <div class="pfp-acct-mail" id="pfpAcctMail"></div>
     <div class="pfp-verify" id="pfpVerify" hidden><span>Confirma tu correo con el enlace que te hemos enviado.</span><span class="pfp-verify-b"><button class="pf-linkbtn" onclick="pfResendVerify()">Reenviar</button><button class="pf-linkbtn" onclick="pfAuthRefresh()">Ya lo he confirmado</button></span></div>
   </div>
+  <section class="pfp-plan" id="pfpPlan" hidden>
+    <div class="pfp-plan-top"><div><div class="pfp-plan-k" id="pfpPlanK">Plan gratuito</div><div class="pfp-plan-t" id="pfpPlanT"></div></div><span id="pfpPlanDots"></span></div>
+    <button class="pfp-plan-btn" id="pfpPlanBtn" onclick="pfProOpen()">Ver PHONEFINDER Pro</button>
+  </section>
   <div id="pfpAdminBox" hidden>
     <h2 class="pfp-h">Administraci&oacute;n</h2>
     <div class="pfp-list"><button class="pfp-row" onclick="pfOpenAdmin()"><span class="pfp-row-t">Usuarios registrados <b class="pfp-badge" id="pfpAdmBadge" hidden></b></span><svg class="pfp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button></div>
@@ -4036,7 +4114,7 @@ async function analyzePhone(quickMode){
     var ctrl=new AbortController();_pfAbortCtrl=ctrl;
     var to=setTimeout(function(){ctrl.abort();},lean?42000:50000);
     var uc=lean?userContent.filter(function(c,i){return c.type!=='image'||i===0;}):userContent;
-    try{return await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:_qm?500:(lean?1300:2000),messages:[{role:'user',content:uc}]},pfKbText(_qm||lean),systemPrompt+(lean?'\nResponde lo mas breve posible.':'')+pfUserRefsText(),ctrl.signal);}
+    try{return await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:_qm?500:(lean?1300:2000),pf_kind:'main',messages:[{role:'user',content:uc}]},pfKbText(_qm||lean),systemPrompt+(lean?'\nResponde lo mas breve posible.':'')+pfUserRefsText(),ctrl.signal);}
     finally{clearTimeout(to);}
   }
 
@@ -5284,7 +5362,7 @@ async function analyzeLot(){
   content.push({type:'text',text:'Analiza cada telefono. SOLO array JSON: [{"nombre":"...","precio_compra_min":0,"precio_compra_max":0,"precio_venta_min":0,"precio_venta_max":0,"rareza":"COMUN"},...]'});
   try{
     var lotSys='Eres PHONEFINDER, tasador experto de telefonia vintage para el mercado espanol. Identifica cada telefono con ayuda de la base de conocimiento anterior y tasalo con sus rangos como ancla, ajustando por estado y originalidad; si no puedes identificar uno con seguridad, da el nombre generico mas probable y valoralo con prudencia.';
-    var resp=await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:3000,messages:[{role:'user',content:content}]},pfKbText(false),lotSys+pfUserRefsText());
+    var resp=await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:3000,pf_kind:'lot',messages:[{role:'user',content:content}]},pfKbText(false),lotSys+pfUserRefsText());
     var data=await resp.json();
     var raw=data.content.map(function(c){return c.text||'';}).join('');
     var arr=null;
@@ -6026,7 +6104,7 @@ function pfUserRefsText(){
 // perfil con cifras, logros y ajustes, compartir como imagen, vista
 // vitrina y ayuda. Todo lo local vive en localStorage.
 // =====================================================================
-var PF_APP_VERSION='5.7',PF_NEWS_VER='v5.3';
+var PF_APP_VERSION='5.8',PF_NEWS_VER='v5.3';
 function pfLS(k,def){try{var v=localStorage.getItem(k);return v==null?def:JSON.parse(v);}catch(e){return def;}}
 function pfLSset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
@@ -6644,10 +6722,10 @@ async function pfOpenAdmin(){
     _pfAdmPrevSeen=pfLS('pf_admin_seen',0);
     var wk=Date.now()-7*864e5;
     var nw=us.filter(function(x){return x.createdAt>wk;}).length,ac=us.filter(function(x){return x.lastSeen>wk;}).length;
-    document.getElementById('pfAdmSum').innerHTML='<div><b>'+us.length+'</b><span>Registrados</span></div><div><b>'+nw+'</b><span>Nuevos, 7 d\u00edas</span></div><div><b>'+ac+'</b><span>Activos, 7 d\u00edas</span></div>';
+    document.getElementById('pfAdmSum').innerHTML='<div><b>'+us.length+'</b><span>Registrados</span></div><div><b>'+nw+'</b><span>Nuevos, 7 d\u00edas</span></div><div><b>'+ac+'</b><span>Activos, 7 d\u00edas</span></div>'+'<div><b>'+us.filter(function(x){return x.proInterest;}).length+'</b><span>Quieren Pro</span></div>';
     list.innerHTML=us.length?us.map(function(x){
       var isNew=x.createdAt>_pfAdmPrevSeen&&x.uid!==A.user().uid;
-      return '<button class="pf-adm-row" onclick="pfAdminOpenUser(\''+pfEsc(x.uid)+'\')"><div class="pf-adm-av">'+pfEsc((x.name||x.email||'?').charAt(0).toUpperCase())+'</div><div class="pf-adm-info"><div class="pf-adm-n">'+pfEsc(x.name||'Sin nombre')+(isNew?'<span class="pf-adm-new">Nuevo</span>':'')+'</div><div class="pf-adm-m">'+pfEsc(x.email)+'</div></div><div class="pf-adm-c"><b>'+x.colCount+'</b>'+(x.colCount===1?'pieza':'piezas')+'<br>'+pfAgo(x.lastSeen)+'</div></button>';
+      return '<button class="pf-adm-row" onclick="pfAdminOpenUser(\''+pfEsc(x.uid)+'\')"><div class="pf-adm-av">'+pfEsc((x.name||x.email||'?').charAt(0).toUpperCase())+'</div><div class="pf-adm-info"><div class="pf-adm-n">'+pfEsc(x.name||'Sin nombre')+(isNew?'<span class="pf-adm-new">Nuevo</span>':'')+(x.plan==='pro'?'<span class="pf-adm-pro">Pro</span>':(x.proInterest?'<span class="pf-adm-pro pf-adm-want">Quiere Pro</span>':''))+'</div><div class="pf-adm-m">'+pfEsc(x.email)+'</div></div><div class="pf-adm-c"><b>'+x.colCount+'</b>'+(x.colCount===1?'pieza':'piezas')+'<br>'+pfAgo(x.lastSeen)+'</div></button>';
     }).join(''):'<div class="pf-adm-empty">A\u00fan no se ha registrado nadie.</div>';
     pfLSset('pf_admin_seen',Date.now());
     var bd=document.getElementById('pfpAdmBadge');if(bd)bd.hidden=true;pfSetNavBadge(false);
@@ -6673,10 +6751,14 @@ async function pfMigrateLegacy(){
     showToast('Colecci\u00f3n recuperada');
   }catch(e){if(b){b.disabled=false;b.textContent='Reintentar';}showToast('No se pudo: '+((e&&e.code)||'error'));}
 }
+async function pfAdminSetPlan(uid,plan){
+  try{await window._pfAuth.setPlan(uid,plan);var x=_pfAdmUsers.filter(function(u){return u.uid===uid;})[0];if(x)x.plan=plan;showToast(plan==='pro'?'Ahora tiene Pro':'Vuelve al plan gratis');pfAdminOpenUser(uid);}
+  catch(e){showToast('No se pudo cambiar: '+((e&&e.code)||'error'));}
+}
 async function pfAdminOpenUser(uid){
   var x=_pfAdmUsers.filter(function(u){return u.uid===uid;})[0];if(!x)return;
   document.getElementById('pfAdmUName').textContent=x.name||'Sin nombre';
-  document.getElementById('pfAdmUMeta').innerHTML='<b>'+pfEsc(x.email)+'</b><br>Alta: '+pfDate(x.createdAt)+'<br>\u00daltima vez: '+pfAgo(x.lastSeen)+'<br>Dispositivo: '+pfEsc(x.platform||'-')+'. Plan: '+pfEsc(x.plan);
+  document.getElementById('pfAdmUMeta').innerHTML='<b>'+pfEsc(x.email)+'</b><br>Alta: '+pfDate(x.createdAt)+'<br>\u00daltima vez: '+pfAgo(x.lastSeen)+'<br>Dispositivo: '+pfEsc(x.platform||'-')+'. Plan: '+pfEsc(x.plan==='pro'?'Pro':'Gratis')+(x.proInterest?'<br>Pidi\u00f3 que le avisen de Pro: '+pfDate(x.proInterest):'')+'<br><button class="pf-adm-plan" onclick="pfAdminSetPlan(\''+pfEsc(x.uid)+'\',\''+(x.plan==='pro'?'free':'pro')+'\')">'+(x.plan==='pro'?'Quitar Pro':'Dar Pro')+'</button>';
   var col=document.getElementById('pfAdmUCol');col.innerHTML='<div class="pf-adm-empty">Cargando...</div>';
   pfOpenSheet('pfAdminUser');
   try{
@@ -6831,7 +6913,7 @@ async function pfEnrichStart(r){
   for(var attempt=0;attempt<2;attempt++){
     var ctrl=new AbortController(),to=setTimeout(function(){ctrl.abort();},45000);
     try{
-      var resp=await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:1600,messages:[{role:'user',content:content}]},pfKbText(attempt>0),instr,ctrl.signal);
+      var resp=await pfAnalyzeFetch({model:'claude-sonnet-4-6',max_tokens:1600,pf_kind:'enrich',messages:[{role:'user',content:content}]},pfKbText(attempt>0),instr,ctrl.signal);
       clearTimeout(to);
       if(_pfEnrichFor!==r)return;
       if(!resp.ok)throw new Error('http '+resp.status);
@@ -7515,6 +7597,128 @@ pfEncOpen=function(q){
 };
 var _pfkShowPage0=showPage;
 showPage=function(n){if(n!=='enc'&&_pfk.cur>=0)pfkClose();return _pfkShowPage0.apply(this,arguments);};
+// ===================== v5.8: PLAN GRATIS Y PRO =====================
+var PF_PRO_PRICE='3,99 \u20ac';
+var _pfq={info:null,lastMainAt:0,asked:false};
+function pfqToday(){try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);}}
+function pfqLeft(){var i=_pfq.info;return i?Math.max(0,i.limit-i.used):null;}
+function pfqIsPro(){return !!(_pfq.info&&_pfq.info.plan==='pro');}
+function pfqSet(o,quiet){
+  var prev=_pfq.info,was=prev&&prev.day===(o.day||prev.day)?prev.used:null;
+  _pfq.info=Object.assign({},prev||{},o);
+  pfqRender();
+  if(!quiet&&was!=null&&o.used>was&&_pfq.info.plan==='free'){
+    var left=pfqLeft();
+    setTimeout(function(){
+      if(left===1)showToast('Te queda 1 tasaci\u00f3n gratis hoy');
+      else if(left===0)showToast('Has usado tus '+_pfq.info.limit+' tasaciones gratis de hoy');
+    },2200);
+  }
+}
+function pfqFromHeaders(r){
+  try{
+    var u=r.headers.get('x-pf-used');if(u==null)return;
+    pfqSet({plan:r.headers.get('x-pf-plan')||'free',used:+u,limit:+r.headers.get('x-pf-limit')||3,verified:r.headers.get('x-pf-verified')==='1',day:r.headers.get('x-pf-day')||pfqToday()});
+  }catch(e){}
+}
+function pfqDots(n,total,cls){var s='';for(var i=0;i<total;i++)s+='<i class="'+(i<n?'on':'')+'"></i>';return '<span class="'+cls+'" aria-hidden="true">'+s+'</span>';}
+function pfqRender(){
+  var i=_pfq.info,q=document.getElementById('pfQuota'),pl=document.getElementById('pfpPlan');
+  if(!i||!window._pfAuth||!window._pfAuth.user()){if(q)q.hidden=true;if(pl)pl.hidden=true;return;}
+  var left=pfqLeft(),pro=i.plan==='pro',free=!pro;
+  if(q){
+    q.hidden=false;q.className='pf-quota'+(pro?' is-pro':(left===0?' is-zero':''));
+    q.innerHTML=pro?'<span class="pf-quota-pro">PRO</span><span>Tasaciones sin l\u00edmite</span>'
+      :pfqDots(left,i.limit,'pf-quota-dots')+'<span>'+(left>0?(left===1?'Hoy te queda 1 tasaci\u00f3n gratis':'Hoy te quedan '+left+' tasaciones gratis'):'Has usado tus '+i.limit+' tasaciones de hoy')+'</span>'+(left===0?'<span class="pf-quota-go">Ver Pro</span>':'');
+  }
+  if(pl){
+    pl.hidden=false;pl.className='pfp-plan'+(pro?' is-pro':'');
+    document.getElementById('pfpPlanK').textContent=pro?'PHONEFINDER Pro':'Plan gratuito';
+    document.getElementById('pfpPlanT').textContent=pro?'Tasaciones sin l\u00edmite. Gracias por apoyar la app.':(left>0?'Hoy te quedan '+left+' de '+i.limit+' tasaciones. Se renuevan a las 00:00.':'Has usado tus '+i.limit+' tasaciones de hoy. Se renuevan a las 00:00.');
+    document.getElementById('pfpPlanDots').innerHTML=pro?'':pfqDots(left,i.limit,'pf-quota-dots');
+    var b=document.getElementById('pfpPlanBtn');if(b)b.hidden=pro;
+  }
+}
+async function pfqLoad(){
+  var A=window._pfAuth;if(!A||!A.user())return;
+  try{
+    var tok=await A.token();
+    var r=await _pfFetch0('/api/analyze',{headers:{Authorization:'Bearer '+tok}});
+    if(!r.ok)return;
+    var j=await r.json();
+    pfqSet({plan:j.plan,used:j.used,limit:j.limit,verified:j.verified,day:j.day},true);
+  }catch(e){}
+}
+// ---- toda llamada a /api/analyze lleva la sesion y se enteran los avisos ----
+var _pfFetch0=window.fetch.bind(window);
+window.fetch=function(u,o){
+  if(typeof u==='string'&&u.indexOf('/api/analyze')===0&&window._pfAuth)return pfApiFetch(u,o);
+  return _pfFetch0.apply(null,arguments);
+};
+async function pfApiFetch(u,o){
+  var A=window._pfAuth,tok='';
+  try{tok=await A.token();}catch(e){}
+  o=Object.assign({},o||{});
+  var h=Object.assign({},o.headers||{});if(tok)h.Authorization='Bearer '+tok;o.headers=h;
+  var kind='';
+  if(o.method==='POST'&&typeof o.body==='string'){
+    try{var b=JSON.parse(o.body);if(!b.pf_kind){b.pf_kind='extra';o.body=JSON.stringify(b);}kind=b.pf_kind;}catch(e){}
+  }
+  if(kind==='main'||kind==='lot')_pfq.lastMainAt=Date.now();
+  var r=await _pfFetch0(u,o);
+  pfqFromHeaders(r);
+  if(r.status===401||r.status===403||r.status===429){
+    var j=null;try{j=await r.clone().json();}catch(e){}
+    var t=j&&j.error&&j.error.type;
+    if(t==='pf_auth'||t==='pf_verify'||t==='pf_limit'||t==='pf_extras'){
+      pfqHandle(t,j);
+      if(kind==='main'){window._pfCancelled=true;throw new DOMException('pf','AbortError');}
+    }
+  }
+  return r;
+}
+function pfqHandle(t,j){
+  if(t==='pf_auth'){showToast('Tu sesi\u00f3n ha caducado. Vuelve a entrar');setTimeout(function(){try{window._pfAuth.logout();}catch(e){}},1300);}
+  else if(t==='pf_verify')pfOpenSheet('pfVerify');
+  else if(t==='pf_limit'){if(j&&j.pf)pfqSet({plan:j.pf.plan,used:j.pf.limit,limit:j.pf.limit},true);pfProOpen('limit');}
+  else if(t==='pf_extras')showToast('Has llegado al l\u00edmite de consultas de hoy. Vuelve ma\u00f1ana');
+}
+// ---- puerta antes de empezar un analisis (evita ense\u00f1ar el escaner para nada) ----
+function pfGate(){
+  var i=_pfq.info;if(!i||!window._pfAuth||!window._pfAuth.user())return true;
+  if(i.day&&i.day!==pfqToday())return true;
+  if(i.verified===false){pfOpenSheet('pfVerify');return false;}
+  if(i.plan==='free'&&i.used>=i.limit&&Date.now()-_pfq.lastMainAt>15*60*1000){pfProOpen('limit');return false;}
+  return true;
+}
+var _pfAnalyzePhone0=analyzePhone;
+analyzePhone=function(q){if(!pfGate())return Promise.resolve();return _pfAnalyzePhone0.apply(this,arguments);};
+var _pfLotStart0=typeof openLotMode==='function'?openLotMode:null;
+// ---- hoja Pro ----
+function pfProOpen(why){
+  var i=_pfq.info,lead=document.getElementById('pfProLead');
+  if(lead)lead.textContent=why==='limit'?('Has usado tus '+((i&&i.limit)||3)+' tasaciones gratis de hoy. Se renuevan ma\u00f1ana a las 00:00.'):'Con Pro tasas todo lo que quieras, sin contar.';
+  var done=_pfq.asked||pfLS('pf_pro_asked',0);
+  var b=document.getElementById('pfProGo'),n=document.getElementById('pfProNote');
+  if(b){b.disabled=!!done;b.textContent=done?'Anotado. Te avisaremos':'Avisarme cuando est\u00e9 listo';}
+  if(n)n.textContent=done?'Gracias. Te escribiremos al correo de tu cuenta cuando se pueda contratar.':'Todav\u00eda no se puede contratar. Deja tu aviso y ser\u00e1s de los primeros, sin compromiso.';
+  pfOpenSheet('pfPro');
+}
+async function pfProWant(){
+  var b=document.getElementById('pfProGo');if(b)b.disabled=true;
+  try{await window._pfAuth.wantsPro();_pfq.asked=true;pfLSset('pf_pro_asked',1);showToast('Anotado. Te avisaremos');pfProOpen();}
+  catch(e){if(b)b.disabled=false;showToast('No se pudo anotar. Prueba otra vez');}
+}
+async function pfVerifyCheck(){
+  var b=document.getElementById('pfVerifyGo');if(b)b.disabled=true;
+  await pfqLoad();
+  if(b)b.disabled=false;
+  if(_pfq.info&&_pfq.info.verified){pfCloseSheet('pfVerify');try{await window._pfAuth.refresh();}catch(e){}showToast('Listo, ya puedes tasar');}
+  else showToast('Todav\u00eda no consta confirmado. Mira tambi\u00e9n en spam');
+}
+window.addEventListener('pf-auth',function(){_pfq.info=null;pfqRender();pfqLoad();});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&_pfq.info&&_pfq.info.day!==pfqToday())pfqLoad();});
+setTimeout(pfqLoad,1500);
 </script>
 </body>
 </html>
