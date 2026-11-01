@@ -107,6 +107,13 @@
     }
   };
 
+  // ---- Fotos de la enciclopedia elegidas por el administrador ----
+  window._pfKbPhotos = {
+    async list(){ if(!U) return {}; const s=await getDocs(collection(db,'kb_photos')); const o={}; s.docs.forEach(d=>{o[d.id]=d.data();}); return o; },
+    async set(k,v){ if(!isAdmin()) throw Object.assign(new Error('admin'),{code:'permission-denied'}); await setDoc(doc(db,'kb_photos',k),Object.assign({},v,{by:U.email,at:serverTimestamp()})); },
+    async clear(k){ if(!isAdmin()) throw Object.assign(new Error('admin'),{code:'permission-denied'}); await deleteDoc(doc(db,'kb_photos',k)); }
+  };
+
   window._firebaseReady=false;
   onAuthStateChanged(auth, async(user)=>{
     U=user||null;
@@ -2119,6 +2126,119 @@ body.pf-boot .pfh-tool:nth-child(4){animation-delay:1.26s;}
 .pf-intro{overflow:hidden;}
 .pf-intro .photo-strip{justify-content:center;}
 .pf-intro .photo-meta{text-align:center;}
+/* ---------- v5.7 laminas ---------- */
+.pfk-svg{display:block;width:100%;height:100%;overflow:visible;}
+.pfk-svg .k-b{fill:var(--kb,#2B221B);stroke:var(--kbs,none);stroke-width:1.2;}
+.pfk-svg .k-hl{fill:none;stroke:rgba(255,255,255,.2);stroke-width:2;stroke-linecap:round;}
+.pfk-svg .k-d{fill:#F2EADB;}
+.pfk-svg .k-hole{fill:#2B221B;opacity:.78;}
+.pfk-svg .k-a{fill:#D4862A;}
+.pfk-svg .k-br{fill:#C9A060;}
+.pfk-svg .k-w{fill:#7A5233;}
+.pfk-svg .k-wd{fill:#5A3B24;}
+.pfk-svg .k-m{fill:#6E6963;}
+.pfk-svg .k-c{fill:none;stroke:#2B221B;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.pfk-svg .k-thick{stroke-width:3.4;}
+.pfk-svg .k-mag{stroke-width:5.5;stroke:#3B3A3F;}
+.pfk-svg .k-arm{stroke:#8E8A84;stroke-width:4.5;stroke-dasharray:2.2 1.4;}
+.pfk-svg .k-sh{fill:rgba(27,21,17,.13);}
+.pfk-svg .k-g{fill:rgba(176,204,206,.6);}
+.pfk-svg .k-gl{stroke:#2B221B;stroke-width:1.4;}
+.pfk-svg .k-hole2{fill:#1B1511;}
+.pfk-svg .k-ca{fill:none;stroke:#D4862A;stroke-width:2;stroke-linecap:round;}
+.pfk-svg .k-scr{fill:#9DB3A2;}
+.pfk-svg .k-glow{fill:none;stroke:#F2B661;stroke-width:1.6;opacity:.85;}
+.pfk-svg .k-lip{fill:#B8322A;}
+.pfk-svg .k-lip2{fill:#8E211B;}
+.pfk-svg .k-bg{fill:rgba(0,0,0,.18);}
+.pfk-svg .k-pg{fill:#EFE7D6;stroke:#C9BFAA;}
+.pfk-svg .k-en{fill:#2C4F8A;}
+.pfk-svg .k-white{stroke:#fff;stroke-width:2;}
+.pfk-svg .k-wh{fill:#fff;}
+.pfk-svg .k-gls{fill:rgba(63,149,146,.5);stroke:#2A7D6B;stroke-width:1.4;}
+.pfk-svg .k-gls2{fill:rgba(63,149,146,.75);}
+.pfk-svg .k-hlw{fill:none;stroke:rgba(255,255,255,.75);stroke-width:2.5;stroke-linecap:round;}
+/* ---------- v5.7 enciclopedia visual ---------- */
+.pfk-shapes{display:flex;gap:10px;overflow-x:auto;margin:14px -16px 4px;padding:2px 16px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
+.pfk-shapes::-webkit-scrollbar{display:none;}
+.pfk-shape{flex:0 0 84px;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;padding:0;cursor:pointer;font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;scroll-snap-align:start;}
+.pfk-shape-i{width:84px;height:64px;border-radius:16px;background:var(--mist2);box-shadow:inset 0 0 0 1px var(--mist3);display:flex;align-items:center;justify-content:center;padding:6px 8px 4px;transition:box-shadow .2s,background .2s,transform .15s var(--e-soft,ease);}
+.pfk-shape:active .pfk-shape-i{transform:scale(.94);}
+.pfk-shape-t{font-size:11.5px;line-height:1.2;color:var(--fog3);text-align:center;max-width:84px;}
+.pfk-shape.on .pfk-shape-i{background:#fff;box-shadow:inset 0 0 0 2px var(--amber);}
+.pfk-shape.on .pfk-shape-t{color:var(--ink);font-weight:600;}
+.pfk-all{font-family:'Instrument Serif',serif;font-size:30px;color:var(--ink);line-height:1;}
+.pfk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pfk-grid .pfe-empty{grid-column:1/-1;}
+.pfk-card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--mist3);border-radius:18px;overflow:hidden;padding:0;text-align:left;cursor:pointer;font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;transition:transform .15s var(--e-soft,ease);min-width:0;}
+.pfk-card:active{transform:scale(.97);}
+.pfk-pic{position:relative;display:block;aspect-ratio:4/3;background:var(--mist2);padding:10px 12px 4px;overflow:hidden;transition:background .4s;}
+.pfk-pic .pfk-svg{transition:opacity .4s;}
+.pfk-pic img.pfk-ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .45s ease;}
+.pfk-pic.has-ph{background:var(--bak);}
+.pfk-pic.has-ph img.pfk-ph{opacity:1;}
+.pfk-pic.has-ph .pfk-svg{opacity:0;}
+.pfk-tag{position:absolute;top:8px;right:8px;z-index:1;background:#FDECEA;color:var(--ruby);border-radius:8px;padding:2px 7px;font-size:11px;font-weight:600;}
+.pfk-cap{display:flex;flex-direction:column;gap:3px;padding:10px 12px 12px;flex:1;min-width:0;}
+.pfk-n{font-size:14.5px;font-weight:600;line-height:1.28;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pfk-e{font-size:12px;color:var(--fog3);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pfk-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;padding-top:6px;}
+.pfk-p{font-family:'Instrument Serif',serif;font-size:17px;color:var(--ink);white-space:nowrap;}
+/* ficha */
+body.pfk-lock{overflow:hidden;}
+.pfk-sheet{position:fixed;inset:0;z-index:960;background:var(--mist);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transform:translateY(100%);transition:transform .34s cubic-bezier(.2,.8,.2,1);}
+.pfk-sheet[hidden]{display:none;}
+.pfk-sheet.open{transform:none;}
+.pfk-bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 8px;background:var(--mist);box-shadow:0 1px 0 var(--mist3);}
+.pfk-x{display:flex;align-items:center;gap:4px;background:none;border:none;font-family:'Inter',sans-serif;font-size:15.5px;font-weight:600;color:var(--ink);padding:8px 6px;cursor:pointer;}
+.pfk-x svg,.pfk-nav svg{width:20px;height:20px;}
+.pfk-nav{display:flex;gap:6px;}
+.pfk-nav button{width:40px;height:40px;border-radius:50%;border:1px solid var(--mist3);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.pfk-nav button:disabled{opacity:.35;}
+.pfk-hero{margin:0;}
+.pfk-stage{height:min(46vh,360px);background:var(--mist2);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.pfk-hero.is-ph .pfk-stage{background:var(--bak);}
+.pfk-big{width:100%;height:100%;object-fit:contain;animation:pfkIn .35s ease;}
+.pfk-plate{width:78%;max-width:340px;animation:pfkIn .35s ease;}
+@keyframes pfkIn{from{opacity:0;transform:scale(.98);}to{opacity:1;transform:none;}}
+.pfk-credit{font-size:11.5px;line-height:1.4;color:var(--fog3);padding:8px 16px 0;}
+.pfk-credit a{color:var(--fog3);}
+.pfk-ok{display:inline-block;margin-left:6px;color:var(--teal);font-weight:600;}
+.pfk-thumbs{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 2px;scrollbar-width:none;}
+.pfk-thumbs::-webkit-scrollbar{display:none;}
+.pfk-th{flex:0 0 64px;height:64px;border-radius:12px;border:2px solid transparent;padding:0;overflow:hidden;background:var(--bak);cursor:pointer;}
+.pfk-th img{width:100%;height:100%;object-fit:cover;display:block;}
+.pfk-th.on{border-color:var(--amber);}
+.pfk-th-plate{background:var(--mist2);padding:6px 4px;}
+.pfk-th-wait{display:block;background:linear-gradient(90deg,var(--mist2),var(--mist3),var(--mist2));background-size:200% 100%;animation:pfkWait 1.2s linear infinite;}
+@keyframes pfkWait{from{background-position:100% 0;}to{background-position:-100% 0;}}
+.pfk-txt{padding:14px 20px calc(env(safe-area-inset-bottom,0px) + 40px);max-width:640px;}
+.pfk-kind{font-size:13px;font-weight:600;color:var(--amber2);margin:0 0 4px;}
+.pfk-kind:first-letter{text-transform:uppercase;}
+.pfk-t{font-family:'Instrument Serif',serif;font-weight:400;font-size:32px;line-height:1.05;letter-spacing:-.3px;color:var(--ink);margin:0 0 6px;}
+.pfk-o{font-size:14.5px;color:var(--fog3);margin:0 0 16px;}
+.pfk-warnp{font-size:13.5px;color:#3D3A36;margin:-6px 0 14px;line-height:1.45;}
+.pfk-facts{margin:0 0 20px;border-top:1px solid var(--mist3);}
+.pfk-facts>div{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--mist3);}
+.pfk-facts dt{font-size:13.5px;color:var(--fog3);flex-shrink:0;}
+.pfk-facts dd{margin:0;font-size:14.5px;font-weight:600;color:var(--ink);text-align:right;display:flex;align-items:center;gap:8px;}
+.pfk-facts .pfk-price{font-family:'Instrument Serif',serif;font-weight:400;font-size:24px;}
+.pfk-h{font-size:17px;font-weight:600;color:var(--ink);margin:0 0 6px;}
+.pfk-d{font-size:15.5px;line-height:1.58;color:#3D3A36;margin:0 0 8px;}
+.pfk-x2{font-size:13.5px;line-height:1.5;color:var(--fog3);margin:0 0 8px;}
+.pfk-cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin:20px 0 0;background:var(--amber);color:#fff;border:none;border-radius:16px;padding:16px;font-family:'Inter',sans-serif;font-size:15.5px;font-weight:600;cursor:pointer;}
+.pfk-cta svg{width:20px;height:20px;}
+.pfk-cta:active{transform:scale(.98);}
+.pfk-more{display:block;text-align:center;margin:12px 0 0;padding:14px;border:1px solid var(--mist3);border-radius:16px;background:var(--surface);color:var(--ink);font-size:14.5px;font-weight:600;text-decoration:none;}
+.pfk-disc{font-size:12.5px;line-height:1.5;color:var(--fog3);margin:16px 0 0;}
+.pfk-admin{margin:16px 0 0;padding:14px;border:1.5px dashed var(--amber);border-radius:16px;background:#FFF8EE;}
+.pfk-admin-t{font-size:13px;color:var(--amber3);margin:0 0 10px;line-height:1.4;}
+.pfk-admin-b{display:flex;flex-wrap:wrap;gap:8px;}
+.pfk-admin-b button{border:1px solid var(--amber);background:#fff;color:var(--amber3);border-radius:999px;padding:8px 13px;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;}
+.pfk-admin-b .pfk-admin-x{border-color:var(--mist3);color:var(--fog3);}
+@media (prefers-reduced-motion:reduce){.pfk-sheet{transition:none;}.pfk-big,.pfk-plate{animation:none;}}
+.pfk-row .pfe-holes{grid-template-columns:repeat(4,8px);gap:3px;}.pfk-row .pfe-holes i{width:8px;height:8px;}
+.pf-ach-toast{transform:translate(-50%,-200%);visibility:hidden;transition:transform .45s var(--e-spring),visibility 0s .45s;}.pf-ach-toast.show{visibility:visible;transition:transform .45s var(--e-spring),visibility 0s;}
 </style>
 </head>
 <body>
@@ -2648,14 +2768,16 @@ body.pf-boot .pfh-tool:nth-child(4){animation-delay:1.26s;}
     <p class="pfe-sub" id="pfeSub"></p>
   </header>
   <label class="pfe-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.2" y2="16.2"/></svg><input id="pfeQ" type="search" placeholder="Modelo, fabricante, pa&iacute;s o &eacute;poca" autocomplete="off" oninput="pfEncRender(true)"></label>
+  <div class="pfk-shapes" id="pfeShapes" role="group" aria-label="Forma"></div>
   <div class="pfe-chips" id="pfeRegions" role="group" aria-label="Pa&iacute;s o tipo"></div>
   <div class="pfe-chips pfe-chips-s" id="pfeRarity" role="group" aria-label="Rareza"></div>
   <p class="pfe-count" id="pfeCount" aria-live="polite"></p>
   <div class="pfe-list" id="pfeList"></div>
   <button class="pfe-more" id="pfeMore" onclick="pfEncMore()" hidden>Ver m&aacute;s</button>
-  <p class="pfe-foot">Precios orientativos de venta en Espa&ntilde;a en buen estado. La rareza se marca en los agujeros del disco, como en las tasaciones.</p>
+  <p class="pfe-foot">Precios orientativos de venta en Espa&ntilde;a en buen estado. La rareza se marca en los agujeros del disco, como en las tasaciones. Las fotos vienen de Wikimedia Commons, de sus autores y con licencia libre.</p>
  </div>
 </div>
+<div class="pfk-sheet" id="pfkSheet" hidden role="dialog" aria-modal="true" aria-label="Ficha de la enciclopedia"><div class="pfk-body" id="pfkBody"></div></div>
 
 <!-- PERFIL -->
 <div class="page" id="page-profile">
@@ -5904,7 +6026,7 @@ function pfUserRefsText(){
 // perfil con cifras, logros y ajustes, compartir como imagen, vista
 // vitrina y ayuda. Todo lo local vive en localStorage.
 // =====================================================================
-var PF_APP_VERSION='5.6',PF_NEWS_VER='v5.3';
+var PF_APP_VERSION='5.7',PF_NEWS_VER='v5.3';
 function pfLS(k,def){try{var v=localStorage.getItem(k);return v==null?def:JSON.parse(v);}catch(e){return def;}}
 function pfLSset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
@@ -6882,56 +7004,10 @@ function pfEncRegion(m){
 }
 function pfEncLevel(r){return {C:1,PC:2,R:3,MR:4}[r]||1;}
 function pfEncPrice(p){var main=String(p||'').split(';')[0].trim();return main?main.replace('-',PF_DASH)+' '+PF_EUR:'';}
-function pfEncBuild(){
-  if(_pfEnc.built)return;_pfEnc.built=true;
-  var mk=function(arr,key,box){box.innerHTML=arr.map(function(x){return '<button class="pfe-chip'+(x[0]===_pfEnc[key]?' on':'')+'" data-k="'+x[0]+'" onclick="pfEncSet(\''+key+'\',\''+x[0]+'\')">'+x[1]+'</button>';}).join('');};
-  mk(PF_ENC_REG,'reg',document.getElementById('pfeRegions'));
-  mk(PF_ENC_RAR,'rar',document.getElementById('pfeRarity'));
-  var n=PF_KB_MODELS.length,sub=document.getElementById('pfeSub');
-  if(sub)sub.textContent=n+' fichas de tel\u00e9fonos de todo el mundo, accesorios del rastro y r\u00e9plicas modernas. Es la misma base que usa la IA al tasar.';
-}
-function pfEncSet(key,val){
-  _pfEnc[key]=val;
-  document.querySelectorAll(key==='reg'?'#pfeRegions .pfe-chip':'#pfeRarity .pfe-chip').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-k')===val);});
-  pfEncRender(true);
-}
-function pfEncRender(reset){
-  if(reset)_pfEnc.n=40;
-  var q=pfNorm((document.getElementById('pfeQ')||{}).value||'').trim(),toks=q?q.split(/\s+/):[];
-  var regLbl={};PF_ENC_REG.forEach(function(x){regLbl[x[0]]=pfNorm(x[1]);});
-  var res=PF_KB_MODELS.filter(function(m){
-    var reg=pfEncRegion(m);
-    if(_pfEnc.reg==='eri'){if(!/ericsson|ericofon|elektrisk bureau|fatme|tunnan|deckert/.test(pfNorm(m[0]+' '+m[1])))return false;}
-    else if(_pfEnc.reg!=='all'&&reg!==_pfEnc.reg)return false;
-    if(_pfEnc.rar!=='all'&&m[4]!==_pfEnc.rar)return false;
-    if(!toks.length)return true;
-    var hay=pfNorm(m[0]+' '+m[1]+' '+m[2]+' '+m[3]+' '+(regLbl[reg]||''));
-    for(var i=0;i<toks.length;i++)if(hay.indexOf(toks[i])<0)return false;
-    return true;
-  });
-  _pfEnc.res=res;
-  var cnt=document.getElementById('pfeCount');if(cnt)cnt.textContent=res.length===1?'1 ficha':res.length+' fichas';
-  var list=document.getElementById('pfeList');if(!list)return;
-  if(!res.length){list.innerHTML='<div class="pfe-empty">No hay ninguna ficha con esos filtros. Prueba con el fabricante o el pa\u00eds.</div>';document.getElementById('pfeMore').hidden=true;return;}
-  list.innerHTML=res.slice(0,_pfEnc.n).map(pfEncRow).join('');
-  document.getElementById('pfeMore').hidden=res.length<=_pfEnc.n;
-  if(reset&&typeof pfStagger==='function')pfStagger(list,12);
-}
 var PF_ACC={gondola:'g\u00f3ndola',acustico:'ac\u00fastico',acusticos:'ac\u00fasticos',administracion:'administraci\u00f3n',aereas:'a\u00e9reas',aleman:'alem\u00e1n',analogica:'anal\u00f3gica',analogico:'anal\u00f3gico',anos:'a\u00f1os',aqui:'aqu\u00ed',asi:'as\u00ed',automatico:'autom\u00e1tico',basica:'b\u00e1sica',belgica:'B\u00e9lgica',berlines:'berlin\u00e9s',boton:'bot\u00f3n',britanica:'brit\u00e1nica',britanico:'brit\u00e1nico',britanicos:'brit\u00e1nicos',cajon:'caj\u00f3n',camara:'c\u00e1mara',canada:'Canad\u00e1',caracteristica:'caracter\u00edstica',caracteristicas:'caracter\u00edsticas',catalogo:'cat\u00e1logo',ceramica:'cer\u00e1mica',coleccion:'colecci\u00f3n',compania:'compa\u00f1\u00eda',comun:'com\u00fan',conexion:'conexi\u00f3n',dali:'Dal\u00ed',danes:'dan\u00e9s',despues:'despu\u00e9s',disenado:'dise\u00f1ado',diseno:'dise\u00f1o',disenos:'dise\u00f1os',electrica:'el\u00e9ctrica',electronica:'electr\u00f3nica',electronico:'electr\u00f3nico',emision:'emisi\u00f3n',epoca:'\u00e9poca',espana:'Espa\u00f1a',espanol:'espa\u00f1ol',espanola:'espa\u00f1ola',espanoles:'espa\u00f1oles',estetica:'est\u00e9tica',extraible:'extra\u00edble',fabricacion:'fabricaci\u00f3n',frances:'franc\u00e9s',fundicion:'fundici\u00f3n',genova:'G\u00e9nova',hungria:'Hungr\u00eda',imitacion:'imitaci\u00f3n',ingles:'ingl\u00e9s',japon:'Jap\u00f3n',japones:'japon\u00e9s',linea:'l\u00ednea',lineas:'l\u00edneas',madrileno:'madrile\u00f1o',magnetico:'magn\u00e9tico',mas:'m\u00e1s',maximo:'m\u00e1ximo',mecanico:'mec\u00e1nico',metalica:'met\u00e1lica',metalico:'met\u00e1lico',metalicos:'met\u00e1licos',mexico:'M\u00e9xico',microtelefono:'microtel\u00e9fono',microtelefonos:'microtel\u00e9fonos',minimo:'m\u00ednimo',movil:'m\u00f3vil',moviles:'m\u00f3viles',numero:'n\u00famero',numeros:'n\u00fameros',operacion:'operaci\u00f3n',pais:'pa\u00eds',paises:'Pa\u00edses',pequena:'peque\u00f1a',pequenas:'peque\u00f1as',pequeno:'peque\u00f1o',pequenos:'peque\u00f1os',periodo:'per\u00edodo',plastico:'pl\u00e1stico',plasticos:'pl\u00e1sticos',portugues:'portugu\u00e9s',practico:'pr\u00e1ctico',publica:'p\u00fablica',publico:'p\u00fablico',publicos:'p\u00fablicos',raton:'rat\u00f3n',razon:'raz\u00f3n',region:'regi\u00f3n',replica:'r\u00e9plica',replicas:'r\u00e9plicas',reproduccion:'reproducci\u00f3n',republica:'Rep\u00fablica',segun:'seg\u00fan',senal:'se\u00f1al',senales:'se\u00f1ales',senalizar:'se\u00f1alizar',sovietico:'sovi\u00e9tico',sovieticos:'sovi\u00e9ticos',tambien:'tambi\u00e9n',tecnica:'t\u00e9cnica',tecnico:'t\u00e9cnico',tecnologia:'tecnolog\u00eda',telefonica:'telef\u00f3nica',telefonico:'telef\u00f3nico',telefonicos:'telef\u00f3nicos',telefonicas:'telef\u00f3nicas',guia:'gu\u00eda',guias:'gu\u00edas',fisica:'f\u00edsica',historico:'hist\u00f3rico',musica:'m\u00fasica',telefono:'tel\u00e9fono',telefonos:'tel\u00e9fonos',telegrafo:'tel\u00e9grafo',telescopica:'telesc\u00f3pica',tipico:'t\u00edpico',ultima:'\u00faltima',ultimo:'\u00faltimo',unico:'\u00fanico',version:'versi\u00f3n',vienes:'vien\u00e9s',vision:'visi\u00f3n'};
 var PF_ACC_RE=new RegExp('\\b('+Object.keys(PF_ACC).join('|')+')\\b','gi');
 function pfAcc(t){return String(t==null?'':t).replace(PF_ACC_RE,function(w){var r=PF_ACC[w.toLowerCase()];if(!r)return w;if(w.charAt(0)===w.charAt(0).toUpperCase()&&r.charAt(0)===r.charAt(0).toLowerCase())r=r.charAt(0).toUpperCase()+r.slice(1);return r;});}
-function pfEncRow(m){
-  var lvl=pfEncLevel(m[4]),extra=String(m[5]||'').split(';').slice(1).join(';').trim();
-  return '<div class="pfe-item"><button class="pfe-row" aria-expanded="false" onclick="pfEncToggle(this)">'
-    +'<span class="pfe-holes l'+lvl+'" title="'+pfRarityText(lvl)+'"><i></i><i></i><i></i><i></i></span>'
-    +'<span class="pfe-tx"><span class="pfe-n">'+escapeHtml(pfAcc(m[0]))+'</span><span class="pfe-m">'+escapeHtml(pfAcc([m[1],m[2]].filter(Boolean).join(', ')))+'</span></span>'
-    +'<span class="pfe-p">'+pfEncPrice(m[5])+'</span></button>'
-    +'<div class="pfe-detail" hidden><p>'+escapeHtml(pfAcc(m[3]))+'</p>'
-    +'<p class="pfe-meta">Rareza: '+pfRarityText(lvl).toLowerCase()+(extra?'. '+escapeHtml(pfAcc(extra.charAt(0).toUpperCase()+extra.slice(1))):'')+'.</p>'
-    +(m[6]==='rep'?'<p><span class="pfe-warn">Reproducci\u00f3n moderna</span></p>':'')+'</div></div>';
-}
 function pfEncToggle(b){var d=b.nextElementSibling,open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',open?'false':'true');if(d){d.hidden=open;if(!open)d.classList.add('pf-arrive');}}
-function pfEncMore(){_pfEnc.n+=40;pfEncRender(false);}
 function pfEncOpen(q){
   var cur=document.querySelector('.page.active');var from=cur?cur.id.replace('page-',''):'home';
   if(from!=='enc')_pfEnc.from=from;
@@ -6989,6 +7065,456 @@ function pfhSpin(){
   pfhInit();
   try{renderHuntWidget();}catch(e){}
 })();
+// ===================== v5.7: LAMINAS (ilustraciones por tipo de telefono) =====================
+// Cada tipo es una silueta de baquelita sobre papel, con el disco en marfil y un toque ambar.
+// Coordenadas en una caja de 160x120; el suelo esta en y=104.
+function pfkDial(cx,cy,r,ry){
+  ry=ry||r;var s='<ellipse class="k-d" cx="'+cx+'" cy="'+cy+'" rx="'+r+'" ry="'+ry+'"/>';
+  var hr=Math.max(1.2,r*0.13),rr=r*0.68;
+  for(var i=0;i<10;i++){var a=(-60+i*27)*Math.PI/180;s+='<circle class="k-hole" cx="'+(cx+Math.cos(a)*rr).toFixed(1)+'" cy="'+(cy+Math.sin(a)*rr*ry/r).toFixed(1)+'" r="'+hr.toFixed(1)+'"/>';}
+  return s+'<ellipse class="k-a" cx="'+cx+'" cy="'+cy+'" rx="'+(r*0.3).toFixed(1)+'" ry="'+(ry*0.3).toFixed(1)+'"/>';
+}
+// Microtelefono tumbado, centrado en (x,y); s escala (1 = 100 de largo); rot en grados
+function pfkHandset(x,y,s,rot,cls){
+  return '<path class="'+(cls||'k-b')+'" transform="translate('+x+' '+y+') rotate('+(rot||0)+') scale('+s+')" d="M-50,2 C-51,-8 -44,-13 -34,-12 C-14,-15 14,-15 34,-12 C44,-13 51,-8 50,2 L49,7 C48,11 44,13 40,13 L30,13 C26,13 23,10 23,6 L22,1 C8,-1 -8,-1 -22,1 L-23,6 C-23,10 -26,13 -30,13 L-40,13 C-44,13 -48,11 -49,7 Z"/>'
+    +'<path class="k-hl" transform="translate('+x+' '+y+') rotate('+(rot||0)+') scale('+s+')" d="M-34,-8 C-14,-11 14,-11 34,-8"/>';
+}
+function pfkCord(d){return '<path class="k-c" d="'+d+'"/>';}
+function pfkKeys(x0,y0,dx,dy,cols,rows,w,h){var s='';for(var r=0;r<rows;r++)for(var c=0;c<cols;c++)s+='<rect class="k-d" x="'+(x0+c*dx)+'" y="'+(y0+r*dy)+'" width="'+w+'" height="'+h+'" rx="1.2"/>';return s;}
+var PFK_ART={
+  desk:function(){return pfkCord('M42,96 C26,98 20,84 28,76 C34,70 30,60 34,54')
+    +'<path class="k-b" d="M36,101 C34,84 42,62 58,58 L102,58 C118,62 126,84 124,101 Z"/>'
+    +'<path class="k-hl" d="M58,63 C48,68 44,80 43,94"/>'
+    +'<rect class="k-b" x="54" y="50" width="12" height="10" rx="3"/><rect class="k-b" x="94" y="50" width="12" height="10" rx="3"/>'
+    +pfkHandset(80,44,0.86,0)+pfkDial(80,82,17,13);},
+  bakelite:function(){return pfkCord('M40,98 C24,98 20,86 26,78 C32,70 28,56 34,48')
+    +'<path class="k-b" d="M40,101 L48,66 C49,63 51,62 54,62 L106,62 C109,62 111,63 112,66 L120,101 Z"/>'
+    +'<path class="k-b" d="M60,62 L62,50 L98,50 L100,62 Z"/>'
+    +'<rect class="k-b" x="61" y="38" width="7" height="14" rx="2"/><rect class="k-b" x="92" y="38" width="7" height="14" rx="2"/>'
+    +'<path class="k-hl" d="M50,68 L44,96"/>'
+    +pfkHandset(80,32,0.84,0)+pfkDial(80,84,14,12);},
+  candle:function(){return pfkCord('M62,100 C46,102 40,92 46,84 C52,76 66,74 72,64')
+    +'<ellipse class="k-b" cx="80" cy="100" rx="26" ry="5.5"/><path class="k-b" d="M58,99 C62,90 72,88 76,84 L84,84 C88,88 98,90 102,99 Z"/>'
+    +'<rect class="k-b" x="76.5" y="34" width="7" height="52" rx="2"/>'
+    +'<path class="k-b" d="M70,20 C70,16 90,16 90,20 L86,34 L74,34 Z"/><ellipse class="k-a" cx="80" cy="19" rx="10" ry="3"/>'
+    +'<path class="k-b" d="M84,52 L100,52 L100,56 L84,56 Z"/>'
+    +'<path class="k-b" d="M101,44 C101,40 111,40 111,44 L109,58 L109,86 C109,89 103,89 103,86 L103,58 Z"/><ellipse class="k-a" cx="106" cy="43" rx="5" ry="2"/>'
+    +pfkCord('M106,88 C108,98 118,100 122,94')+pfkDial(80,95,8,3.5);},
+  skeleton:function(){return '<path class="k-b" d="M44,92 L116,92 L114,98 L46,98 Z"/>'
+    +'<path class="k-c k-thick" d="M48,98 C42,100 40,104 36,104 M112,98 C118,100 120,104 124,104 M58,98 L54,104 M102,98 L106,104"/>'
+    +'<path class="k-c k-mag" d="M56,92 L56,70 C56,56 74,56 74,70 L74,92 M86,92 L86,70 C86,56 104,56 104,70 L104,92"/>'
+    +'<rect class="k-b" x="77" y="40" width="6" height="52" rx="2"/><path class="k-b" d="M66,44 L94,44 L94,48 L66,48 Z"/>'
+    +'<rect class="k-b" x="66" y="34" width="5" height="12" rx="2"/><rect class="k-b" x="89" y="34" width="5" height="12" rx="2"/>'
+    +pfkHandset(80,28,0.82,0)
+    +'<path class="k-c k-thick" d="M116,78 L128,78 L128,90"/><circle class="k-br" cx="128" cy="92" r="3.5"/>'
+    +pfkCord('M46,94 C32,92 30,78 40,70 C46,66 44,48 38,38 C36,32 40,28 44,27');},
+  magwall:function(){return '<rect class="k-w" x="50" y="26" width="60" height="76" rx="5"/>'
+    +'<path class="k-hl" d="M56,32 L56,96"/><rect class="k-wd" x="56" y="72" width="48" height="22" rx="2"/>'
+    +'<circle class="k-br" cx="68" cy="20" r="9"/><circle class="k-br" cx="92" cy="20" r="9"/><rect class="k-b" x="78" y="16" width="4" height="12"/>'
+    +'<path class="k-b" d="M74,52 L86,52 L92,62 L68,62 Z"/><ellipse class="k-a" cx="80" cy="62" rx="12" ry="3"/>'
+    +'<path class="k-b" d="M38,34 C38,30 46,30 46,34 L45,46 L45,72 C45,75 39,75 39,72 L39,46 Z"/><ellipse class="k-a" cx="42" cy="33" rx="4" ry="1.8"/>'
+    +'<path class="k-c" d="M46,44 L50,44"/>'+pfkCord('M42,74 C42,86 50,90 52,86')
+    +'<path class="k-c k-thick" d="M110,52 L122,52 L122,66"/><circle class="k-br" cx="122" cy="68" r="3.5"/>';},
+  wall:function(){return '<rect class="k-b" x="58" y="18" width="50" height="82" rx="10"/>'
+    +'<path class="k-hl" d="M64,26 L64,92"/>'
+    +'<path class="k-b" transform="translate(48 58) rotate(90) scale(0.78)" d="M-50,2 C-51,-8 -44,-13 -34,-12 C-14,-15 14,-15 34,-12 C44,-13 51,-8 50,2 L49,7 C48,11 44,13 40,13 L30,13 C26,13 23,10 23,6 L22,1 C8,-1 -8,-1 -22,1 L-23,6 C-23,10 -26,13 -30,13 L-40,13 C-44,13 -48,11 -49,7 Z"/>'
+    +pfkCord('M44,98 C46,106 58,106 62,100')+pfkDial(86,68,14);},
+  early:function(){return pfkCord('M50,90 C34,90 32,76 40,70 C46,66 42,50 40,42')
+    +'<path class="k-b" d="M46,74 L114,74 L118,96 L42,96 Z"/>'
+    +'<path class="k-c k-thick" d="M48,96 L46,103 M112,96 L114,103"/>'
+    +'<circle class="k-br" cx="62" cy="86" r="7"/><circle class="k-br" cx="98" cy="86" r="7"/>'
+    +'<path class="k-b" d="M74,74 L76,48 L84,48 L86,74 Z"/><path class="k-b" d="M64,46 C64,40 70,40 70,46 L90,46 C90,40 96,40 96,46 L96,50 L64,50 Z"/>'
+    +pfkHandset(80,36,0.78,0)+pfkDial(80,64,9,6);},
+  keys:function(){return pfkCord('M40,98 C24,98 22,86 30,80 C36,76 32,64 36,58')
+    +'<path class="k-b" d="M34,101 L44,72 C45,69 48,68 51,68 L109,66 C112,66 115,67 116,70 L126,101 Z"/>'
+    +'<path class="k-hl" d="M50,72 L42,96"/>'
+    +pfkHandset(80,56,0.84,-1.5)+pfkKeys(70,74,7.5,6.5,3,4,5,4.4);},
+  gondola:function(){return pfkCord('M48,98 C32,100 28,90 34,84 C40,78 36,70 40,66')
+    +'<path class="k-b" d="M46,101 C44,90 52,80 66,78 L96,78 C110,80 118,90 116,101 Z"/>'
+    +'<path class="k-hl" d="M64,82 C56,86 52,92 51,98"/>'
+    +'<path class="k-b" transform="translate(81 68)" d="M-48,2 C-48,-5 -42,-8 -34,-7 C-12,-9 12,-9 34,-7 C42,-8 48,-5 48,2 L47,5 C46,8 42,9 38,9 L30,9 C27,9 25,7 25,5 C8,3 -8,3 -25,5 C-25,7 -27,9 -30,9 L-38,9 C-42,9 -46,8 -47,5 Z"/>'
+    +pfkDial(81,92,9,6)+'<ellipse class="k-glow" cx="81" cy="92" rx="11" ry="7.5"/>';},
+  ericofon:function(){return '<ellipse class="k-b" cx="80" cy="100" rx="24" ry="5.5"/>'
+    +'<path class="k-b" d="M57,100 C57,88 70,84 73,74 L73,40 C73,24 88,18 100,24 L104,28 C102,32 98,30 94,30 C88,30 86,34 86,42 L86,74 C89,84 103,88 103,100 Z"/>'
+    +'<path class="k-hl" d="M77,44 L77,74"/>'+'<ellipse class="k-a" cx="99" cy="28" rx="5" ry="2.4" transform="rotate(35 99 28)"/>'
+    +pfkCord('M100,100 C112,104 122,98 124,90');},
+  payphone:function(){return '<rect class="k-m" x="56" y="12" width="50" height="92" rx="5"/>'
+    +'<path class="k-hl" d="M62,18 L62,98"/><rect class="k-b" x="88" y="20" width="12" height="3" rx="1"/><rect class="k-b" x="88" y="27" width="12" height="3" rx="1"/>'
+    +pfkDial(81,54,14)+'<rect class="k-b" x="72" y="82" width="18" height="12" rx="2"/>'
+    +'<path class="k-b" transform="translate(46 54) rotate(90) scale(0.74)" d="M-50,2 C-51,-8 -44,-13 -34,-12 C-14,-15 14,-15 34,-12 C44,-13 51,-8 50,2 L49,7 C48,11 44,13 40,13 L30,13 C26,13 23,10 23,6 L22,1 C8,-1 -8,-1 -22,1 L-23,6 C-23,10 -26,13 -30,13 L-40,13 C-44,13 -48,11 -49,7 Z"/>'
+    +'<path class="k-c k-arm" d="M42,92 C42,100 52,102 58,96"/>';},
+  booth:function(){return '<rect class="k-b" x="52" y="10" width="56" height="96" rx="3"/><rect class="k-a" x="56" y="14" width="48" height="9" rx="1.5"/>'
+    +'<rect class="k-g" x="58" y="28" width="20" height="72"/><rect class="k-g" x="82" y="28" width="20" height="72"/>'
+    +'<path class="k-gl" d="M58,40 L78,40 M58,52 L78,52 M58,64 L78,64 M58,76 L78,76 M58,88 L78,88 M82,40 L102,40 M82,52 L102,52 M82,64 L102,64 M82,76 L102,76 M82,88 L102,88"/>'
+    +'<rect class="k-b" x="86" y="56" width="12" height="16" rx="2"/>';},
+  field:function(){return '<path class="k-c k-thick" d="M48,62 C48,30 112,30 112,62"/>'
+    +'<rect class="k-w" x="42" y="58" width="76" height="44" rx="6"/><path class="k-hl" d="M42,70 L118,70"/>'
+    +'<rect class="k-b" x="46" y="54" width="68" height="8" rx="3"/>'
+    +pfkHandset(80,82,0.62,0,'k-b')
+    +'<path class="k-c k-thick" d="M118,80 L128,80 L128,92"/><circle class="k-br" cx="128" cy="94" r="3.5"/>';},
+  switchboard:function(){var s='<rect class="k-w" x="38" y="18" width="84" height="56" rx="4"/><path class="k-w" d="M32,74 L128,74 L124,92 L36,92 Z"/>'
+    +'<rect class="k-wd" x="44" y="94" width="8" height="10"/><rect class="k-wd" x="108" y="94" width="8" height="10"/>';
+    for(var r=0;r<4;r++)for(var c=0;c<7;c++)s+='<circle class="k-hole2" cx="'+(50+c*10)+'" cy="'+(28+r*11)+'" r="2.4"/>';
+    return s+'<path class="k-ca" d="M60,80 C60,60 70,50 70,39 M80,80 C82,66 90,60 90,50 M100,80 C98,70 60,66 60,61"/>'
+      +'<circle class="k-br" cx="60" cy="81" r="2.5"/><circle class="k-br" cx="80" cy="81" r="2.5"/><circle class="k-br" cx="100" cy="81" r="2.5"/>';},
+  brick:function(){return '<rect class="k-b" x="84" y="6" width="5" height="18" rx="2"/><rect class="k-b" x="66" y="20" width="28" height="84" rx="5"/>'
+    +'<rect class="k-scr" x="71" y="28" width="18" height="8" rx="1"/>'+pfkKeys(71,44,6.5,8,3,5,5,5)+'<path class="k-hl" d="M70,24 L70,98"/>';},
+  flip:function(){return '<path class="k-b" d="M62,60 L98,60 L98,100 C98,103 96,105 93,105 L67,105 C64,105 62,103 62,100 Z"/>'
+    +'<path class="k-b" d="M66,14 L94,14 C96,14 98,16 98,18 L98,58 L62,58 L62,18 C62,16 64,14 66,14 Z" transform="rotate(-8 80 59)"/>'
+    +'<rect class="k-scr" x="68" y="22" width="22" height="18" rx="1.5" transform="rotate(-8 80 59)"/>'
+    +'<rect class="k-b" x="90" y="4" width="4" height="12" rx="2" transform="rotate(-8 80 59)"/>'
+    +pfkKeys(68,68,8.5,8,3,4,6,5);},
+  mobile:function(){return '<rect class="k-b" x="64" y="14" width="32" height="92" rx="12"/>'
+    +'<rect class="k-scr" x="70" y="26" width="20" height="18" rx="2"/><ellipse class="k-d" cx="80" cy="54" rx="8" ry="4"/>'
+    +pfkKeys(69,64,8,8,3,4,6,4.5)+'<path class="k-hl" d="M69,20 L69,98"/>';},
+  novelty:function(){return '<ellipse class="k-b" cx="80" cy="99" rx="34" ry="6"/>'
+    +'<path class="k-lip" d="M42,74 C52,60 66,58 74,64 C77,66 79,66 80,65 C81,66 83,66 86,64 C94,58 108,60 118,74 C108,90 92,96 80,96 C68,96 52,90 42,74 Z"/>'
+    +'<path class="k-lip2" d="M44,74 C60,78 70,80 80,79 C90,80 100,78 116,74 C104,79 92,82 80,82 C68,82 56,79 44,74 Z"/>'
+    +'<path class="k-hl" d="M60,66 C66,63 70,63 74,66"/>';},
+  coin:function(){return '<circle class="k-br" cx="80" cy="58" r="34"/><circle class="k-c" cx="80" cy="58" r="27"/>'
+    +'<rect class="k-bg" x="50" y="50" width="60" height="5" rx="2.5"/><rect class="k-bg" x="50" y="61" width="60" height="5" rx="2.5"/>'
+    +'<path class="k-hl" d="M58,34 C64,28 74,26 82,26"/>';},
+  card:function(){return '<rect class="k-b" x="38" y="30" width="84" height="54" rx="6" transform="rotate(-6 80 57)"/>'
+    +'<rect class="k-a" x="38" y="30" width="84" height="16" rx="6" transform="rotate(-6 80 57)"/>'
+    +'<rect class="k-br" x="50" y="56" width="16" height="12" rx="2" transform="rotate(-6 80 57)"/>'
+    +'<path class="k-hl" d="M74,66 L112,62 M74,72 L104,69" transform="rotate(-2 80 57)"/>';},
+  book:function(){return '<path class="k-pg" d="M44,32 L112,26 L118,92 L50,98 Z"/>'
+    +'<path class="k-b" d="M40,30 L108,24 L114,90 L46,96 Z"/>'
+    +'<rect class="k-a" x="50" y="40" width="50" height="12" rx="2" transform="rotate(-5 75 46)"/>'
+    +'<path class="k-hl" d="M52,64 L102,60 M53,72 L103,68 M54,80 L94,77"/>';},
+  sign:function(){return '<rect class="k-en" x="34" y="26" width="92" height="62" rx="8"/><rect class="k-c k-white" x="40" y="32" width="80" height="50" rx="5"/>'
+    +'<path class="k-wh" transform="translate(80 58) scale(0.5)" d="M-50,2 C-51,-8 -44,-13 -34,-12 C-14,-15 14,-15 34,-12 C44,-13 51,-8 50,2 L49,7 C48,11 44,13 40,13 L30,13 C26,13 23,10 23,6 L22,1 C8,-1 -8,-1 -22,1 L-23,6 C-23,10 -26,13 -30,13 L-40,13 C-44,13 -48,11 -49,7 Z"/>'
+    +'<circle class="k-wh" cx="40" cy="32" r="2"/><circle class="k-wh" cx="120" cy="32" r="2"/><circle class="k-wh" cx="40" cy="82" r="2"/><circle class="k-wh" cx="120" cy="82" r="2"/>';},
+  bells:function(){return '<rect class="k-b" x="54" y="54" width="52" height="40" rx="5"/>'
+    +'<path class="k-br" d="M54,50 C54,32 78,32 78,50 Z"/><path class="k-br" d="M82,50 C82,32 106,32 106,50 Z"/>'
+    +'<rect class="k-b" x="78.5" y="30" width="3" height="22"/><circle class="k-b" cx="80" cy="30" r="3.5"/><path class="k-hl" d="M60,60 L60,88"/>'
+    +pfkCord('M80,94 C80,102 90,104 96,100');},
+  dial:function(){return pfkDial(80,58,40)+'<path class="k-b" d="M112,74 L122,82 L118,86 L108,78 Z"/>';},
+  handset:function(){return pfkHandset(80,56,1.3,-12)+pfkCord('M28,80 C20,92 32,100 40,94 C48,88 40,80 48,78 C56,76 54,90 62,90');},
+  cable:function(){var s='M30,60';for(var i=0;i<10;i++){var x=36+i*9;s+=' C'+(x-2)+',40 '+(x+8)+',40 '+(x+6)+',60 C'+(x+4)+',78 '+(x-4)+',78 '+(x+3)+',60';}
+    return '<path class="k-c k-thick" d="'+s+'"/><rect class="k-b" x="18" y="54" width="14" height="12" rx="2"/><rect class="k-b" x="126" y="54" width="14" height="12" rx="2"/>';},
+  insulator:function(){return '<rect class="k-wd" x="77" y="78" width="6" height="26"/>'
+    +'<path class="k-gls" d="M66,36 C66,22 94,22 94,36 L96,52 C108,54 112,62 110,70 L50,70 C48,62 52,54 64,52 Z"/>'
+    +'<path class="k-gls2" d="M54,70 L106,70 L104,78 L56,78 Z"/><path class="k-hlw" d="M72,30 C70,40 70,50 66,60"/>';}
+};
+var PFK_TINT={rojo:'#A8362B',roja:'#A8362B',red:'#A8362B',verde:'#4D7558',green:'#4D7558',marfil:'#E8DDC6',crema:'#E8DDC6',blanco:'#EEE9DE',blanca:'#EEE9DE',gris:'#8E8A84',grigio:'#8E8A84',bigrigio:'#8E8A84',marron:'#6B4A33',caoba:'#6B3A24',rosa:'#D7929C',turquesa:'#3F9592',azul:'#3E5F8C',amarillo:'#D9B44A',naranja:'#D4862A',beige:'#D8C7A6',transparente:'glass',metalizado:'#9A9690',cobre:'#B0704A',laton:'#C9A060'};
+function pfkType(m){
+  var t=pfNorm(m[0]),all=pfNorm(m[0]+' '+m[1]+' '+m[3]),tag=m[6]||'';
+  if(tag==='acc'||/^(ficha|tarjeta|guia|listin|placa|cartel|caja de timbre|disco de marcar|microtelefono .*suelto|cable|contador|aislador)/.test(t)){
+    if(/ficha/.test(t))return 'coin';if(/tarjeta/.test(t))return 'card';if(/guia|listin/.test(t))return 'book';
+    if(/placa|cartel/.test(t))return 'sign';if(/timbre/.test(t))return 'bells';if(/disco/.test(t))return 'dial';
+    if(/microtelefono/.test(t))return 'handset';if(/cable/.test(t))return 'cable';if(/aislador/.test(t))return 'insulator';if(/contador/.test(t))return 'bells';
+  }
+  if(tag==='mov'){if(/dynatac|inalambrico|moviline|gh337|ga628/.test(t))return 'brick';if(/startac|microtac|razr/.test(t))return 'flip';return 'mobile';}
+  if((tag==='nov'||/novedad/.test(t))&&!/telefono transparente/.test(t))return 'novelty';
+  if(/ericofon|scandiphone/.test(t))return 'ericofon';
+  if(/cabina/.test(t)&&!/aparato de cabina/.test(t))return 'booth';
+  if(/publico|monedas|fichas|gettoni|pay station|munzfern|jetons|button a|ranuras/.test(t))return 'payphone';
+  if(/campana|militar|trinchera|ee-8|feldfern|ta-57|tai-43|barco|sound-powered|ff33/.test(t))return 'field';
+  if(/conmutador|centralita|intercomunicador|call director/.test(t))return 'switchboard';
+  if(/candelero|candlestick|ac300 y magnetos/.test(t))return 'candle';
+  if(/esqueleto|ac100|ac110|ac120|ac200|ac210|ac300|jubilee|tunnan|lily|biscuit/.test(t))return 'skeleton';
+  if(/gondola|princess|trimline|trimphone|contempra|tritel/.test(t))return 'gondola';
+  if(/magneto/.test(t)&&/pared|madera|mural|wall/.test(all))return 'magwall';
+  if(/magneto|caja de madera|bell de caja|gower/.test(t))return 'magwall';
+  if(/pared|mural|wallset|wandtel|ascensor|industrial/.test(t))return 'wall';
+  if(/\b500\b|w48|w49|\b706|\b746|\b741|heraldo|fetap|dialog|diavox|s62|grillo/.test(t))return 'desk';
+  if(/teclado|teclas|keypad|pulsar|euroset|statesman|viscount|designline|beocom|dk80|digitel|01lx|dallas|alquiler|2500|8746|minitel|\baster|eta 80|t200|botonera|swatch|pbt100|intelsa|satai|benjamin|teide|f68|t65|s63|tesla|\bvariant\b|w63/.test(t))return 'keys';
+  if(/ader|milde|marty|mix und genest|1910|1924|picart|thomson|metalico negro|deckert|siemens brothers|zb\/sa|jydsk/.test(t))return 'early';
+  var y=parseInt((String(m[2]).match(/1[89]\d\d/)||[])[0],10);
+  if(y&&y<1920)return 'early';
+  if(/w28|w38|5523|5522|dbh 100|dbh 15|332|312|328|232|serie 200|serie 300|302|monophone|b1 \/|202|baquelita|bakelit|bachelite|ashtray|redbar|1931|1951|1954|m33|ac400|d30|m49|leich|zwietusch|normalzeit|stc|atm|automatic telephone|kapsch|placa frontal/.test(all))return (y&&y>=1955)?'desk':'bakelite';
+  if(y&&y<1950)return 'bakelite';
+  return 'desk';
+}
+function pfkTint(m){
+  var w=pfNorm(m[0]).split(/[^a-z]+/),i,c;
+  for(i=0;i<w.length;i++){c=PFK_TINT[w[i]];if(c)return c;}
+  if(!/color|heraldo|gondola|trimphone|dialog|benjamin|transparente/.test(pfNorm(m[0])))return '';
+  w=pfNorm(m[3]).split(/[^a-z]+/);
+  for(i=0;i<w.length&&i<40;i++){if(w[i]==='negro'||w[i]==='negra')return '';c=PFK_TINT[w[i]];if(c&&c!=='glass'&&c!=='#C9A060'&&c!=='#B0704A')return c;}
+  return '';
+}
+function pfkSvg(m,cls){
+  var t=pfkType(m),tint=pfkTint(m),st='';
+  if(tint==='glass')st=' style="--kb:rgba(120,150,160,.38);--kbs:#3D5B63"';
+  else if(tint){var light=/^#(E|D|F)/i.test(tint)&&tint!=='#D4862A';st=' style="--kb:'+tint+(light?';--kbs:#8B7E68':'')+'"';}
+  return '<svg class="pfk-svg'+(cls?' '+cls:'')+'" viewBox="0 0 160 120" aria-hidden="true" data-t="'+t+'"'+st+'><ellipse class="k-sh" cx="80" cy="104" rx="46" ry="4"/>'+(PFK_ART[t]||PFK_ART.desk)()+'</svg>';
+}
+var PFK_TYPE_LBL={desk:'sobremesa de disco',bakelite:'sobremesa de baquelita de los 30 y 40',candle:'candelero',skeleton:'esqueleto',magwall:'magneto de pared',wall:'tel\u00e9fono de pared',early:'sobremesa de los inicios',keys:'tel\u00e9fono de teclas',gondola:'tel\u00e9fono compacto',ericofon:'una sola pieza',payphone:'tel\u00e9fono p\u00fablico',booth:'cabina',field:'tel\u00e9fono de campa\u00f1a',switchboard:'centralita',brick:'m\u00f3vil de los inicios',flip:'m\u00f3vil de tapa',mobile:'m\u00f3vil',novelty:'tel\u00e9fono de fantas\u00eda',coin:'ficha o moneda',card:'tarjeta',book:'gu\u00eda',sign:'placa',bells:'caja de timbre',dial:'disco de marcar',handset:'microtel\u00e9fono',cable:'cable',insulator:'aislador'};
+function pfkArt(t){return '<svg class="pfk-svg" viewBox="0 0 160 120" aria-hidden="true"><ellipse class="k-sh" cx="80" cy="104" rx="46" ry="4"/>'+(PFK_ART[t]||PFK_ART.desk)()+'</svg>';}
+// Consultas de Wikimedia Commons por ficha (alternativas separadas por |)
+var PFK_Q={"Magneto telefonico Standard Electrica (pared)":"Standard Electrica magneto","Standard Electrica 5523 A":"Standard Electrica 5523","Standard Electrica 5523 E / F / FZ":"Standard Electrica 5523","Standard Electrica 5522 / 5522 E (pared)":"Standard Electrica 5522","Standard Electrica con placa frontal en relieve":"Standard Electrica telefono","Telefono publico de fichas o monedas CTNE":"CTNE telefono publico","Cabina telefonica de pared CTNE":"cabina telefonica CTNE","Telefono publico de monedas Telefonica de los 80":"Telefonica telefono publico monedas","Heraldo":"Heraldo telefono|telefono Heraldo CITESA","Heraldo CDM 5605 y Heraldo con volumen graduable":"Heraldo telefono","Satai ejecutivo y Satai multiple":"Satai CITESA","Gondola (DM380)":"Gondola telefono|telefono gondola CITESA","Teide":"Teide telefono Telefonica","Benjamin (Telyco)":"Telyco Benjamin","Siemens W28":"Siemens W28 Telefon|W28 Telefon","Siemens W38 (y Modell 36)":"W38 Telefon","Siemens W48 (y variante W49)":"W48 Telefon","Siemens FeTAp 611":"FeTAp 611","Krone de baquelita beige":"Krone Telefon Bakelit","Feldfernsprecher 33 (FF33)":"Feldfernsprecher 33","Ericsson DBH 1001 (Ericsson sueco, M33, N1020, ED 702)":"Ericsson DBH 1001","Ericsson Dialog":"Ericsson Dialog telefon","Ericofon (Cobra)":"Ericofon","Ericsson Compact mural con disco":"Ericsson Compact telephone","Telefono de pared Ericsson de madera con magneto":"Ericsson wall telephone magneto","KTAS candelero AC300 y magnetos daneses":"KTAS telefon","Candelero GPO No. 2 / No. 150":"GPO candlestick telephone 150","Candelero W-26 (Post Office)":"Post Office candlestick telephone","GPO 162 y 232 (serie 200)":"GPO 232 telephone|bakelite telephone 232","GPO 312 / 328 / 330 / 332 (serie 300)":"GPO 332 telephone","GPO 706":"GPO 706 telephone","GPO 746":"GPO 746 telephone","Trimphone":"Trimphone","Plessey PBT100 / PBT101":"Plessey telephone BT","Appareil Mle 1910 (magneto)":"telephone 1910 PTT","Modelo 1924 (B.C.I., Dunyach & Leclerc)":"telephone 1924 PTT","Thomson-Houston":"Thomson-Houston telephone","PTT U43 y M24":"telephone U43 PTT","PTT S63 (Socotel)":"telephone S63 Socotel|S63 telephone","Bell Telephone Manufacturing (Assistant)":"Bell Telephone Manufacturing telephone","ATEA Belgica de baquelita":"ATEA telephone","Baquelita suiza de los 40 (PTT)":"Autophon Telefon|Hasler Telefon","Siemens Grillo":"Siemens Grillo","Siemens S62 Bigrigio (SIP)":"Siemens S62 telefono|Bigrigio","SIP Pulsar y SIP Sirio":"SIP Sirio telefono|Sirio telefono","Heemaf tipo 1931 / 1938 / 1952":"Heemaf telefoon","Heemaf tipo 1955 (PTT)":"Heemaf telefoon 1955","PTT T65":"T65 telefoon","FeTAp 751 / FeTAp 791 / FeWAp 792":"FeTAp 791|FeTAp 751","Telefono sovietico TAI-43 y navales de magneto":"TAI-43 telephone","Western Electric candelero 20B / 20AL / 40AL / 50AL / 51AL / 151AL":"Western Electric candlestick telephone","Western Electric B1 / 102, D1 / 202":"Western Electric 202 telephone|Western Electric 102 telephone","Western Electric 302":"Western Electric 302","Western Electric 500":"Western Electric 500 telephone","Western Electric 1500 / 2500 / 3500":"Western Electric 2500","Western Electric Princess y Trimline":"Princess telephone|Trimline telephone","Western Electric pared 653 / 354 / 554":"Western Electric 554|Western Electric wall telephone","Kellogg 925 Ashtray":"Kellogg ashtray telephone","Stromberg-Carlson 1543 (Cut Corner 500)":"Stromberg-Carlson 1543|Stromberg-Carlson telephone","Magnetos de pared de madera EEUU (Kellogg, Stromberg-Carlson, North Electric, Chicago)":"Kellogg wall telephone|Stromberg-Carlson wall telephone","Automatic Electric":"Automatic Electric telephone","EE-8 y telefonos de campana militares":"EE-8 field telephone","Telefono de la Compania Peninsular de Telefonos":"Compania Peninsular de Telefonos","Candelero CTNE":"candlestick telephone CTNE","Gondola de teclado":"telefono gondola teclado","Heraldo de colores poco vistos":"Heraldo telefono","Mix und Genest de sobremesa de principios de siglo":"Mix Genest Telefon","Fernsprechtischapparat ZB/SA 19 y SA 25 (Reichspost)":"Fernsprechtischapparat","Siemens W28 de pared":"W28 Wandtelefon","W38 de la RDA":"W38 RFT|W38 DDR Telefon","RFT W63":"RFT W63","RFT Variant":"RFT Variant Telefon","W48 rojo, marfil o verde":"W48 Telefon rot|W48 Telefon","FeTAp 615 / FeTAp 612":"FeTAp 615|FeTAp 612","Telefono 01LX y Dallas (Bundespost)":"Telefon 01LX|Dallas Telefon","Siemens Euroset":"Siemens Euroset","Hagenuk y DeTeWe de baquelita":"Hagenuk Telefon|DeTeWe Telefon","GPO 332 Chinese Red":"GPO 332 red","GPO 711 de pared":"GPO 711 telephone","GPO 741":"GPO 741 telephone","GPO 8746 (746 de teclas)":"GPO 8746","GPO 746 reedicion moderna":"GPO 746 retro telephone","BT Statesman y Viscount":"BT Statesman telephone","Aparato de cabina britanica Button A y B":"Button A Button B telephone","Ericsson Telephones Ltd (Beeston)":"Ericsson Telephones Beeston","GPO candelero No 150 y No 2 de laton":"GPO candlestick telephone","Telefono de pared GPO de magneto (No 121 y similares)":"GPO wall telephone magneto","Western Electric Designline":"Western Electric Designline","Western Electric 500 de color (rosa, turquesa, amarillo)":"Western Electric 500 pink|Western Electric 500 color","Telefono publico de 3 ranuras Western Electric (233G y similares)":"three slot payphone Western Electric","Gray Telephone Pay Station":"Gray pay station telephone","Automatic Electric Monophone 34 y 40":"Automatic Electric Monophone","Automatic Electric 80 y 90":"Automatic Electric 80 telephone","Kellogg Redbar (Masterphone)":"Kellogg Redbar","Leich Electric de baquelita":"Leich telephone","Ericofon North Electric":"Ericofon North Electric","Northern Electric Contempra":"Contempra telephone","Northern Electric 302 y 500 canadienses":"Northern Electric 500 telephone","Telefono Marty":"telephone Marty","Telephone Ader":"Ader telephone","Milde":"Milde telephone","Picart Lebas y Grammont":"Picart Lebas telephone","Minitel":"Minitel","PTT U43 de color":"U43 telephone","FATME de baquelita":"FATME telefono","Telefono de baquelita italiano de los 30-40":"telefono bachelite","Telefono publico de gettoni SIP":"telefono gettoni SIP","Siemens S62 de color":"Siemens S62 telefono","Ericsson tipo 1951 (Paises Bajos)":"Ericsson telefoon 1951","Standard Electric tipo 1954 (Paises Bajos)":"Standard Electric telefoon","RTT 56 y RTT 72 (Belgica)":"RTT telephone 56|RTT 72 telephone","Telefono suizo de sobremesa (Hasler, Autophon, Gfeller)":"Hasler Telefon|Autophon Telefon|Gfeller Telefon","Telefono suizo de magneto de pared":"Hasler Wandtelefon","Tritel (PTT Suiza)":"Tritel Telefon","Telefono austriaco de baquelita (Kapsch, Schrack, Czeija Nissl)":"Kapsch Telefon|Schrack Telefon","Ericsson AC400 (version danesa)":"Ericsson AC400","KTAS D30 de cobre o laton":"KTAS D30","KTAS M49":"M49 telefon","F68 (Dinamarca)":"F68 telefon","DK80 / Digitel (Jacob Jensen)":"Jacob Jensen telephone|Kirk Digitel","Jydsk Telefon de sobremesa alto":"Jydsk Telefon","Televerket Diavox":"Diavox","Elektrisk Bureau de baquelita":"Elektrisk Bureau telefon","VEF de baquelita y plastico":"VEF telephone","TA-57 (campana sovietico)":"TA-57 field telephone","RWT Aster-70 y Aster-72":"Aster 72 telefon","RWT Tulipan y familia de flores":"RWT Tulipan","RWT CB 662 y baquelitas polacas anteriores":"RWT telefon","Tesla (Checoslovaquia)":"Tesla telefon","Telefongyar de baquelita":"Telefongyar","Iskra ETA 80 / ETA 85":"Iskra ETA telefon|Iskra telefon","Tipo 4 japones (kuro-denwa)":"kuro denwa","Tipo 600 japones (600-A)":"600-A telephone","Telefono publico rosa o rojo japones":"pink public telephone Japan","PMG serie 300 (Australia)":"PMG telephone 300","Serie 800 australiana (801 / 802)":"802 telephone Australia","Telecom T200 (Australia)":"Telecom Australia T200","Telefono de ENTel (Argentina)":"ENTel telefono","Telefono portugues de baquelita (TLP, CTT)":"telefone baquelite","Telefono hamburguesa":"hamburger telephone","Telefono labios (boca roja)":"lips telephone","Telefono transparente con luces":"transparent telephone","Motorola DynaTAC 8000X":"Motorola DynaTAC 8000X","Motorola MicroTAC":"Motorola MicroTAC","Motorola StarTAC":"Motorola StarTAC","Nokia 8110 (banana)":"Nokia 8110","Nokia 3210 y 3310":"Nokia 3310|Nokia 3210","Ericsson GH337 y GA628":"Ericsson GH337|Ericsson GA628","Motorola Razr V3":"Motorola Razr V3","Ficha telefonica CTNE":"ficha telefonica","Tarjeta telefonica de Telefonica":"tarjeta telefonica Telefonica","Guia telefonica antigua":"guia telefonica","Disco de marcar suelto":"rotary dial telephone","Cuadro conmutador de clavijas pequeno":"telephone switchboard cord","Telefonos Intelsa":"Intelsa telefono","Amper de sobremesa":"Amper telefono","Aislador de poste telefonico":"telephone insulator glass","Zwietusch de sobremesa":"Zwietusch Telefon","Telefonbau und Normalzeit (T&N) de baquelita":"Telefonbau Normalzeit Telefon","Siemens Brothers (Woolwich)":"Siemens Brothers telephone","Automatic Telephone Manufacturing (ATM)":"Automatic Telephone Manufacturing telephone","STC de baquelita":"STC bakelite telephone","Trimphone de colores":"Trimphone","GPO 706 de color":"GPO 706","Western Electric Call Director":"Call Director telephone","Candelero de otros fabricantes americanos":"Kellogg candlestick telephone|Stromberg-Carlson candlestick","FACE Standard de baquelita":"FACE Standard telefono","Telefono de campana britanico de la II Guerra Mundial":"field telephone Don 5","Telefono de trinchera de la I Guerra Mundial":"field telephone World War I","Telefono de barco sin bateria (sound-powered)":"sound powered telephone","Bang und Olufsen BeoCom":"BeoCom","Swatch Twin Phone":"Swatch Twin Phone","Nokia 9000 Communicator":"Nokia 9000 Communicator","iPhone de primera generacion":"iPhone first generation|original iPhone 2007","Siemens S y C de los 90":"Siemens S25 mobile|Siemens C25","Heraldo de pared":"Heraldo telefono pared","Telefono publico de monedas de los 70 (Telefonica)":"Telefonica telefono publico","GPO 332 con cajon":"GPO 332 drawer","GPO 746 de color":"GPO 746 red|746 telephone","Gower-Bell":"Gower-Bell telephone","Telefono Bell de caja":"Bell box telephone 1877","Deckert und Homolka":"Deckert Homolka","ITT y Cortelco 500 y 2500":"Cortelco 2500|ITT 500 telephone","Ericofon 700":"Ericofon 700","Ericsson Dialog de pared":"Ericsson Dialog wall telephone","Telefono indio de baquelita (ITI)":"Indian Telephone Industries telephone","Telefono publico aleman de monedas (Munzfernsprecher)":"Munzfernsprecher","Telefono publico frances de fichas (jetons)":"jeton telephone public","Telefono de juguete de hojalata":"tin toy telephone","Fisher-Price Chatter Telephone":"Chatter Telephone","Ericsson Lily":"Ericsson Lily telephone","Ericsson AC100 esqueleto con microfono de brazo (antiguo No 370)":"Ericsson AC100","Ericsson AC110 esqueleto (antiguo No 375)":"Ericsson AC110|Ericsson skeleton telephone","Ericsson AC120 / AC130 / AC140 (N2000 britanico)":"Ericsson AC120|Ericsson N2000","Ericsson AC200 de doble manivela (antiguo No 385)":"Ericsson AC200","Ericsson AC210 Biscuit Barrel (antiguo No 380)":"Ericsson AC210","Ericsson AC300 / AC310 / AC320 Jubilee (antiguos 381, 383, 384)":"Ericsson AC300|Ericsson Jubilee telephone","Ericsson Tele 90 / N2115":"Ericsson Tele 90","Ericsson Type 37 / 137 Auto Wallset (Tele 21)":"Ericsson Auto Wallset","Ericsson N1400 / N1050 / N1450 de pared":"Ericsson N1400","Ericsson N2200 de magneto de pared":"Ericsson N2200","Ericsson DBH 1002 caoba y otros colores de baquelita":"Ericsson DBH 1002","Ericsson DBH 1003 blanco de melamina":"Ericsson DBH 1003","Ericsson DBH 15 (M50)":"Ericsson DBH 15","Ericofon transparente o metalizado":"Ericofon transparent","Societe des Telephones Ericsson de pared con microtelefono de cornete":"Societe des Telephones Ericsson","Deckert und Homolka esqueleto condensado":"Deckert Homolka","Tunnan (copia del esqueleto con tambor)":"Tunnan telefon","Ericsson de la Compania Madrilena y de la red de Valencia":"Compania Madrilena de Telefonos"};
+// ===================== v5.7: ENCICLOPEDIA VISUAL =====================
+// Cada ficha lleva su lamina (forma del tipo) y, cuando la hay, una foto real de Wikimedia Commons
+// buscada desde el propio movil. El administrador puede fijar la foto buena de cada ficha.
+var PFK_SHAPES=[['all','Todas',''],['candle','Candeleros','candle'],['skeleton','Esqueletos','skeleton'],['magwall','Magnetos de pared','magwall'],['old','Baquelita antigua','bakelite'],['desk','Sobremesa de disco','desk'],['keys','De teclas','keys'],['design','Compactos y de dise\u00f1o','gondola'],['wall','De pared','wall'],['pub','P\u00fablicos y cabinas','payphone'],['mil','Militares y centralitas','field'],['mov','M\u00f3viles','flip'],['nov','Fantas\u00eda','novelty'],['acc','Piezas y accesorios','dial']];
+var PFK_GROUP={candle:'candle',skeleton:'skeleton',magwall:'magwall',bakelite:'old',early:'old',desk:'desk',keys:'keys',gondola:'design',ericofon:'design',wall:'wall',payphone:'pub',booth:'pub',field:'mil',switchboard:'mil',brick:'mov',flip:'mov',mobile:'mov',novelty:'nov'};
+var PFK_BAD=/(logo|\bmap\b|mapa|karte|stamp|sello|briefmarke|francobollo|diagram|schema|patent|coat of arms|escudo|\bflag\b|bandera|poster|advert|anuncio|reklam)/i;
+var _pfk={mem:{},pins:null,pinsP:null,run:0,wait:[],obs:null,cur:-1,sel:0,ph:[]};
+_pfEnc.shape='all';
+function pfkPrep(){if(PF_KB_MODELS._pfk)return;PF_KB_MODELS._pfk=1;PF_KB_MODELS.forEach(function(m,i){m.pfi=i;m.pft=pfkType(m);});}
+function pfkKey(m){return pfNorm(m[0]).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,90)||'x';}
+function pfkGroup(m){return PFK_GROUP[m.pft]||'acc';}
+function pfkStrip(h){if(!h)return '';var d=document.createElement('textarea');d.innerHTML=String(h).replace(/<[^>]*>/g,' ');return d.value.replace(/\s+/g,' ').trim();}
+// ---- cola: como mucho 3 peticiones a la vez ----
+function pfkQueue(fn){return new Promise(function(ok,ko){_pfk.wait.push(function(){_pfk.run++;fn().then(ok,ko).then(function(){_pfk.run--;pfkPump();});});pfkPump();});}
+function pfkPump(){while(_pfk.run<3&&_pfk.wait.length)_pfk.wait.shift()();}
+// ---- cache en el movil (14 dias) ----
+function pfkCacheAll(){try{return JSON.parse(localStorage.getItem('pf_kbimg')||'{}')||{};}catch(e){return {};}}
+function pfkCacheGet(q){var c=pfkCacheAll()[q];return c&&Date.now()-c.ts<14*864e5?c.r:null;}
+function pfkCachePut(q,r){var c=pfkCacheAll();c[q]={ts:Date.now(),r:r};try{localStorage.setItem('pf_kbimg',JSON.stringify(c));}catch(e){try{var o={};o[q]=c[q];localStorage.setItem('pf_kbimg',JSON.stringify(o));}catch(e2){}}}
+function pfkInfo(p,force){
+  var ii=p&&p.imageinfo&&p.imageinfo[0];if(!ii||!ii.thumburl)return null;
+  if(ii.mime&&!/jpeg|png|webp/.test(ii.mime))return null;
+  if(!force&&((ii.width||0)<320||PFK_BAD.test(p.title||'')))return null;
+  var em=ii.extmetadata||{};
+  return {t:String(p.title||'').replace(/^File:/,''),u:ii.thumburl,o:(ii.width>=960?'':ii.url),w:ii.width,h:ii.height,
+    a:pfkStrip(em.Artist&&em.Artist.value).slice(0,70),l:pfkStrip(em.LicenseShortName&&em.LicenseShortName.value).slice(0,24),p:ii.descriptionurl||''};
+}
+var PFK_API='https://commons.wikimedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&prop=imageinfo&iiprop=url%7Csize%7Cmime%7Cextmetadata&iiurlwidth=500&iiextmetadatafilter=Artist%7CLicenseShortName';
+function pfkApi(extra){return pfkQueue(function(){return fetch(PFK_API+extra).then(function(r){if(!r.ok)throw new Error('commons '+r.status);return r.json();});});}
+function pfkSearchOne(q){
+  var mk='1:'+q;if(_pfk.mem[mk])return _pfk.mem[mk];
+  return (_pfk.mem[mk]=pfkApi('&generator=search&gsrnamespace=6&gsrlimit=10&gsrsearch='+encodeURIComponent(q+' filetype:bitmap')).then(function(j){
+    var pages=((j&&j.query&&j.query.pages)||[]).slice().sort(function(a,b){return (a.index||0)-(b.index||0);});
+    return pages.map(function(p){return pfkInfo(p);}).filter(Boolean);
+  }));
+}
+function pfkSearch(q){
+  if(_pfk.mem[q])return _pfk.mem[q];
+  var c=pfkCacheGet(q);if(c)return (_pfk.mem[q]=Promise.resolve(c));
+  var alts=q.split('|'),bad=false;
+  var p=alts.reduce(function(acc,a){return acc.then(function(r){
+    if(r.length>=3)return r;
+    return pfkSearchOne(a).then(function(n){var seen={};r.forEach(function(x){seen[x.t]=1;});return r.concat(n.filter(function(x){return !seen[x.t];}));},function(){bad=true;delete _pfk.mem['1:'+a];return r;});
+  });},Promise.resolve([])).then(function(r){r=r.slice(0,5);if(bad)delete _pfk.mem[q];else pfkCachePut(q,r);return r;});
+  _pfk.mem[q]=p;
+  return p;
+}
+// ---- fotos elegidas por el administrador (Firestore kb_photos) ----
+function pfkPinsLoad(){
+  if(_pfk.pinsP)return _pfk.pinsP;
+  var api=window._pfKbPhotos;
+  if(!api){_pfk.pins={};return (_pfk.pinsP=Promise.resolve({}));}
+  _pfk.pinsP=Promise.race([api.list(),new Promise(function(ok){setTimeout(function(){ok(null);},2500);})]).then(function(o){_pfk.pins=o||{};if(!o)_pfk.pinsP=null;return _pfk.pins;},function(){_pfk.pins={};return {};});
+  return _pfk.pinsP;
+}
+function pfkPhotos(m){
+  return pfkPinsLoad().then(function(pins){
+    var pin=pins[pfkKey(m)];
+    if(pin&&pin.none)return [];
+    var q=PFK_Q[m[0]];
+    var base=q?pfkSearch(q).catch(function(){return [];}):Promise.resolve([]);
+    return base.then(function(a){
+      if(pin&&pin.u){var p=Object.assign({pin:1},pin);a=[p].concat(a.filter(function(x){return x.t!==pin.t;}));}
+      return a;
+    });
+  });
+}
+function pfkBig(x){if(!x)return '';if(x.o)return x.o;return x.w>=960?x.u.replace(/\/\d+px-/,'/960px-'):x.u;}
+// ---- tarjetas ----
+function pfEncRow(m){
+  pfkPrep();
+  var lvl=pfEncLevel(m[4]);
+  return '<button class="pfk-card" onclick="pfkOpen('+m.pfi+')"><span class="pfk-pic" data-i="'+m.pfi+'">'+pfkSvg(m)
+    +(m[6]==='rep'?'<span class="pfk-tag">R\u00e9plica</span>':'')+'</span>'
+    +'<span class="pfk-cap"><span class="pfk-n">'+escapeHtml(pfAcc(m[0]))+'</span>'
+    +'<span class="pfk-e">'+escapeHtml(pfAcc([pfkEra(m[2]),pfkCountry(m[1])].filter(Boolean).join(', ')))+'</span>'
+    +'<span class="pfk-row"><span class="pfe-holes l'+lvl+'" title="'+pfRarityText(lvl)+'"><i></i><i></i><i></i><i></i></span><span class="pfk-p">'+pfEncPrice(m[5])+'</span></span></span></button>';
+}
+function pfkEra(t){t=String(t||'');var c=t.split(/[(,;]/)[0].trim();return c.length>22?c.slice(0,22).replace(/\s+\S*$/,'')+'...':c;}
+function pfkCountry(t){var p=String(t||'').split(',');return p.length>1?p[p.length-1].trim():'';}
+function pfkObserve(){
+  var list=document.getElementById('pfeList');if(!list)return;
+  var els=list.querySelectorAll('.pfk-pic:not([data-seen])');
+  if(!('IntersectionObserver' in window)){els.forEach(pfkThumb);return;}
+  if(!_pfk.obs)_pfk.obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){_pfk.obs.unobserve(e.target);pfkThumb(e.target);}});},{rootMargin:'400px 0px'});
+  els.forEach(function(el){_pfk.obs.observe(el);});
+}
+function pfkThumb(el){
+  if(el.getAttribute('data-seen'))return;el.setAttribute('data-seen','1');
+  var m=PF_KB_MODELS[+el.getAttribute('data-i')];if(!m)return;
+  pfkPhotos(m).then(function(a){pfkPaintThumb(el,a[0]);});
+}
+function pfkPaintThumb(el,x){
+  var old=el.querySelector('img.pfk-ph');if(old)old.remove();el.classList.remove('has-ph');
+  if(!x)return;
+  var img=new Image();img.alt='';img.decoding='async';img.className='pfk-ph';
+  img.onload=function(){el.classList.add('has-ph');};img.onerror=function(){img.remove();el.classList.remove('has-ph');};
+  img.src=x.u;el.appendChild(img);
+}
+// ---- filtros (la forma va primero: es lo que un coleccionista ve de lejos) ----
+function pfEncBuild(){
+  if(_pfEnc.built)return;_pfEnc.built=true;pfkPrep();
+  var mk=function(arr,key,box){box.innerHTML=arr.map(function(x){return '<button class="pfe-chip'+(x[0]===_pfEnc[key]?' on':'')+'" data-k="'+x[0]+'" onclick="pfEncSet(\''+key+'\',\''+x[0]+'\')">'+x[1]+'</button>';}).join('');};
+  mk(PF_ENC_REG,'reg',document.getElementById('pfeRegions'));
+  mk(PF_ENC_RAR,'rar',document.getElementById('pfeRarity'));
+  var sb=document.getElementById('pfeShapes');
+  if(sb)sb.innerHTML=PFK_SHAPES.map(function(x){
+    var art=x[2]?pfkArt(x[2]):'<span class="pfk-all">'+PF_KB_MODELS.length+'</span>';
+    return '<button class="pfk-shape'+(x[0]===_pfEnc.shape?' on':'')+'" data-k="'+x[0]+'" onclick="pfEncSet(\'shape\',\''+x[0]+'\')"><span class="pfk-shape-i">'+art+'</span><span class="pfk-shape-t">'+x[1]+'</span></button>';
+  }).join('');
+  var sub=document.getElementById('pfeSub');
+  if(sub)sub.textContent=PF_KB_MODELS.length+' fichas con su forma, su \u00e9poca y su precio. Toca una para ver fotos y c\u00f3mo reconocerla.';
+}
+function pfEncSet(key,val){
+  _pfEnc[key]=val;
+  var sel=key==='reg'?'#pfeRegions .pfe-chip':key==='rar'?'#pfeRarity .pfe-chip':'#pfeShapes .pfk-shape';
+  document.querySelectorAll(sel).forEach(function(b){b.classList.toggle('on',b.getAttribute('data-k')===val);});
+  if(key==='shape'){var b=document.querySelector('#pfeShapes .pfk-shape.on');if(b&&b.scrollIntoView)try{b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});}catch(e){}}
+  pfEncRender(true);
+}
+function pfEncRender(reset){
+  pfkPrep();
+  if(reset)_pfEnc.n=24;
+  var q=pfNorm((document.getElementById('pfeQ')||{}).value||'').trim(),toks=q?q.split(/\s+/):[];
+  var regLbl={};PF_ENC_REG.forEach(function(x){regLbl[x[0]]=pfNorm(x[1]);});
+  var res=PF_KB_MODELS.filter(function(m){
+    var reg=pfEncRegion(m);
+    if(_pfEnc.shape&&_pfEnc.shape!=='all'&&pfkGroup(m)!==_pfEnc.shape)return false;
+    if(_pfEnc.reg==='eri'){if(!/ericsson|ericofon|elektrisk bureau|fatme|tunnan|deckert/.test(pfNorm(m[0]+' '+m[1])))return false;}
+    else if(_pfEnc.reg!=='all'&&reg!==_pfEnc.reg)return false;
+    if(_pfEnc.rar!=='all'&&m[4]!==_pfEnc.rar)return false;
+    if(!toks.length)return true;
+    var hay=pfNorm(m[0]+' '+m[1]+' '+m[2]+' '+m[3]+' '+(regLbl[reg]||'')+' '+pfNorm(PFK_TYPE_LBL[m.pft]||''));
+    for(var i=0;i<toks.length;i++)if(hay.indexOf(toks[i])<0)return false;
+    return true;
+  });
+  _pfEnc.res=res;
+  var cnt=document.getElementById('pfeCount');if(cnt)cnt.textContent=res.length===1?'1 ficha':res.length+' fichas';
+  var list=document.getElementById('pfeList');if(!list)return;
+  list.classList.add('pfk-grid');
+  if(!res.length){list.innerHTML='<div class="pfe-empty">No hay ninguna ficha con esos filtros. Prueba con otra forma, el fabricante o el pa\u00eds.</div>';document.getElementById('pfeMore').hidden=true;return;}
+  list.innerHTML=res.slice(0,_pfEnc.n).map(pfEncRow).join('');
+  document.getElementById('pfeMore').hidden=res.length<=_pfEnc.n;
+  pfkObserve();
+  if(reset&&typeof pfStagger==='function')pfStagger(list,8);
+}
+function pfEncMore(){_pfEnc.n+=24;pfEncRender(false);}
+// ---- ficha a pantalla completa ----
+function pfkOpen(i){
+  var m=PF_KB_MODELS[i];if(!m)return;
+  _pfk.cur=i;_pfk.sel=0;_pfk.ph=[];
+  var sh=document.getElementById('pfkSheet');if(!sh)return;
+  pfkRender(m,true);
+  sh.hidden=false;sh.scrollTop=0;
+  requestAnimationFrame(function(){sh.classList.add('open');});
+  document.body.classList.add('pfk-lock');
+  pfkPhotos(m).then(function(a){if(_pfk.cur!==i)return;_pfk.ph=a;_pfk.sel=0;pfkRender(m,false);});
+}
+function pfkClose(){
+  var sh=document.getElementById('pfkSheet');if(!sh)return;
+  sh.classList.remove('open');document.body.classList.remove('pfk-lock');
+  setTimeout(function(){if(!sh.classList.contains('open'))sh.hidden=true;},320);
+  _pfk.cur=-1;
+}
+function pfkStep(d){
+  var r=_pfEnc.res||[],k=-1;for(var j=0;j<r.length;j++)if(r[j].pfi===_pfk.cur){k=j;break;}
+  if(k<0)return;var n=r[k+d];if(!n)return;
+  var sh=document.getElementById('pfkSheet');if(sh)sh.scrollTop=0;
+  pfkOpen(n.pfi);
+}
+function pfkPick(j){_pfk.sel=j;var m=PF_KB_MODELS[_pfk.cur];if(m)pfkRender(m,false);}
+function pfkRender(m,loading){
+  var box=document.getElementById('pfkBody');if(!box)return;
+  var ph=_pfk.ph||[],n=ph.length,sel=Math.min(_pfk.sel,n),cur=sel<n?ph[sel]:null;
+  var lvl=pfEncLevel(m[4]),extra=String(m[5]||'').split(';').slice(1).join(';').trim();
+  var r=_pfEnc.res||[],k=-1;for(var j=0;j<r.length;j++)if(r[j].pfi===m.pfi){k=j;break;}
+  var q=PFK_Q[m[0]]?PFK_Q[m[0]].split('|')[0]:m[0];
+  var stage=cur?'<img class="pfk-big" src="'+escapeHtml(pfkBig(cur))+'" alt="'+escapeHtml(pfAcc(m[0]))+'" onerror="this.src=\''+escapeHtml(cur.u)+'\';this.onerror=null">'
+    :'<div class="pfk-plate">'+pfkSvg(m,'pfk-svg-big')+'</div>';
+  var credit=cur?('Foto: '+escapeHtml(cur.a||'autor en Commons')+(cur.l?', '+escapeHtml(cur.l):'')+'. <a href="'+escapeHtml(cur.p)+'" target="_blank" rel="noopener">Wikimedia Commons</a>'+(cur.pin?'<span class="pfk-ok">Elegida por PHONEFINDER</span>':''))
+    :('L\u00e1mina de PHONEFINDER: '+PFK_TYPE_LBL[m.pft]+'. Muestra la forma del tipo, no el modelo exacto.');
+  var thumbs='';
+  if(n||loading){
+    thumbs='<div class="pfk-thumbs" role="tablist" aria-label="Im\u00e1genes">';
+    ph.forEach(function(x,j){thumbs+='<button class="pfk-th'+(j===sel?' on':'')+'" onclick="pfkPick('+j+')" aria-label="Foto '+(j+1)+'"><img src="'+escapeHtml(x.u)+'" alt="" loading="lazy" onerror="this.parentNode.remove()"></button>';});
+    if(loading)thumbs+='<span class="pfk-th pfk-th-wait" aria-hidden="true"></span><span class="pfk-th pfk-th-wait" aria-hidden="true"></span>';
+    thumbs+='<button class="pfk-th pfk-th-plate'+(sel===n&&!loading?' on':'')+'" onclick="pfkPick('+n+')" aria-label="L\u00e1mina">'+pfkSvg(m)+'</button></div>';
+  }
+  var admin='';
+  if(window._pfKbPhotos&&window._pfAuth&&_pfAuth.isAdmin&&_pfAuth.isAdmin()){
+    var pin=(_pfk.pins||{})[pfkKey(m)];
+    admin='<div class="pfk-admin"><p class="pfk-admin-t">Solo t\u00fa ves esto. Elige la imagen que ver\u00e1n todos en esta ficha.</p><div class="pfk-admin-b">'
+      +(cur&&!cur.pin?'<button onclick="pfkPinCur()">Usar esta foto</button>':'')
+      +'<button onclick="pfkPinPaste()">Pegar enlace de Commons</button>'
+      +(!(pin&&pin.none)?'<button onclick="pfkPinNone()">Solo la l\u00e1mina</button>':'')
+      +(pin?'<button class="pfk-admin-x" onclick="pfkPinClear()">Quitar mi elecci\u00f3n</button>':'')
+      +'</div></div>';
+  }
+  box.innerHTML='<div class="pfk-bar"><button class="pfk-x" onclick="pfkClose()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Enciclopedia</button>'
+      +'<span class="pfk-nav"><button onclick="pfkStep(-1)" aria-label="Ficha anterior"'+(k>0?'':' disabled')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      +'<button onclick="pfkStep(1)" aria-label="Ficha siguiente"'+(k>=0&&k<r.length-1?'':' disabled')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button></span></div>'
+    +'<figure class="pfk-hero'+(cur?' is-ph':'')+'"><div class="pfk-stage">'+stage+'</div><figcaption class="pfk-credit">'+credit+'</figcaption></figure>'
+    +thumbs
+    +'<div class="pfk-txt">'
+    +'<p class="pfk-kind">'+escapeHtml(pfAcc(PFK_TYPE_LBL[m.pft]||''))+'</p>'
+    +'<h2 class="pfk-t">'+escapeHtml(pfAcc(m[0]))+'</h2>'
+    +'<p class="pfk-o">'+escapeHtml(pfAcc(m[1]))+'</p>'
+    +(m[6]==='rep'?'<p class="pfk-warnp"><span class="pfe-warn">Reproducci\u00f3n moderna</span> Aprende a distinguirla antes de pagar como antiguo.</p>':'')
+    +'<dl class="pfk-facts"><div><dt>\u00c9poca</dt><dd>'+escapeHtml(pfAcc(m[2]))+'</dd></div>'
+    +'<div><dt>Rareza</dt><dd><span class="pfe-holes l'+lvl+'"><i></i><i></i><i></i><i></i></span>'+pfRarityText(lvl)+'</dd></div>'
+    +'<div><dt>Precio de venta</dt><dd class="pfk-price">'+(pfEncPrice(m[5])||'Sin datos')+'</dd></div></dl>'
+    +'<h3 class="pfk-h">C\u00f3mo reconocerlo</h3><p class="pfk-d">'+escapeHtml(pfAcc(m[3]))+'</p>'
+    +(extra?'<p class="pfk-x2">'+escapeHtml(pfAcc(extra.charAt(0).toUpperCase()+extra.slice(1)))+'.</p>':'')
+    +'<button class="pfk-cta" onclick="pfkTasar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Tengo uno: hacer foto y tasarlo</button>'
+    +admin
+    +'<a class="pfk-more" href="https://commons.wikimedia.org/w/index.php?title=Special:MediaSearch&type=image&search='+encodeURIComponent(q)+'" target="_blank" rel="noopener">Ver m\u00e1s fotos en Wikimedia Commons</a>'
+    +'<p class="pfk-disc">Las fotos son de referencia, de sus autores en Wikimedia Commons y con licencia libre. Puede que alguna no sea exactamente este modelo: f\u00edate en los detalles de la ficha.</p>'
+    +'</div>';
+}
+function pfkTasar(){
+  pfkClose();showPage('home');window.scrollTo(0,0);
+  var c=document.getElementById('cameraInput');if(c)try{c.click();}catch(e){}
+}
+// ---- acciones del administrador ----
+function pfkPinSave(m,v){
+  var k=pfkKey(m);
+  return window._pfKbPhotos.set(k,v).then(function(){
+    _pfk.pins=_pfk.pins||{};_pfk.pins[k]=v;
+    var ph=(_pfk.ph||[]).filter(function(x){return !x.pin&&x.t!==v.t;});
+    _pfk.ph=v.u?[Object.assign({pin:1},v)].concat(ph):ph;
+    if(v.none)_pfk.ph=[];
+    _pfk.sel=0;pfkRender(m,false);
+    var el=document.querySelector('#pfeList .pfk-pic[data-i="'+m.pfi+'"]');if(el)pfkPaintThumb(el,_pfk.ph[0]);
+    showToast(v.none?'Esta ficha mostrar\u00e1 solo la l\u00e1mina':'Foto fijada para todos');
+  },function(e){showToast(e&&e.code==='permission-denied'?'Falta actualizar las reglas de Firestore':'No se pudo guardar. Revisa la conexi\u00f3n');});
+}
+function pfkPinCur(){var m=PF_KB_MODELS[_pfk.cur],x=(_pfk.ph||[])[_pfk.sel];if(!m||!x)return;pfkPinSave(m,{t:x.t,u:x.u,o:x.o||'',w:x.w||0,h:x.h||0,a:x.a||'',l:x.l||'',p:x.p||''});}
+function pfkPinNone(){var m=PF_KB_MODELS[_pfk.cur];if(m)pfkPinSave(m,{none:true});}
+function pfkPinClear(){
+  var m=PF_KB_MODELS[_pfk.cur];if(!m)return;var k=pfkKey(m);
+  window._pfKbPhotos.clear(k).then(function(){
+    if(_pfk.pins)delete _pfk.pins[k];
+    var q=PFK_Q[m[0]];(q?pfkSearch(q):Promise.resolve([])).then(function(a){_pfk.ph=a;_pfk.sel=0;pfkRender(m,false);var el=document.querySelector('#pfeList .pfk-pic[data-i="'+m.pfi+'"]');if(el)pfkPaintThumb(el,a[0]);});
+    showToast('Vuelve a la foto autom\u00e1tica');
+  },function(){showToast('No se pudo quitar. Revisa la conexi\u00f3n');});
+}
+function pfkPinPaste(){
+  var m=PF_KB_MODELS[_pfk.cur];if(!m)return;
+  var v=prompt('Pega el enlace de la foto en Wikimedia Commons (la p\u00e1gina que empieza por File: o Archivo:)');if(!v)return;
+  var t='';try{v=decodeURIComponent(v);}catch(e){}
+  var mm=v.match(/(?:File|Archivo|Fichier|Datei|Bestand|Fil):([^?#&]+)/i);
+  if(mm)t=mm[1].replace(/_/g,' ').trim();
+  else{var u=v.match(/upload\.wikimedia\.org\/.+\/([^\/?#]+\.(?:jpe?g|png|webp))/i);if(u)t=u[1].replace(/^\d+px-/,'').replace(/_/g,' ');}
+  if(!t){showToast('Ese enlace no es de una foto de Wikimedia Commons');return;}
+  pfkApi('&titles='+encodeURIComponent('File:'+t)).then(function(j){
+    var p=((j&&j.query&&j.query.pages)||[])[0],x=p&&pfkInfo(Object.assign({},p,{title:p.title||('File:'+t)}),true);
+    if(!x){showToast('No encuentro esa foto en Commons');return;}
+    pfkPinSave(m,{t:x.t,u:x.u,o:x.o||'',w:x.w||0,h:x.h||0,a:x.a||'',l:x.l||'',p:x.p||''});
+  },function(){showToast('No se pudo consultar Commons');});
+}
+window.addEventListener('pf-auth',function(){_pfk.pinsP=null;_pfk.pins=null;});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_pfk.cur>=0)pfkClose();});
+var _pfkEncOpen0=pfEncOpen;
+pfEncOpen=function(q){
+  pfkPinsLoad();
+  if(q&&_pfEnc.shape!=='all'){_pfEnc.shape='all';document.querySelectorAll('#pfeShapes .pfk-shape').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-k')==='all');});}
+  _pfkEncOpen0(q);
+};
+var _pfkShowPage0=showPage;
+showPage=function(n){if(n!=='enc'&&_pfk.cur>=0)pfkClose();return _pfkShowPage0.apply(this,arguments);};
 </script>
 </body>
 </html>
