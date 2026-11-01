@@ -7,6 +7,7 @@
 // Opcionales:
 //   FREE_DAILY      tasaciones al dia del plan gratis (por defecto 3)
 //   REQUIRE_VERIFIED=0   para no exigir el correo confirmado
+// Plan gratis: 3 tasaciones al dia y sin lotes. Plan Pro (o el administrador): sin limite practico.
 import crypto from 'node:crypto';
 
 export const config = { maxDuration: 60 };
@@ -181,6 +182,11 @@ export default async function handler(req, res) {
     const images = countImages(messages);
     if (images > MAX_IMAGES) return err(res, 400, 'bad', 'Demasiadas fotos en una peticion');
     const kind = ['main', 'lot', 'enrich', 'extra'].includes(payload.pf_kind) ? payload.pf_kind : 'main';
+
+    // Herramientas de Pro: el lote solo con Pro
+    if (kind === 'lot' && st.plan !== 'pro') {
+      return res.status(402).json({ error: { type: 'pf_pro', message: 'Tasar un lote es de PHONEFINDER Pro', feature: 'Tasar un lote' } });
+    }
 
     // 3. Cobro
     let charged = 0, fp = '', field = 'n', refund = 0;
