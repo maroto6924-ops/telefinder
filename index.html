@@ -1955,6 +1955,113 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
 #hmResultSlot .pfe-fromresult{display:none;}
 .pfe-chip[data-k="eri"]{border-color:var(--amber);color:var(--amber2);font-weight:600;}
 .pfe-chip[data-k="eri"].on{background:var(--amber);border-color:var(--amber);color:#fff;}
+
+/* ---------- INICIO ANIMADO (v5.5): la llamada ---------- */
+.pf-auth{background:radial-gradient(120% 70% at 50% 24%,#3A2D22 0%,#1B140F 48%,#0C0806 100%);transition:opacity .45s ease .16s;}
+.pf-auth::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.09;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .9 0 0 0 0 .8 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");}
+.pf-auth-wrap{position:relative;z-index:1;align-items:center;text-align:center;}
+.pf-auth-form{width:100%;text-align:left;}
+
+/* Cordon en espiral */
+.pfi-cord{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:0;overflow:visible;transition:opacity .35s ease;}
+.pfi-cord path{fill:none;stroke:#D4862A;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;opacity:.26;}
+.pf-auth[data-st="form"] .pfi-cord,.pf-auth[data-st="boot"] .pfi-cord,.pf-auth[data-st="out"] .pfi-cord{opacity:0;}
+
+/* Disco */
+.pfi-dialwrap{position:relative;flex-shrink:0;width:min(58vw,31vh,236px);height:min(58vw,31vh,236px);margin:0 auto 30px;transition:transform .62s cubic-bezier(.6,0,.2,1),opacity .4s ease;}
+.pfi-dialwrap::before{content:'';position:absolute;inset:-34%;border-radius:50%;background:radial-gradient(circle,rgba(212,134,42,.26) 0%,rgba(212,134,42,.08) 38%,transparent 64%);opacity:.45;transition:opacity 1s ease;pointer-events:none;}
+.pf-auth[data-st="welcome"] .pfi-dialwrap::before,.pf-auth[data-st="form"] .pfi-dialwrap::before{opacity:1;}
+.pfi-dial{position:relative;width:100%;height:100%;filter:drop-shadow(0 22px 34px rgba(0,0,0,.6)) drop-shadow(0 2px 3px rgba(0,0,0,.5));}
+.pfi-dial svg{display:block;width:100%;height:100%;}
+.pfi-dg text{font-family:'Inter',sans-serif;font-size:9px;font-weight:600;fill:#3A2B1E;text-anchor:middle;}
+.pfi-num{font-family:'Instrument Serif',serif;font-size:15.5px;fill:#1E1610;text-anchor:middle;letter-spacing:.6px;}
+.pfi-num.pfi-tick{animation:pfiTick .42s cubic-bezier(.34,1.56,.64,1);transform-box:fill-box;transform-origin:50% 60%;}
+@keyframes pfiTick{0%{fill:#D4862A;transform:scale(1.18);}100%{fill:#1E1610;transform:none;}}
+#pfiDot{transition:r .3s ease;}
+.pfi-dialwrap.pfi-enter{animation:pfiIn .8s cubic-bezier(.2,.9,.25,1.08) both;}
+@keyframes pfiIn{from{opacity:0;transform:scale(.78) rotate(-32deg);}to{opacity:1;transform:none;}}
+
+/* Esperando conexion */
+.pf-auth[data-st="boot"] .pfi-dialwrap::after{content:'';position:absolute;inset:-10px;border-radius:50%;border:1.5px solid rgba(212,134,42,.5);animation:pfiWait 1.7s ease-out infinite;}
+@keyframes pfiWait{0%{transform:scale(.96);opacity:.7;}100%{transform:scale(1.22);opacity:0;}}
+
+/* Ondas al conectar */
+.pfi-ring{position:absolute;inset:0;border-radius:50%;border:1.6px solid rgba(226,160,80,.8);opacity:0;pointer-events:none;}
+.pfi-ringing .pfi-ring{animation:pfiRing 1.5s cubic-bezier(.16,1,.3,1) both;}
+.pfi-ringing .pfi-ring + .pfi-ring{animation-delay:.22s;}
+@keyframes pfiRing{0%{transform:scale(1);opacity:.85;}100%{transform:scale(2.05);opacity:0;}}
+
+/* Bienvenida */
+.pfi-welcome{width:100%;display:flex;flex-direction:column;align-items:center;}
+.pfi-welcome > *{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .8s cubic-bezier(.16,1,.3,1);}
+.pf-auth[data-st="welcome"] .pfi-welcome > *{opacity:1;transform:none;}
+.pf-auth[data-st="welcome"] .pfi-welcome > .pfi-h{transition-delay:.28s;}
+.pf-auth[data-st="welcome"] .pfi-welcome > .pfi-sub{transition-delay:.42s;}
+.pf-auth[data-st="welcome"] .pfi-welcome > .pfi-ticker{transition-delay:.56s;}
+.pf-auth[data-st="welcome"] .pfi-welcome > .pfi-cta{transition-delay:.68s;}
+.pf-auth[data-st="form"] .pfi-welcome{display:none;}
+.pf-auth:not([data-st="welcome"]) .pfi-welcome{pointer-events:none;}
+
+.pfi-mark{font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;letter-spacing:.36em;padding-left:.36em;color:#F6F0E2;line-height:1;transform:none!important;opacity:1!important;}
+.pfi-mark span{display:inline-block;opacity:0;transform:translateY(9px);transition:opacity .35s ease,transform .55s cubic-bezier(.34,1.56,.64,1);}
+.pfi-mark .pfi-f{color:#D4862A;}
+.pf-auth[data-st="welcome"] .pfi-mark span{opacity:1;transform:none;transition-delay:calc(var(--i) * 34ms);}
+.pfi-h{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(33px,9.6vw,42px);line-height:1.03;letter-spacing:-.3px;color:#F6F0E2;margin:18px auto 12px;max-width:14ch;text-wrap:balance;}
+.pfi-sub{font-family:'Inter',sans-serif;font-size:15px;line-height:1.5;color:rgba(246,240,226,.66);margin:0 auto;max-width:31ch;}
+
+/* Cinta de la enciclopedia */
+.pfi-ticker{width:100vw;margin:24px calc(50% - 50vw) 26px;overflow:hidden;padding:11px 0;border-top:1px solid rgba(246,240,226,.08);border-bottom:1px solid rgba(246,240,226,.08);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);}
+.pfi-tape{display:inline-flex;white-space:nowrap;animation:pfiTape 70s linear infinite;will-change:transform;}
+.pfi-tape span{position:relative;font-family:'Inter',sans-serif;font-size:13px;color:rgba(246,240,226,.56);padding:0 16px 0 18px;}
+.pfi-tape span::before{content:'';position:absolute;left:0;top:50%;width:6px;height:6px;margin-top:-4px;border-radius:50%;border:1.3px solid rgba(212,134,42,.75);}
+@keyframes pfiTape{to{transform:translateX(-50%);}}
+
+/* Botones */
+.pfi-cta{display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px;}
+.pfi-ghost{width:100%;background:transparent;border:1px solid rgba(246,240,226,.26);color:#F6F0E2;border-radius:16px;padding:15px 20px;font-family:'Inter',sans-serif;font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .2s,transform .18s;}
+.pfi-ghost:active{background:rgba(246,240,226,.08);transform:scale(.98);}
+.pfi-cta .pf-auth-go{box-shadow:0 10px 28px rgba(212,134,42,.28);}
+
+/* Toca para continuar */
+.pfi-skip{position:fixed;left:0;right:0;bottom:calc(22px + env(safe-area-inset-bottom));text-align:center;font-family:'Inter',sans-serif;font-size:13px;color:rgba(246,240,226,.42);opacity:0;transition:opacity .4s ease;pointer-events:none;z-index:2;}
+.pf-auth[data-st="intro"] .pfi-skip{opacity:1;transition-delay:1.5s;}
+
+/* Formulario */
+.pfi-back{position:absolute;z-index:3;top:calc(14px + env(safe-area-inset-top));left:12px;display:none;align-items:center;gap:4px;background:none;border:none;padding:10px 8px;font-family:'Inter',sans-serif;font-size:15px;color:rgba(246,240,226,.8);cursor:pointer;}
+.pfi-back svg{width:20px;height:20px;}
+.pf-auth[data-st="form"] .pfi-back{display:inline-flex;}
+.pf-auth[data-st="form"] .pf-auth-wrap{justify-content:flex-start;padding-top:44px;}
+.pf-auth[data-st="form"] .pfi-dialwrap{width:76px;height:76px;margin:0 auto 22px;}
+.pf-auth[data-st="form"] .pf-auth-h,.pf-auth[data-st="form"] .pf-auth-sub{text-align:center;margin-left:auto;margin-right:auto;}
+.pf-auth[data-st="form"] .pf-auth-form > *{animation:pfiUp .55s cubic-bezier(.16,1,.3,1) both;}
+.pf-auth[data-st="form"] .pf-auth-form > :nth-child(2){animation-delay:.05s;}
+.pf-auth[data-st="form"] .pf-auth-form > :nth-child(3){animation-delay:.09s;}
+.pf-auth[data-st="form"] .pf-auth-form > :nth-child(4){animation-delay:.13s;}
+.pf-auth[data-st="form"] .pf-auth-form > :nth-child(5){animation-delay:.17s;}
+.pf-auth[data-st="form"] .pf-auth-form > :nth-child(n+6){animation-delay:.21s;}
+@keyframes pfiUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+/* Salida: el disco se acerca y la app aparece */
+.pf-auth[data-st="out"]{opacity:0;pointer-events:none;}
+.pf-auth[data-st="out"] .pfi-dialwrap{transform:scale(1.45);opacity:0;transition:transform .62s cubic-bezier(.6,0,.2,1),opacity .4s ease .18s;}
+.pf-auth[data-st="out"] .pfi-welcome,.pf-auth[data-st="out"] .pf-auth-form{opacity:0;transition:opacity .25s ease;}
+
+@media (max-height:700px){
+  .pfi-dialwrap{width:min(50vw,27vh,200px);height:min(50vw,27vh,200px);margin-bottom:20px;}
+  .pfi-h{font-size:31px;margin-top:14px;}
+  .pfi-ticker{margin-top:18px;margin-bottom:18px;}
+}
+@media (prefers-reduced-motion: reduce){
+  .pf-auth *,.pf-auth *::before,.pf-auth *::after{animation:none!important;transition:none!important;}
+  .pf-auth{transition:none;}
+}
+.pf-auth .pf-auth-sub{text-wrap:balance;}
+.pf-auth-terms input{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin:0;border-radius:7px;border:1.5px solid rgba(246,240,226,.38);background:rgba(246,240,226,.06) center/14px no-repeat;cursor:pointer;transition:background-color .2s,border-color .2s;}
+.pf-auth-terms input:checked{background-color:#D4862A;border-color:#D4862A;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");}
+.pf-auth-terms input:focus-visible{outline:2px solid #D4862A;outline-offset:2px;}
+.pf-auth-terms{align-items:center;}
 </style>
 </head>
 <body>
@@ -2665,12 +2772,23 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
 </div>
 
 <!-- ACCESO -->
-<div class="pf-auth" id="pfAuth" role="dialog" aria-label="Acceso a PHONEFINDER">
+<div class="pf-auth" id="pfAuth" role="dialog" aria-label="Acceso a PHONEFINDER" data-st="boot">
+  <svg class="pfi-cord" id="pfiCordSvg" aria-hidden="true"><path id="pfiCordPath"/></svg>
+  <button type="button" class="pfi-back" id="pfiBack" onclick="pfiBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Volver</button>
   <div class="pf-auth-wrap">
-    <div class="pf-auth-logo" id="pfAuthLogo" aria-hidden="true"></div>
-    <div class="pf-auth-boot" id="pfAuthBoot"><i></i></div>
+    <div class="pfi-dialwrap" id="pfiDialWrap" aria-hidden="true"><i class="pfi-ring"></i><i class="pfi-ring"></i><div class="pfi-dial" id="pfiDial"></div></div>
+    <div class="pfi-welcome" id="pfiWelcome">
+      <div class="pfi-mark" id="pfiMark" role="img" aria-label="PHONEFINDER"></div>
+      <h1 class="pfi-h">Desde 1876, cada tel&eacute;fono guarda una historia</h1>
+      <p class="pfi-sub">Hazle una foto y te diremos qu&eacute; modelo es, de qu&eacute; &eacute;poca y cu&aacute;nto vale.</p>
+      <div class="pfi-ticker" aria-hidden="true"><div class="pfi-tape" id="pfiTape"></div></div>
+      <div class="pfi-cta">
+        <button type="button" class="pf-auth-go" onclick="pfAuthOpen('register')">Crear mi cuenta</button>
+        <button type="button" class="pfi-ghost" onclick="pfAuthOpen('login')">Ya tengo cuenta</button>
+      </div>
+    </div>
     <form class="pf-auth-form" id="pfAuthForm" hidden onsubmit="return pfAuthSubmit(event)" novalidate>
-      <h1 class="pf-auth-h" id="pfAuthTitle">Entra en tu colecci&oacute;n</h1>
+      <h2 class="pf-auth-h" id="pfAuthTitle">Entra en tu colecci&oacute;n</h2>
       <p class="pf-auth-sub" id="pfAuthSub">Identifica, tasa y guarda tus tel&eacute;fonos antiguos.</p>
       <label class="pf-auth-field" id="pfAuthNameRow" hidden><span>Tu nombre</span><input id="pfAuthName" type="text" autocomplete="given-name" maxlength="30"></label>
       <label class="pf-auth-field"><span>Correo electr&oacute;nico</span><input id="pfAuthEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
@@ -2684,6 +2802,7 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
       </div>
     </form>
   </div>
+  <div class="pfi-skip" aria-hidden="true">Toca para continuar</div>
 </div>
 
 <!-- CONDICIONES Y PRIVACIDAD -->
@@ -5714,7 +5833,7 @@ function pfUserRefsText(){
 // perfil con cifras, logros y ajustes, compartir como imagen, vista
 // vitrina y ayuda. Todo lo local vive en localStorage.
 // =====================================================================
-var PF_APP_VERSION='5.4',PF_NEWS_VER='v5.3';
+var PF_APP_VERSION='5.5',PF_NEWS_VER='v5.3';
 function pfLS(k,def){try{var v=localStorage.getItem(k);return v==null?def:JSON.parse(v);}catch(e){return def;}}
 function pfLSset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
@@ -6037,13 +6156,166 @@ function pfWipeLocal(){
   try{if(typeof renderDrafts==='function')renderDrafts();if(typeof renderHuntWidget==='function')renderHuntWidget();}catch(e){}
 }
 
+// ---- Pantalla de inicio animada (v5.5): el disco marca 1-8-7-6 ----
+var _pfiT=[],_pfiRaf=0,_pfiBuilt=false,_pfiDialed='',_pfiOutT=0,_pfiFlipT=0;
+function pfiRM(){try{return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);}catch(e){return false;}}
+function pfiAt(ms,fn){_pfiT.push(setTimeout(fn,ms));}
+function pfiStop(){_pfiT.forEach(clearTimeout);_pfiT=[];cancelAnimationFrame(_pfiRaf);var w=document.getElementById('pfiWheel');if(w)w.setAttribute('transform','rotate(0 60 60)');}
+function pfiSt(s){var a=document.getElementById('pfAuth');if(a)a.setAttribute('data-st',s);}
+function pfiGetSt(){var a=document.getElementById('pfAuth');return a?a.getAttribute('data-st'):'';}
+function pfiDialSvg(){
+  var holes='',digits='',cx=60,cy=60;
+  for(var k=1;k<=10;k++){
+    var a=(-60-(k-1)*30)*Math.PI/180,x=(cx+39*Math.cos(a)).toFixed(2),y=(cy+39*Math.sin(a)).toFixed(2);
+    holes+='<circle cx="'+x+'" cy="'+y+'" r="7.7" fill="#000"/>';
+    digits+='<text x="'+x+'" y="'+(Number(y)+3.3).toFixed(2)+'">'+(k%10)+'</text>';
+  }
+  var sa=-18*Math.PI/180;
+  return '<svg viewBox="0 0 120 120"><defs><mask id="pfiMask"><rect width="120" height="120" fill="#fff"/>'+holes+'<circle cx="60" cy="60" r="25.5" fill="#000"/></mask>'
+    +'<radialGradient id="pfiGrad" cx="36%" cy="28%" r="85%"><stop offset="0" stop-color="#4A3A2C"/><stop offset=".55" stop-color="#1E1610"/><stop offset="1" stop-color="#0E0906"/></radialGradient>'
+    +'<radialGradient id="pfiPlate" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#F3EBDB"/><stop offset="1" stop-color="#DCCFB6"/></radialGradient>'
+    +'<linearGradient id="pfiRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B2E23"/><stop offset="1" stop-color="#070504"/></linearGradient></defs>'
+    +'<circle cx="60" cy="60" r="59.5" fill="url(#pfiRim)"/><circle cx="60" cy="60" r="56" fill="#0B0806"/>'
+    +'<circle cx="60" cy="60" r="52.5" fill="url(#pfiPlate)"/><g class="pfi-dg">'+digits+'</g>'
+    +'<g id="pfiWheel" transform="rotate(0 60 60)"><circle cx="60" cy="60" r="52.5" fill="url(#pfiGrad)" mask="url(#pfiMask)"/></g>'
+    +'<path d="M22 30 A46 46 0 0 1 72 15" fill="none" stroke="rgba(255,240,220,.16)" stroke-width="1.4" stroke-linecap="round"/>'
+    +'<line x1="'+(cx+45*Math.cos(sa)).toFixed(1)+'" y1="'+(cy+45*Math.sin(sa)).toFixed(1)+'" x2="'+(cx+57.5*Math.cos(sa)).toFixed(1)+'" y2="'+(cy+57.5*Math.sin(sa)).toFixed(1)+'" stroke="#C9A060" stroke-width="3.8" stroke-linecap="round"/>'
+    +'<circle cx="60" cy="60" r="24.5" fill="#F6F0E2"/><circle cx="60" cy="60" r="21.5" fill="none" stroke="#D4862A" stroke-width=".7" opacity=".55"/>'
+    +'<circle id="pfiDot" cx="60" cy="60" r="6.5" fill="#D4862A"/>'
+    +'<text id="pfiNum" class="pfi-num" x="60" y="65"></text></svg>';
+}
+function pfiNum(t){var n=document.getElementById('pfiNum'),d=document.getElementById('pfiDot');if(n)n.textContent=t;if(d)d.setAttribute('r',t?'0':'6.5');}
+function pfiTick(){var n=document.getElementById('pfiNum');if(!n)return;n.classList.remove('pfi-tick');n.getBoundingClientRect();n.classList.add('pfi-tick');}
+function pfiBuild(){
+  if(_pfiBuilt)return;_pfiBuilt=true;
+  var d=document.getElementById('pfiDial');if(d)d.innerHTML=pfiDialSvg();
+  var m=document.getElementById('pfiMark');
+  if(m){var w='PHONEFINDER',h='';for(var i=0;i<w.length;i++)h+='<span style="--i:'+i+'"'+(i>=5?' class="pfi-f"':'')+'>'+w.charAt(i)+'</span>';m.innerHTML=h;}
+  var a=document.getElementById('pfAuth');
+  if(a)a.addEventListener('click',function(e){if(pfiGetSt()==='intro'&&!(e.target.closest&&e.target.closest('button')))pfiSkip();});
+  window.addEventListener('resize',function(){var st=pfiGetSt();if(a&&!a.hidden&&(st==='welcome'||st==='intro'))pfiCord(false);});
+}
+function pfiTape(){
+  var t=document.getElementById('pfiTape');if(!t||typeof PF_KB_MODELS==='undefined')return;
+  var cl=function(n){return String(n).replace(/\s*\([^)]*\)/g,'').split(' / ')[0].trim();};
+  var pool=PF_KB_MODELS.filter(function(r){return r&&r[0]&&!r[6]&&cl(r[0]).length<=32;});
+  for(var i=pool.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),x=pool[i];pool[i]=pool[j];pool[j]=x;}
+  var star=pool.filter(function(r){return /ericsson|ericofon|heraldo|standard|western|siemens|teide|citesa|bell|mix|ader|gondola/i.test(r[0]);}).slice(0,9);
+  var rest=pool.filter(function(r){return star.indexOf(r)<0;}).slice(0,9),pick=[];
+  for(var k=0;k<9;k++){if(star[k])pick.push(star[k]);if(rest[k])pick.push(rest[k]);}
+  var nm=function(r){var n=cl(r[0]);if(typeof pfAcc==='function')n=pfAcc(n);return n;};
+  var h=pick.map(function(r){return '<span>'+pfEsc(nm(r))+'</span>';}).join('');
+  t.innerHTML=h+h;
+}
+function pfiCord(animate){
+  var svg=document.getElementById('pfiCordSvg'),p=document.getElementById('pfiCordPath'),a=document.getElementById('pfAuth'),dw=document.getElementById('pfiDialWrap');
+  if(!svg||!p||!a||!dw||a.hidden)return;
+  var W=a.clientWidth,H=Math.max(a.clientHeight,a.scrollHeight);
+  var r=dw.getBoundingClientRect(),ar=a.getBoundingClientRect();
+  if(!r.width)return;
+  var R=r.width/2,cx=r.left-ar.left+R,cy=r.top-ar.top+a.scrollTop+R;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.style.height=H+'px';
+  var P=[[cx+R*0.55,cy+R*0.86],[W+R*0.2,cy+R*1.1],[W*1.02,H*0.62],[W*0.78,H+40]];
+  var bz=function(t){var u=1-t,a1=u*u*u,b1=3*u*u*t,c1=3*u*t*t,d1=t*t*t;return [a1*P[0][0]+b1*P[1][0]+c1*P[2][0]+d1*P[3][0],a1*P[0][1]+b1*P[1][1]+c1*P[2][1]+d1*P[3][1]];};
+  var L=0,prev=bz(0),i,q;for(i=1;i<=200;i++){q=bz(i/200);L+=Math.hypot(q[0]-prev[0],q[1]-prev[1]);prev=q;}
+  var loops=Math.max(8,Math.round(L/10.5)),rad=Math.min(8,Math.max(5.5,W/62)),N=loops*14,d='';
+  for(i=0;i<=N;i++){
+    var t=i/N,b=bz(t),b2=bz(Math.min(1,t+0.002)),b0=bz(Math.max(0,t-0.002)),tx=b2[0]-b0[0],ty=b2[1]-b0[1],tl=Math.hypot(tx,ty)||1;tx/=tl;ty/=tl;
+    var ph=t*loops*2*Math.PI,amp=rad*Math.min(1,t*6+0.15);
+    var x=b[0]-ty*amp*Math.sin(ph)+tx*amp*0.9*Math.cos(ph),y=b[1]+tx*amp*Math.sin(ph)+ty*amp*0.9*Math.cos(ph);
+    d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+  }
+  p.setAttribute('d',d);
+  var len=0;try{len=p.getTotalLength();}catch(e){len=L*4;}
+  p.style.strokeDasharray=len;
+  p.style.transition='none';
+  if(animate&&!pfiRM()){p.style.strokeDashoffset=len;p.getBoundingClientRect();p.style.transition='stroke-dashoffset 3.2s cubic-bezier(.25,.6,.25,1)';requestAnimationFrame(function(){p.style.strokeDashoffset='0';});}
+  else p.style.strokeDashoffset='0';
+}
+function pfiEase(p){return p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;}
+function pfiBack_ease(p){return 1-Math.pow(1-p,1.35);}
+function pfiTurn(from,to,dur,ease,done){
+  var w=document.getElementById('pfiWheel'),t0=performance.now();cancelAnimationFrame(_pfiRaf);
+  var step=function(t){var p=Math.min(1,Math.max(0,(t-t0)/dur)),v=from+(to-from)*ease(p);if(w)w.setAttribute('transform','rotate('+v.toFixed(2)+' 60 60)');if(p<1)_pfiRaf=requestAnimationFrame(step);else if(done)done();};
+  _pfiRaf=requestAnimationFrame(step);
+}
+function pfiDialSeq(digits,i,done){
+  if(i>=digits.length){done();return;}
+  var k=Number(digits.charAt(i)),deg=42+((k||10)-1)*30;
+  pfiTurn(0,deg,170+deg*0.72,pfiEase,function(){
+    pfiAt(80,function(){
+      pfiTurn(deg,0,120+deg*1.05,pfiBack_ease,function(){
+        _pfiDialed+=digits.charAt(i);pfiNum(_pfiDialed);pfiTick();
+        pfiAt(120,function(){pfiDialSeq(digits,i+1,done);});
+      });
+    });
+  });
+}
+function pfiEnter(){var w=document.getElementById('pfiDialWrap');if(!w||pfiRM())return;w.classList.remove('pfi-enter');w.getBoundingClientRect();w.classList.add('pfi-enter');}
+function pfiWelcome(){
+  var a=document.getElementById('pfAuth');if(!a)return;
+  pfiBuild();
+  var st=pfiGetSt();
+  if(st==='welcome'||st==='form'||st==='intro')return;
+  pfiStop();_pfiDialed='';
+  var tp=document.getElementById('pfiTape');if(tp&&!tp.children.length)pfiTape();
+  document.getElementById('pfAuthForm').hidden=true;
+  if(st!=='boot')pfiEnter();
+  if(pfiRM()){pfiSt('welcome');pfiNum('1876');pfiCord(false);return;}
+  pfiSt('intro');pfiNum('');
+  pfiAt(80,function(){pfiCord(true);});
+  if(pfLS('pf_intro_seen',0)){pfiAt(300,function(){pfiNum('1876');pfiTick();});pfiAt(650,function(){pfiDone(true);});return;}
+  pfiAt(700,function(){pfiDialSeq('1876',0,function(){pfiAt(160,function(){pfiDone(true);});});});
+}
+function pfiDone(ring){
+  pfiStop();pfiSt('welcome');pfiNum('1876');pfLSset('pf_intro_seen',1);
+  if(ring&&!pfiRM()){var w=document.getElementById('pfiDialWrap');if(w){w.classList.remove('pfi-ringing');w.getBoundingClientRect();w.classList.add('pfi-ringing');}}
+}
+function pfiSkip(){pfiStop();_pfiDialed='1876';pfiCord(false);pfiDone(true);}
+function pfiFlip(fn){
+  var w=document.getElementById('pfiDialWrap');
+  if(!w||pfiRM()){fn();return;}
+  clearTimeout(_pfiFlipT);w.style.transition='none';w.style.transform='';
+  var r0=w.getBoundingClientRect();fn();var r1=w.getBoundingClientRect();
+  if(!r1.width){return;}
+  var dx=(r0.left+r0.width/2)-(r1.left+r1.width/2),dy=(r0.top+r0.height/2)-(r1.top+r1.height/2),sc=r0.width/r1.width;
+  w.style.transform='translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale('+sc.toFixed(3)+')';
+  w.getBoundingClientRect();
+  w.style.transition='transform .6s cubic-bezier(.2,.85,.2,1)';w.style.transform='';
+  _pfiFlipT=setTimeout(function(){w.style.transition='';},650);
+}
+function pfAuthOpen(m){
+  pfiStop();pfAuthMode(m);
+  var a=document.getElementById('pfAuth');
+  pfiFlip(function(){document.getElementById('pfAuthForm').hidden=false;pfiSt('form');if(a)a.scrollTop=0;});
+  var w=document.getElementById('pfiWheel');if(w&&!pfiRM())pfiTurn(0,360,700,pfiEase,function(){w.setAttribute('transform','rotate(0 60 60)');});
+}
+function pfiBack(){
+  pfAuthSay('');
+  pfiFlip(function(){document.getElementById('pfAuthForm').hidden=true;pfiSt('welcome');});
+  pfiCord(false);
+}
+function pfAuthExit(){
+  var a=document.getElementById('pfAuth');if(!a||a.hidden)return;
+  pfiStop();clearTimeout(_pfiOutT);
+  if(pfiRM()){a.hidden=true;return;}
+  var w=document.getElementById('pfiDialWrap');if(w){clearTimeout(_pfiFlipT);w.style.transition='';w.style.transform='';}
+  pfiSt('out');pfiTurn(0,300,620,pfiEase);
+  _pfiOutT=setTimeout(function(){a.hidden=true;pfiStop();},640);
+}
+
 // ---- Pantalla de acceso ----
 function pfAuthShow(form){
   var a=document.getElementById('pfAuth');if(!a)return;
-  a.hidden=false;
-  var lg=document.getElementById('pfAuthLogo');if(lg&&!lg.innerHTML)lg.innerHTML=pfLogoSvg().replace(/pfLogoMask/g,'pfAuthMask');
-  document.getElementById('pfAuthBoot').hidden=!!form;
-  document.getElementById('pfAuthForm').hidden=!form;
+  clearTimeout(_pfiOutT);
+  var wasHidden=a.hidden;a.hidden=false;
+  pfiBuild();
+  if(!form){
+    pfiStop();document.getElementById('pfAuthForm').hidden=true;pfiSt('boot');pfiNum('');pfiEnter();
+    return;
+  }
+  if(wasHidden&&pfiGetSt()==='out')pfiSt('gone');
+  pfiWelcome();
 }
 function pfAuthMode(m){
   pfAuthCur=m;
@@ -6090,7 +6362,7 @@ function pfOnAuth(){
   if(!u){
     _pfBooted=false;_pfAdmUsers=[];
     var cur=document.getElementById('pfAuthPass');if(cur)cur.value='';
-    pfAuthShow(true);pfAuthMode('login');pfSetNavBadge(false);
+    pfAuthShow(true);if(pfiGetSt()!=='form')pfAuthMode('login');pfSetNavBadge(false);
     return;
   }
   var last=pfLS('pf_uid','');
@@ -6098,7 +6370,7 @@ function pfOnAuth(){
   pfLSset('pf_uid',u.uid);
   if(!pfName()&&u.name)pfLSset('pf_user_name',u.name);
   _colCache=null;_colIndex=[];
-  var a=document.getElementById('pfAuth');if(a)a.hidden=true;
+  pfAuthExit();
   pfApplyName();pfRenderAccount();
   if(!_pfBooted){_pfBooted=true;pfBootFlow();}
   pfAdminCheck();
@@ -6228,7 +6500,7 @@ if(document.body.classList.contains('pf-noauth')){_pfBooted=true;setTimeout(pfBo
 else (function(){
   pfAuthShow(false);
   if(window._pfAuthResolved)pfOnAuth();
-  _pfAuthTimer=setTimeout(function(){if(!window._pfAuthResolved){pfAuthShow(true);pfAuthMode('login');pfAuthSay('Estamos tardando en conectar. Comprueba tu conexi\u00f3n.');}},9000);
+  _pfAuthTimer=setTimeout(function(){if(!window._pfAuthResolved){pfAuthShow(true);pfAuthOpen('login');pfAuthSay('Estamos tardando en conectar. Comprueba tu conexi\u00f3n.');}},9000);
 })();
 
 // ===================== v5.1: ANALISIS EN DOS FASES, ESCANER Y ANIMACIONES =====================
@@ -6572,7 +6844,7 @@ function pfEncRender(reset){
   document.getElementById('pfeMore').hidden=res.length<=_pfEnc.n;
   if(reset&&typeof pfStagger==='function')pfStagger(list,12);
 }
-var PF_ACC={acustico:'ac\u00fastico',acusticos:'ac\u00fasticos',administracion:'administraci\u00f3n',aereas:'a\u00e9reas',aleman:'alem\u00e1n',analogica:'anal\u00f3gica',analogico:'anal\u00f3gico',anos:'a\u00f1os',aqui:'aqu\u00ed',asi:'as\u00ed',automatico:'autom\u00e1tico',basica:'b\u00e1sica',belgica:'B\u00e9lgica',berlines:'berlin\u00e9s',boton:'bot\u00f3n',britanica:'brit\u00e1nica',britanico:'brit\u00e1nico',britanicos:'brit\u00e1nicos',cajon:'caj\u00f3n',camara:'c\u00e1mara',canada:'Canad\u00e1',caracteristica:'caracter\u00edstica',caracteristicas:'caracter\u00edsticas',catalogo:'cat\u00e1logo',ceramica:'cer\u00e1mica',coleccion:'colecci\u00f3n',compania:'compa\u00f1\u00eda',comun:'com\u00fan',conexion:'conexi\u00f3n',dali:'Dal\u00ed',danes:'dan\u00e9s',despues:'despu\u00e9s',disenado:'dise\u00f1ado',diseno:'dise\u00f1o',disenos:'dise\u00f1os',electrica:'el\u00e9ctrica',electronica:'electr\u00f3nica',electronico:'electr\u00f3nico',emision:'emisi\u00f3n',epoca:'\u00e9poca',espana:'Espa\u00f1a',espanol:'espa\u00f1ol',espanola:'espa\u00f1ola',espanoles:'espa\u00f1oles',estetica:'est\u00e9tica',extraible:'extra\u00edble',fabricacion:'fabricaci\u00f3n',frances:'franc\u00e9s',fundicion:'fundici\u00f3n',genova:'G\u00e9nova',hungria:'Hungr\u00eda',imitacion:'imitaci\u00f3n',ingles:'ingl\u00e9s',japon:'Jap\u00f3n',japones:'japon\u00e9s',linea:'l\u00ednea',lineas:'l\u00edneas',madrileno:'madrile\u00f1o',magnetico:'magn\u00e9tico',mas:'m\u00e1s',maximo:'m\u00e1ximo',mecanico:'mec\u00e1nico',metalica:'met\u00e1lica',metalico:'met\u00e1lico',metalicos:'met\u00e1licos',mexico:'M\u00e9xico',microtelefono:'microtel\u00e9fono',microtelefonos:'microtel\u00e9fonos',minimo:'m\u00ednimo',movil:'m\u00f3vil',moviles:'m\u00f3viles',numero:'n\u00famero',numeros:'n\u00fameros',operacion:'operaci\u00f3n',pais:'pa\u00eds',paises:'Pa\u00edses',pequena:'peque\u00f1a',pequenas:'peque\u00f1as',pequeno:'peque\u00f1o',pequenos:'peque\u00f1os',periodo:'per\u00edodo',plastico:'pl\u00e1stico',plasticos:'pl\u00e1sticos',portugues:'portugu\u00e9s',practico:'pr\u00e1ctico',publica:'p\u00fablica',publico:'p\u00fablico',publicos:'p\u00fablicos',raton:'rat\u00f3n',razon:'raz\u00f3n',region:'regi\u00f3n',replica:'r\u00e9plica',replicas:'r\u00e9plicas',reproduccion:'reproducci\u00f3n',republica:'Rep\u00fablica',segun:'seg\u00fan',senal:'se\u00f1al',senales:'se\u00f1ales',senalizar:'se\u00f1alizar',sovietico:'sovi\u00e9tico',sovieticos:'sovi\u00e9ticos',tambien:'tambi\u00e9n',tecnica:'t\u00e9cnica',tecnico:'t\u00e9cnico',tecnologia:'tecnolog\u00eda',telefonica:'telef\u00f3nica',telefonico:'telef\u00f3nico',telefonicos:'telef\u00f3nicos',telefonicas:'telef\u00f3nicas',guia:'gu\u00eda',guias:'gu\u00edas',fisica:'f\u00edsica',historico:'hist\u00f3rico',musica:'m\u00fasica',telefono:'tel\u00e9fono',telefonos:'tel\u00e9fonos',telegrafo:'tel\u00e9grafo',telescopica:'telesc\u00f3pica',tipico:'t\u00edpico',ultima:'\u00faltima',ultimo:'\u00faltimo',unico:'\u00fanico',version:'versi\u00f3n',vienes:'vien\u00e9s',vision:'visi\u00f3n'};
+var PF_ACC={gondola:'g\u00f3ndola',acustico:'ac\u00fastico',acusticos:'ac\u00fasticos',administracion:'administraci\u00f3n',aereas:'a\u00e9reas',aleman:'alem\u00e1n',analogica:'anal\u00f3gica',analogico:'anal\u00f3gico',anos:'a\u00f1os',aqui:'aqu\u00ed',asi:'as\u00ed',automatico:'autom\u00e1tico',basica:'b\u00e1sica',belgica:'B\u00e9lgica',berlines:'berlin\u00e9s',boton:'bot\u00f3n',britanica:'brit\u00e1nica',britanico:'brit\u00e1nico',britanicos:'brit\u00e1nicos',cajon:'caj\u00f3n',camara:'c\u00e1mara',canada:'Canad\u00e1',caracteristica:'caracter\u00edstica',caracteristicas:'caracter\u00edsticas',catalogo:'cat\u00e1logo',ceramica:'cer\u00e1mica',coleccion:'colecci\u00f3n',compania:'compa\u00f1\u00eda',comun:'com\u00fan',conexion:'conexi\u00f3n',dali:'Dal\u00ed',danes:'dan\u00e9s',despues:'despu\u00e9s',disenado:'dise\u00f1ado',diseno:'dise\u00f1o',disenos:'dise\u00f1os',electrica:'el\u00e9ctrica',electronica:'electr\u00f3nica',electronico:'electr\u00f3nico',emision:'emisi\u00f3n',epoca:'\u00e9poca',espana:'Espa\u00f1a',espanol:'espa\u00f1ol',espanola:'espa\u00f1ola',espanoles:'espa\u00f1oles',estetica:'est\u00e9tica',extraible:'extra\u00edble',fabricacion:'fabricaci\u00f3n',frances:'franc\u00e9s',fundicion:'fundici\u00f3n',genova:'G\u00e9nova',hungria:'Hungr\u00eda',imitacion:'imitaci\u00f3n',ingles:'ingl\u00e9s',japon:'Jap\u00f3n',japones:'japon\u00e9s',linea:'l\u00ednea',lineas:'l\u00edneas',madrileno:'madrile\u00f1o',magnetico:'magn\u00e9tico',mas:'m\u00e1s',maximo:'m\u00e1ximo',mecanico:'mec\u00e1nico',metalica:'met\u00e1lica',metalico:'met\u00e1lico',metalicos:'met\u00e1licos',mexico:'M\u00e9xico',microtelefono:'microtel\u00e9fono',microtelefonos:'microtel\u00e9fonos',minimo:'m\u00ednimo',movil:'m\u00f3vil',moviles:'m\u00f3viles',numero:'n\u00famero',numeros:'n\u00fameros',operacion:'operaci\u00f3n',pais:'pa\u00eds',paises:'Pa\u00edses',pequena:'peque\u00f1a',pequenas:'peque\u00f1as',pequeno:'peque\u00f1o',pequenos:'peque\u00f1os',periodo:'per\u00edodo',plastico:'pl\u00e1stico',plasticos:'pl\u00e1sticos',portugues:'portugu\u00e9s',practico:'pr\u00e1ctico',publica:'p\u00fablica',publico:'p\u00fablico',publicos:'p\u00fablicos',raton:'rat\u00f3n',razon:'raz\u00f3n',region:'regi\u00f3n',replica:'r\u00e9plica',replicas:'r\u00e9plicas',reproduccion:'reproducci\u00f3n',republica:'Rep\u00fablica',segun:'seg\u00fan',senal:'se\u00f1al',senales:'se\u00f1ales',senalizar:'se\u00f1alizar',sovietico:'sovi\u00e9tico',sovieticos:'sovi\u00e9ticos',tambien:'tambi\u00e9n',tecnica:'t\u00e9cnica',tecnico:'t\u00e9cnico',tecnologia:'tecnolog\u00eda',telefonica:'telef\u00f3nica',telefonico:'telef\u00f3nico',telefonicos:'telef\u00f3nicos',telefonicas:'telef\u00f3nicas',guia:'gu\u00eda',guias:'gu\u00edas',fisica:'f\u00edsica',historico:'hist\u00f3rico',musica:'m\u00fasica',telefono:'tel\u00e9fono',telefonos:'tel\u00e9fonos',telegrafo:'tel\u00e9grafo',telescopica:'telesc\u00f3pica',tipico:'t\u00edpico',ultima:'\u00faltima',ultimo:'\u00faltimo',unico:'\u00fanico',version:'versi\u00f3n',vienes:'vien\u00e9s',vision:'visi\u00f3n'};
 var PF_ACC_RE=new RegExp('\\b('+Object.keys(PF_ACC).join('|')+')\\b','gi');
 function pfAcc(t){return String(t==null?'':t).replace(PF_ACC_RE,function(w){var r=PF_ACC[w.toLowerCase()];if(!r)return w;if(w.charAt(0)===w.charAt(0).toUpperCase()&&r.charAt(0)===r.charAt(0).toLowerCase())r=r.charAt(0).toUpperCase()+r.slice(1);return r;});}
 function pfEncRow(m){
