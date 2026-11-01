@@ -2062,6 +2062,63 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
 .pf-auth-terms input:checked{background-color:#D4862A;border-color:#D4862A;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");}
 .pf-auth-terms input:focus-visible{outline:2px solid #D4862A;outline-offset:2px;}
 .pf-auth-terms{align-items:center;}
+
+/* ---------- PANTALLA PRINCIPAL (v5.5): una accion protagonista ---------- */
+.pf-intro{text-align:center;padding:26px 20px 28px;}
+.pf-intro .pf-hero-deco{display:none;}
+.pf-intro .pf-intro-h{margin:0 auto 10px;max-width:11ch;font-size:clamp(34px,9.6vw,40px);text-wrap:balance;}
+.pf-intro .pf-intro-p{margin:0 auto;max-width:30ch;text-wrap:balance;}
+#uploadRow{display:none!important;}
+
+.pfh-capture{display:flex;flex-direction:column;align-items:center;gap:16px;margin:24px 0 4px;}
+.pf-intro.pf-has-photo .pfh-capture{display:none;}
+.pfh-shutter{position:relative;display:block;width:min(52vw,27vh,208px);height:min(52vw,27vh,208px);border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.pfh-shutter::before{content:'';position:absolute;inset:-30%;border-radius:50%;background:radial-gradient(circle,rgba(212,134,42,.22) 0%,rgba(212,134,42,.06) 40%,transparent 66%);pointer-events:none;}
+.pfh-shutter::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1.6px solid rgba(226,160,80,.75);opacity:0;pointer-events:none;}
+.pfh-dial{position:relative;display:block;width:100%;height:100%;filter:drop-shadow(0 16px 26px rgba(0,0,0,.55)) drop-shadow(0 2px 3px rgba(0,0,0,.45));transition:transform .18s var(--e-out);}
+.pfh-dial svg{display:block;width:100%;height:100%;}
+.pfh-shutter:active .pfh-dial{transform:scale(.965);}
+.pfh-shutter-c{position:absolute;left:50%;top:50%;width:40%;height:40%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;line-height:1.1;pointer-events:none;}
+.pfh-shutter-c svg{width:25px;height:25px;}
+.pfh-gallery{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:rgba(255,255,255,.86);font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .2s,transform .18s var(--e-out);}
+.pfh-gallery:active{background:rgba(255,255,255,.1);transform:scale(.97);}
+.pfh-gallery svg{width:17px;height:17px;}
+.pf-intro .pf-addinfo{margin-top:14px;font-size:13px;color:rgba(255,255,255,.6);}
+.pf-intro .pf-details{text-align:left;}
+
+/* Lo que aparece cuando ya hay foto o descripcion */
+.pf-intro:not(.pf-can-analyze) #analyzeBtn,.pf-intro:not(.pf-can-analyze) #quickBtn{display:none!important;}
+.pf-intro:not(.pf-has-photo) .photo-strip,.pf-intro:not(.pf-has-photo) .photo-meta{display:none!important;}
+.pf-intro.pf-has-photo .photo-strip{margin-top:22px;animation:pfRise .5s var(--e-out) both;}
+.pf-intro.pf-can-analyze #analyzeBtn{animation:pfRise .5s var(--e-out) both .05s;}
+.pf-intro .btn-analyze{background:var(--amber);color:#fff;}
+
+/* Entrada orquestada */
+body.pf-boot .pfh-shutter{animation:pfiIn .9s cubic-bezier(.2,.9,.25,1.08) both .4s;}
+body.pf-boot .pfh-shutter::after{animation:pfiRing 1.6s cubic-bezier(.16,1,.3,1) both 1.25s;}
+body.pf-boot .pfh-gallery{animation:pfRise .6s var(--e-out) both .85s;}
+body.pf-boot .pf-addinfo{animation:pfRise .6s var(--e-out) both .95s;}
+body.pf-boot .pfh-tool{animation:pfRise .6s var(--e-out) both 1.05s;}
+body.pf-boot .pfh-tool:nth-child(2){animation-delay:1.12s;}
+body.pf-boot .pfh-tool:nth-child(3){animation-delay:1.19s;}
+body.pf-boot .pfh-tool:nth-child(4){animation-delay:1.26s;}
+
+/* Herramientas: cuadricula uniforme */
+.pf-tools.pfh-tools{grid-template-columns:1fr 1fr;gap:10px;margin:18px 16px 0;}
+.pfh-tool{min-height:128px;padding:15px 15px 14px;gap:3px;border-radius:20px;justify-content:flex-start;}
+.pfh-ico{width:38px;height:38px;border-radius:50%;background:var(--bak);color:var(--amber);display:flex;align-items:center;justify-content:center;margin-bottom:10px;flex-shrink:0;}
+.pfh-ico svg{width:19px;height:19px;}
+.pfh-ico.pfh-ico-dial{background:none;}
+.pfh-ico.pfh-ico-dial svg{width:38px;height:38px;}
+.pfh-tool .pf-tool-t{font-size:15px;}
+.pfh-tool .pf-tool-s{font-size:12.5px;}
+#homeSnapshot[style*="block"] ~ .pfh-empty{display:none;}
+@media (prefers-reduced-motion: reduce){
+  body.pf-boot .pfh-shutter,body.pf-boot .pfh-shutter::after,body.pf-boot .pfh-gallery,body.pf-boot .pf-addinfo,body.pf-boot .pfh-tool,.pf-intro.pf-has-photo .photo-strip,.pf-intro.pf-can-analyze #analyzeBtn{animation:none!important;}
+}
+.pf-intro{overflow:hidden;}
+.pf-intro .photo-strip{justify-content:center;}
+.pf-intro .photo-meta{text-align:center;}
 </style>
 </head>
 <body>
@@ -2085,6 +2142,19 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
     <p class="pf-intro-hi" id="pfHello" hidden></p>
     <h1 class="pf-intro-h">&iquest;Qu&eacute; tel&eacute;fono tienes delante?</h1>
     <p class="pf-intro-p">Hazle una foto y te digo qu&eacute; es, cu&aacute;nto vale y cu&aacute;nto pagar por &eacute;l.</p>
+    <div class="pfh-capture">
+      <label class="pfh-shutter" for="cameraInput" id="pfhShutter" onclick="pfhSpin()">
+        <span class="pfh-dial" id="pfhDial" aria-hidden="true"></span>
+        <span class="pfh-shutter-c">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>Hacer foto</span>
+        </span>
+      </label>
+      <label class="pfh-gallery" for="galleryInput">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Elegir de la galer&iacute;a
+      </label>
+    </div>
     <div class="upload-row pf-capture" id="uploadRow">
       <label class="pf-shot" for="cameraInput">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -2172,10 +2242,11 @@ body.pf-boot .pf-capture{animation:pfRise .6s var(--e-out) both .6s;}
     </div>
   </div>
 
-  <div class="pf-tools">
-    <button class="pf-tool pf-tool-enc" onclick="pfEncOpen()"><span class="pf-tool-ico" id="pfToolEncIco" aria-hidden="true"></span><span class="pf-tool-tx"><span class="pf-tool-t">Enciclopedia de tel&eacute;fonos</span><span class="pf-tool-s" id="pfToolEncSub">Modelos de todo el mundo, con &eacute;poca, rareza y precio</span></span></button>
-    <button class="pf-tool" onclick="openLotMode()"><span class="pf-tool-t">Tasar un lote</span><span class="pf-tool-s">Varias fotos a la vez, con total y oferta recomendada</span></button>
-    <div id="homeSnapshot" style="display:none"><button class="pf-tool" onclick="showPage('collection')"><span class="pf-tool-t">Mi colecci&oacute;n</span><span class="pf-tool-s"><b id="snapNum">0</b> tel&eacute;fonos, valor <b id="snapValue">0 &euro;</b></span></button></div>
+  <div class="pf-tools pfh-tools">
+    <button class="pf-tool pfh-tool" onclick="pfEncOpen()"><span class="pfh-ico pfh-ico-dial" id="pfToolEncIco" aria-hidden="true"></span><span class="pf-tool-t">Enciclopedia</span><span class="pf-tool-s" id="pfToolEncSub">Modelos de todo el mundo</span></button>
+    <button class="pf-tool pfh-tool" onclick="showPage('collection')"><span class="pfh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="pf-tool-t">Mi colecci&oacute;n</span><span class="pf-tool-s" id="homeSnapshot" style="display:none"><b id="snapNum">0</b> tel&eacute;fonos, <b id="snapValue">0 &euro;</b></span><span class="pf-tool-s pfh-empty">Guarda aqu&iacute; tus piezas</span></button>
+    <button class="pf-tool pfh-tool" onclick="openLotMode()"><span class="pfh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 18l9 5 9-5" opacity=".55"/></svg></span><span class="pf-tool-t">Tasar un lote</span><span class="pf-tool-s">Varias piezas, un total</span></button>
+    <button class="pf-tool pfh-tool" onclick="openHuntHistory()"><span class="pfh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4z"/><path d="M4 17a3 3 0 0 1 3-3h12"/><line x1="8" y1="8" x2="14" y2="8"/></svg></span><span class="pf-tool-t">Diario de caza</span><span class="pf-tool-s">Tus visitas al rastro</span></button>
   </div>
 
   <!-- Drafts: colapsado, discreto -->
@@ -5833,7 +5904,7 @@ function pfUserRefsText(){
 // perfil con cifras, logros y ajustes, compartir como imagen, vista
 // vitrina y ayuda. Todo lo local vive en localStorage.
 // =====================================================================
-var PF_APP_VERSION='5.5',PF_NEWS_VER='v5.3';
+var PF_APP_VERSION='5.6',PF_NEWS_VER='v5.3';
 function pfLS(k,def){try{var v=localStorage.getItem(k);return v==null?def:JSON.parse(v);}catch(e){return def;}}
 function pfLSset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
@@ -6163,7 +6234,8 @@ function pfiAt(ms,fn){_pfiT.push(setTimeout(fn,ms));}
 function pfiStop(){_pfiT.forEach(clearTimeout);_pfiT=[];cancelAnimationFrame(_pfiRaf);var w=document.getElementById('pfiWheel');if(w)w.setAttribute('transform','rotate(0 60 60)');}
 function pfiSt(s){var a=document.getElementById('pfAuth');if(a)a.setAttribute('data-st',s);}
 function pfiGetSt(){var a=document.getElementById('pfAuth');return a?a.getAttribute('data-st'):'';}
-function pfiDialSvg(){
+function pfiDialSvg(p,cam){
+  p=p||'pfi';
   var holes='',digits='',cx=60,cy=60;
   for(var k=1;k<=10;k++){
     var a=(-60-(k-1)*30)*Math.PI/180,x=(cx+39*Math.cos(a)).toFixed(2),y=(cy+39*Math.sin(a)).toFixed(2);
@@ -6171,18 +6243,18 @@ function pfiDialSvg(){
     digits+='<text x="'+x+'" y="'+(Number(y)+3.3).toFixed(2)+'">'+(k%10)+'</text>';
   }
   var sa=-18*Math.PI/180;
-  return '<svg viewBox="0 0 120 120"><defs><mask id="pfiMask"><rect width="120" height="120" fill="#fff"/>'+holes+'<circle cx="60" cy="60" r="25.5" fill="#000"/></mask>'
-    +'<radialGradient id="pfiGrad" cx="36%" cy="28%" r="85%"><stop offset="0" stop-color="#4A3A2C"/><stop offset=".55" stop-color="#1E1610"/><stop offset="1" stop-color="#0E0906"/></radialGradient>'
-    +'<radialGradient id="pfiPlate" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#F3EBDB"/><stop offset="1" stop-color="#DCCFB6"/></radialGradient>'
-    +'<linearGradient id="pfiRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B2E23"/><stop offset="1" stop-color="#070504"/></linearGradient></defs>'
-    +'<circle cx="60" cy="60" r="59.5" fill="url(#pfiRim)"/><circle cx="60" cy="60" r="56" fill="#0B0806"/>'
-    +'<circle cx="60" cy="60" r="52.5" fill="url(#pfiPlate)"/><g class="pfi-dg">'+digits+'</g>'
-    +'<g id="pfiWheel" transform="rotate(0 60 60)"><circle cx="60" cy="60" r="52.5" fill="url(#pfiGrad)" mask="url(#pfiMask)"/></g>'
+  return '<svg viewBox="0 0 120 120"><defs><mask id="'+p+'Mask"><rect width="120" height="120" fill="#fff"/>'+holes+'<circle cx="60" cy="60" r="25.5" fill="#000"/></mask>'
+    +'<radialGradient id="'+p+'Grad" cx="36%" cy="28%" r="85%"><stop offset="0" stop-color="#4A3A2C"/><stop offset=".55" stop-color="#1E1610"/><stop offset="1" stop-color="#0E0906"/></radialGradient>'
+    +'<radialGradient id="'+p+'Plate" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#F3EBDB"/><stop offset="1" stop-color="#DCCFB6"/></radialGradient>'
+    +'<linearGradient id="'+p+'Rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B2E23"/><stop offset="1" stop-color="#070504"/></linearGradient></defs>'
+    +'<circle cx="60" cy="60" r="59.5" fill="url(#'+p+'Rim)"/><circle cx="60" cy="60" r="56" fill="#0B0806"/>'
+    +'<circle cx="60" cy="60" r="52.5" fill="url(#'+p+'Plate)"/><g class="pfi-dg">'+digits+'</g>'
+    +'<g id="'+p+'Wheel" transform="rotate(0 60 60)"><circle cx="60" cy="60" r="52.5" fill="url(#'+p+'Grad)" mask="url(#'+p+'Mask)"/></g>'
     +'<path d="M22 30 A46 46 0 0 1 72 15" fill="none" stroke="rgba(255,240,220,.16)" stroke-width="1.4" stroke-linecap="round"/>'
     +'<line x1="'+(cx+45*Math.cos(sa)).toFixed(1)+'" y1="'+(cy+45*Math.sin(sa)).toFixed(1)+'" x2="'+(cx+57.5*Math.cos(sa)).toFixed(1)+'" y2="'+(cy+57.5*Math.sin(sa)).toFixed(1)+'" stroke="#C9A060" stroke-width="3.8" stroke-linecap="round"/>'
     +'<circle cx="60" cy="60" r="24.5" fill="#F6F0E2"/><circle cx="60" cy="60" r="21.5" fill="none" stroke="#D4862A" stroke-width=".7" opacity=".55"/>'
-    +'<circle id="pfiDot" cx="60" cy="60" r="6.5" fill="#D4862A"/>'
-    +'<text id="pfiNum" class="pfi-num" x="60" y="65"></text></svg>';
+    +(cam?'<circle cx="60" cy="60" r="24.5" fill="#D4862A"/><circle cx="60" cy="60" r="21.5" fill="none" stroke="#fff" stroke-width=".7" opacity=".35"/></svg>'
+      :'<circle id="'+p+'Dot" cx="60" cy="60" r="6.5" fill="#D4862A"/><text id="'+p+'Num" class="pfi-num" x="60" y="65"></text></svg>');
 }
 function pfiNum(t){var n=document.getElementById('pfiNum'),d=document.getElementById('pfiDot');if(n)n.textContent=t;if(d)d.setAttribute('r',t?'0':'6.5');}
 function pfiTick(){var n=document.getElementById('pfiNum');if(!n)return;n.classList.remove('pfi-tick');n.getBoundingClientRect();n.classList.add('pfi-tick');}
@@ -6301,6 +6373,7 @@ function pfAuthExit(){
   if(pfiRM()){a.hidden=true;return;}
   var w=document.getElementById('pfiDialWrap');if(w){clearTimeout(_pfiFlipT);w.style.transition='';w.style.transform='';}
   pfiSt('out');pfiTurn(0,300,620,pfiEase);
+  document.body.classList.add('pf-boot');setTimeout(function(){document.body.classList.remove('pf-boot');},2800);
   _pfiOutT=setTimeout(function(){a.hidden=true;pfiStop();},640);
 }
 
@@ -6875,8 +6948,47 @@ function pfEncFromResult(){
 }
 setTimeout(function(){
   var ic=document.getElementById('pfToolEncIco');if(ic&&!ic.innerHTML)ic.innerHTML=pfLogoSvg().replace(/pfLogoMask/g,'pfEncMask');
-  var sb=document.getElementById('pfToolEncSub');if(sb&&typeof PF_KB_MODELS!=='undefined')sb.textContent=PF_KB_MODELS.length+' modelos de todo el mundo, con \u00e9poca, rareza y precio';
+  var sb=document.getElementById('pfToolEncSub');if(sb&&typeof PF_KB_MODELS!=='undefined')sb.textContent=PF_KB_MODELS.length+' modelos, con \u00e9poca y precio';
 },0);
+
+// ===================== v5.5: PANTALLA PRINCIPAL =====================
+// Una sola accion protagonista (el disco hace la foto) y el resto aparece cuando hace falta.
+var _pfhRaf=0;
+function pfhInit(){
+  var d=document.getElementById('pfhDial');if(d&&!d.innerHTML)d.innerHTML=pfiDialSvg('pfh',true);
+  var ds=document.getElementById('descInput');if(ds&&!ds._pfh){ds._pfh=1;ds.addEventListener('input',pfhSync);}
+  pfhSync();
+}
+function pfhSync(){
+  var h=document.getElementById('mainHero');if(!h)return;
+  var n=(typeof currentImages!=='undefined'&&currentImages)?currentImages.length:0;
+  var ds=document.getElementById('descInput'),t=ds?ds.value.trim():'';
+  h.classList.toggle('pf-has-photo',n>0);
+  h.classList.toggle('pf-can-analyze',n>0||t.length>0);
+}
+function pfhSpin(){
+  if(pfReducedMotion())return;
+  var w=document.getElementById('pfhWheel');if(!w)return;
+  cancelAnimationFrame(_pfhRaf);
+  var t0=performance.now(),deg=72;
+  var step=function(t){
+    var e=t-t0,a;
+    if(e<240){var p=e/240;a=deg*(p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2);}
+    else if(e<300)a=deg;
+    else if(e<660){var q=(e-300)/360;a=deg*Math.pow(1-q,1.35);}
+    else{w.setAttribute('transform','rotate(0 60 60)');return;}
+    w.setAttribute('transform','rotate('+a.toFixed(2)+' 60 60)');_pfhRaf=requestAnimationFrame(step);
+  };
+  _pfhRaf=requestAnimationFrame(step);
+}
+(function(){
+  var _ps=renderPhotoStrip;renderPhotoStrip=function(){var x=_ps.apply(this,arguments);pfhSync();return x;};
+  var _na=newAnalysis;newAnalysis=function(){var x=_na.apply(this,arguments);pfhSync();return x;};
+  var _sp=showPage;showPage=function(n){var x=_sp.apply(this,arguments);if(n==='home')pfhSync();return x;};
+  var _rh=renderHuntWidget;renderHuntWidget=function(){var x=_rh.apply(this,arguments);var w=document.getElementById('huntWidget');if(w)w.style.display=_huntSession?'':'none';return x;};
+  pfhInit();
+  try{renderHuntWidget();}catch(e){}
+})();
 </script>
 </body>
 </html>
